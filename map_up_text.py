@@ -15,10 +15,11 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import List, Literal, Optional, Dict, Tuple
 import proximity_scoring
+import text_utils
 
 
 ADVANCED_SPLIT_RE = re.compile(r"[ ,!]+")
-HY_PHENS = ("-", "-", "—", "--")  # plain hyphen + common variants
+HY_PHENS = text_utils.HY_PHENS  # Import from text_utils
 WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z0-9-]*")  # Fixed: removed \p{L} which requires regex module
 
 @dataclass
@@ -84,25 +85,494 @@ class VocabEntry:
     
 ALL_HYPOTHESES: Dict[XMLOBJ.StringWord, TokenHypotheses] = {} # Key by anchor StringWord
 
-def decode_html_entities(text: str) -> str:
+# ============================================================================
+# HELPER FUNCTIONS FOR COMMON PATTERNS
+# ============================================================================
+
+# ============================================================================
+# HELPER FUNCTIONS FOR LINK_HYPHEN_PAIRS
+# ============================================================================
+
+# ============================================================================
+# HELPER FUNCTIONS FOR SEARCH_FOR_WORD_MERGES
+# ============================================================================
+
+def _create_split_hypotheses(
+    anchor: XMLOBJ.StringWord,
+    split_words: List[str],
+    clean_vocab: set[str],
+    fuzzy_cutoff: float = 90.0
+) -> List[TokenHypotheses]:
     """
-    Decode HTML entities in text to Unicode characters.
-    This is needed because ALTO XML may contain HTML entities (e.g., &amp;, &quot;)
-    while the clean text has Unicode characters.
+    Create TokenHypotheses objects for split words.
     
     Args:
-        text (str): Text that may contain HTML entities
-        
+        anchor: Original ALTO word anchor
+        split_words: List of split word strings
+        clean_vocab: Set of normalized vocabulary words
+        fuzzy_cutoff: Cutoff for fuzzy matching (default: 90.0)
+    
     Returns:
-        str: Text with HTML entities decoded to Unicode
-        
-    Example:
-        >>> decode_html_entities("&amp;")
-        '&'
-        >>> decode_html_entities("&quot;hello&quot;")
-        '"hello"'
+        List of TokenHypotheses for each split word
     """
-    return html.unescape(text)
+    split_hypotheses_objects: List[TokenHypotheses] = []
+    
+    for word in split_words:
+        # Normalize the split word for matching
+        normalized_word = text_utils.normalize_for_matching(word)
+        
+        # Create hypothesis object for this split word
+        split_anchor = XMLOBJ.StringWord(
+            id=anchor.id, 
+            width=anchor.width, 
+            height=anchor.height, 
+            hpos=anchor.hpos, 
+            vpos=anchor.vpos, 
+            content=word, 
+            wc=anchor.wc
+        )
+        split_hypothesis = TokenHypotheses(anchor=split_anchor)
+        
+        # Create candidates for this split word (similar to create_hypothesis_list)
+        # First check for exact match in normalized vocab
+        if normalized_word in clean_vocab:
+            split_hypothesis.candidates.append(
+                TokenCandidate(clean_form=normalized_word, kind="word", alto_words=[split_anchor], fuzzy_score=100.0)
+            )
+        else:
+            # If no exact match, try fuzzy matching
+            token_candidates = fuzzy_match_rapid(normalized_word, clean_vocab, cutoff=fuzzy_cutoff, limit=None)
+            for token_candidate in token_candidates:
+                split_hypothesis.candidates.append(
+                    TokenCandidate(clean_form=token_candidate[0], kind="word", alto_words=[split_anchor], fuzzy_score=token_candidate[1])
+                )
+        
+        split_hypotheses_objects.append(split_hypothesis)
+    
+    return split_hypotheses_objects
+
+
+def _setup_split_triplets(
+    split_hypotheses: List[TokenHypotheses],
+    original_anchor: XMLOBJ.StringWord
+) -> None:
+    """
+    Set up before_word/after_word triplets for split hypotheses.
+    Modifies split_hypotheses in place.
+    
+    Args:
+        split_hypotheses: List of split hypotheses to set up
+        original_anchor: Original anchor word before splitting
+    """
+    for i, split_hyp in enumerate(split_hypotheses):
+        if i == 0:
+            # First split
+            split_hyp.anchor.before_word = original_anchor.before_word
+            if len(split_hypotheses) > 1:
+                split_hyp.anchor.after_word = split_hypotheses[1].anchor
+            else:
+                split_hyp.anchor.after_word = original_anchor.after_word
+        elif i == len(split_hypotheses) - 1:
+            # Last split
+            split_hyp.anchor.before_word = split_hypotheses[i-1].anchor
+            split_hyp.anchor.after_word = original_anchor.after_word
+        else:
+            # Middle split
+            split_hyp.anchor.before_word = split_hypotheses[i-1].anchor
+            split_hyp.anchor.after_word = split_hypotheses[i+1].anchor
+
+
+def _create_candidate_fuzzy_lookups(
+    split_hypotheses: List[TokenHypotheses]
+) -> List[Dict[int, LLMToken]]:
+    """
+    Create optimized lookup dictionaries for fast token matching.
+    
+    Args:
+        split_hypotheses: List of split hypotheses
+    
+    Returns:
+        List of lookup dictionaries, one per split hypothesis
+    """
+    candidate_fuzzy_lookups: List[Dict[int, LLMToken]] = []
+    for split_hyp in split_hypotheses:
+        lookup = {}
+        if len(split_hyp.candidates) > 0:
+            # Build a dict mapping id(token) -> token for fast lookups
+            for token in split_hyp.candidates[0].possible_llm_elements_by_fuzzy_match:
+                lookup[id(token)] = token
+        candidate_fuzzy_lookups.append(lookup)
+    return candidate_fuzzy_lookups
+
+def _search_all_words_for_exact_match(
+    hyp1: TokenHypotheses,
+    i: int,
+    all_other_indices: List[int],
+    hypothesis_list: List[TokenHypotheses],
+    processed_indices: set,
+    search_indices_pass1: List[int],
+    is_literal_hyphen: bool,
+    base1: str,
+    decoded_w1: str,
+    clean_vocab: set[str],
+    llm_word_lookup: Dict[str, List[LLMToken]]
+) -> Optional[Tuple[str, float, int, LLMToken, float]]:
+    """
+    Search all remaining words for exact vocabulary matches (handles paragraph reordering).
+    
+    Args:
+        hyp1: First hypothesis
+        i: Current index in hypothesis_list
+        all_other_indices: List of indices not in prioritized_indices
+        hypothesis_list: List of all hypotheses
+        processed_indices: Set of already processed indices
+        search_indices_pass1: Indices already searched in pass 1
+        is_literal_hyphen: Whether hyp1 ends with a literal hyphen
+        base1: Base word without trailing hyphens (if literal hyphen)
+        decoded_w1: Decoded content of hyp1
+        clean_vocab: Set of normalized vocabulary words
+        llm_word_lookup: Lookup dictionary for LLM tokens
+    
+    Returns:
+        Tuple of (best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score)
+        or None if no match found
+    """
+    for j in all_other_indices:
+        if j in processed_indices or j in search_indices_pass1:
+            continue  # Skip if already processed in pass 1
+        
+        hyp2 = hypothesis_list[j]
+        
+        # Decode and normalize second word
+        decoded_w2 = text_utils.decode_html_entities(hyp2.anchor.content)
+        normalized_w2 = text_utils.normalize_for_matching(decoded_w2)
+        
+        # Try combining: base1 + w2 (for literal hyphens) or w1 + w2 (for non-hyphen splits)
+        if is_literal_hyphen:
+            merged = base1 + decoded_w2
+        else:
+            merged = decoded_w1 + decoded_w2
+        
+        merged_normalized = text_utils.normalize_for_matching(merged)
+        
+        if not merged_normalized:
+            continue
+        
+        # Only check for exact vocabulary matches in pass 2 (not fuzzy)
+        # This prioritizes exact matches even when words are far apart due to reordering
+        if merged_normalized in clean_vocab:
+            # Found exact match - this is a valid combination despite distance
+            matching_llm_tokens = llm_word_lookup.get(merged_normalized, [])
+            if matching_llm_tokens:
+                # Use first match - exact vocab match gets priority
+                # Note: Skip context checking here since spatial distance is unreliable
+                # due to paragraph reordering. The exact vocab match is strong enough.
+                return (
+                    merged_normalized,
+                    100.0,
+                    j,
+                    matching_llm_tokens[0],
+                    100.0  # Exact vocab match gets high priority
+                )
+    
+    return None
+
+
+def _create_combined_hypothesis(
+    hyp1: TokenHypotheses,
+    hyp2: TokenHypotheses,
+    best_match: str,
+    best_match_score: float,
+    best_llm_token: LLMToken
+) -> TokenHypotheses:
+    """
+    Create a combined TokenHypotheses from two hypotheses.
+    
+    Args:
+        hyp1: First hypothesis
+        hyp2: Second hypothesis (partner)
+        best_match: Best matched word form
+        best_match_score: Score of the match
+        best_llm_token: Best matching LLM token
+    
+    Returns:
+        Combined TokenHypotheses object
+    """
+    # Calculate actual context scores using helper function
+    before_score, after_score = calculate_context_scores(
+        hyp1.anchor.before_word,
+        hyp2.anchor.after_word,
+        best_llm_token,
+        None
+    )
+    
+    # Create combined TokenHypotheses
+    # Use hyp1's anchor as base, but combine both words
+    combined_anchor = hyp1.anchor
+    combined_hypothesis = TokenHypotheses(anchor=combined_anchor)
+    
+    # Create candidate with both ALTO words
+    combined_candidate = TokenCandidate(
+        clean_form=best_match,
+        kind="word",
+        alto_words=[hyp1.anchor, hyp2.anchor],
+        fuzzy_score=best_match_score
+    )
+    combined_candidate.possible_llm_elements_by_fuzzy_match = [best_llm_token]
+    combined_candidate.possible_llm_elements_by_context = [(best_llm_token, before_score, after_score)]
+    combined_hypothesis.candidates.append(combined_candidate)
+    combined_hypothesis.chosen_LLM_token = best_llm_token
+    combined_hypothesis.chosen_index = 0
+    combined_hypothesis.flagged_for_error = False
+    
+    # Set context: before word from hyp1, after word from hyp2
+    combined_hypothesis.anchor.before_word = hyp1.anchor.before_word
+    combined_hypothesis.anchor.after_word = hyp2.anchor.after_word
+    
+    return combined_hypothesis
+
+
+def _check_after_word_match(
+    hyp1: TokenHypotheses,
+    after_word_idx: int,
+    hypothesis_list: List[TokenHypotheses],
+    is_literal_hyphen: bool,
+    base1: str,
+    decoded_w1: str,
+    clean_vocab: set[str],
+    llm_word_lookup: Dict[str, List[LLMToken]]
+) -> Optional[Tuple[str, float, int, LLMToken, float]]:
+    """
+    Check if hyp1's after_word creates a valid match when combined.
+    
+    Note: This function uses exact vocabulary matches only, so no thresholds needed.
+    
+    Args:
+        hyp1: First hypothesis
+        after_word_idx: Index of after_word in hypothesis_list
+        hypothesis_list: List of all hypotheses
+        is_literal_hyphen: Whether hyp1 ends with a literal hyphen
+        base1: Base word without trailing hyphens (if literal hyphen)
+        decoded_w1: Decoded content of hyp1
+        clean_vocab: Set of normalized vocabulary words
+        llm_word_lookup: Lookup dictionary for LLM tokens
+    
+    Returns:
+        Tuple of (best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score)
+        or None if no match found
+    """
+    if after_word_idx is None or after_word_idx >= len(hypothesis_list):
+        return None
+    
+    hyp2_after = hypothesis_list[after_word_idx]
+    decoded_w2_after = text_utils.decode_html_entities(hyp2_after.anchor.content)
+    normalized_w2_after = text_utils.normalize_for_matching(decoded_w2_after)
+    
+    # Try combining with after_word
+    if is_literal_hyphen:
+        merged_after = base1 + decoded_w2_after
+    else:
+        merged_after = decoded_w1 + decoded_w2_after
+    
+    merged_normalized_after = text_utils.normalize_for_matching(merged_after)
+    
+    # Check if combined form matches vocab
+    if merged_normalized_after in clean_vocab:
+        # Found exact match with after_word - use it immediately (hard match)
+        matching_llm_tokens_after = llm_word_lookup.get(merged_normalized_after, [])
+        if matching_llm_tokens_after:
+            # Use first match - after_word is highest priority
+            return (
+                merged_normalized_after,
+                100.0,
+                after_word_idx,
+                matching_llm_tokens_after[0],
+                100.0  # After_word match gets highest priority
+            )
+    
+    return None
+
+def calculate_context_scores(
+    before_alto: Optional[XMLOBJ.StringWord],
+    after_alto: Optional[XMLOBJ.StringWord],
+    llm_token: LLMToken,
+    hypothesis_lookup: Optional[Dict[int, TokenHypotheses]] = None,
+    context_score_threshold: float = 90.0
+) -> Tuple[float, float]:
+    """
+    Calculate before and after context scores for a match.
+    
+    Args:
+        before_alto: ALTO word before the candidate (or None)
+        after_alto: ALTO word after the candidate (or None)
+        llm_token: LLM token to match against
+        hypothesis_lookup: Optional lookup for resolved hypotheses
+        context_score_threshold: Minimum score to consider a match (default: 90.0)
+    
+    Returns:
+        Tuple of (before_score, after_score) where scores are 0.0-100.0
+    """
+    # Get the text to compare for before word
+    before_fuzzy_match_score = 0.0
+    if before_alto is None and llm_token.w_before is None:
+        # Both are at the start - perfect match
+        before_fuzzy_match_score = 100.0
+    elif before_alto is not None and llm_token.w_before is not None:
+        # Both have before words - compare them
+        before_text_to_compare = None
+        if hypothesis_lookup and id(before_alto) in hypothesis_lookup:
+            before_hyp = hypothesis_lookup[id(before_alto)]
+            if before_hyp.chosen_LLM_token:
+                before_text_to_compare = before_hyp.chosen_LLM_token.word
+            else:
+                # Use the best candidate's clean_form if available
+                if before_hyp.candidates:
+                    before_text_to_compare = before_hyp.candidates[0].clean_form
+        
+        if before_text_to_compare is None:
+            # Fall back to ALTO content
+            before_alto_content = text_utils.decode_html_entities(before_alto.content)
+            before_text_to_compare = before_alto_content
+        
+        # Normalize for comparison
+        before_alto_normalized = text_utils.normalize_for_matching(before_text_to_compare)
+        before_llm_normalized = text_utils.normalize_for_matching(llm_token.w_before.word)
+        
+        # Compare normalized forms for accurate matching
+        before_fuzzy_match_score = fuzz.ratio(before_alto_normalized, before_llm_normalized)
+    # If one is None and the other isn't, score remains 0.0 (not a match)
+    
+    # Get the text to compare for after word
+    after_fuzzy_match_score = 0.0
+    if after_alto is None and llm_token.w_after is None:
+        # Both are at the end - perfect match
+        after_fuzzy_match_score = 100.0
+    elif after_alto is not None and llm_token.w_after is not None:
+        # Both have after words - compare them
+        after_text_to_compare = None
+        if hypothesis_lookup and id(after_alto) in hypothesis_lookup:
+            after_hyp = hypothesis_lookup[id(after_alto)]
+            if after_hyp.chosen_LLM_token:
+                after_text_to_compare = after_hyp.chosen_LLM_token.word
+            else:
+                # Use the best candidate's clean_form if available
+                if after_hyp.candidates:
+                    after_text_to_compare = after_hyp.candidates[0].clean_form
+        
+        if after_text_to_compare is None:
+            # Fall back to ALTO content
+            after_alto_content = text_utils.decode_html_entities(after_alto.content)
+            after_text_to_compare = after_alto_content
+        
+        # Normalize for comparison
+        after_alto_normalized = text_utils.normalize_for_matching(after_text_to_compare)
+        after_llm_normalized = text_utils.normalize_for_matching(llm_token.w_after.word)
+        
+        # Compare normalized forms for accurate matching
+        after_fuzzy_match_score = fuzz.ratio(after_alto_normalized, after_llm_normalized)
+    # If one is None and the other isn't, score remains 0.0 (not a match)
+    
+    return before_fuzzy_match_score, after_fuzzy_match_score
+
+
+def create_llm_word_lookup(llm_elements: List[LLMToken]) -> Dict[str, List[LLMToken]]:
+    """
+    Create a lookup dictionary mapping normalized words to LLMToken lists.
+    
+    Args:
+        llm_elements: List of LLMToken objects
+    
+    Returns:
+        Dictionary: normalized_word -> List[LLMToken]
+    """
+    llm_word_lookup: Dict[str, List[LLMToken]] = {}
+    for llm_element in llm_elements:
+        if llm_element.word_normalized not in llm_word_lookup:
+            llm_word_lookup[llm_element.word_normalized] = []
+        llm_word_lookup[llm_element.word_normalized].append(llm_element)
+    return llm_word_lookup
+
+
+def check_individual_word_match(
+    normalized_word: str,
+    clean_vocab: set[str],
+    cutoff: float = 85.0
+) -> Optional[Tuple[str, float]]:
+    """
+    Check if a word matches individually in the vocabulary.
+    
+    Args:
+        normalized_word: Normalized word to check
+        clean_vocab: Set of normalized vocabulary words
+        cutoff: Minimum fuzzy match score (default: 85.0)
+    
+    Returns:
+        Tuple of (matched_word, score) if match found, None otherwise
+    """
+    if normalized_word:
+        if normalized_word in clean_vocab:
+            return (normalized_word, 100.0)
+        else:
+            candidate = best_fuzzy_match_rapid(normalized_word, clean_vocab, cutoff=cutoff)
+            if candidate:
+                return (candidate.clean_form, candidate.fuzzy_score)
+    return None
+
+
+def validate_context_scores(
+    before_score: float,
+    after_score: float,
+    avg_score: float,
+    threshold: float = 70.0
+) -> bool:
+    """
+    Check if context scores meet minimum requirements.
+    
+    Args:
+        before_score: Context score for before word
+        after_score: Context score for after word
+        avg_score: Average context score
+        threshold: Minimum score threshold (default: 70.0)
+    
+    Returns:
+        True if scores are acceptable, False otherwise
+    """
+    return (avg_score > threshold) or (before_score > threshold) or (after_score > threshold)
+
+
+def should_combine_words(
+    individual_w1_score: float,
+    individual_w2_score: float,
+    combined_score: float,
+    individual_threshold: float = 85.0,
+    improvement_threshold: float = 5.0
+) -> bool:
+    """
+    Determine if two words should be combined based on score comparison.
+    
+    Args:
+        individual_w1_score: Score for first word individually
+        individual_w2_score: Score for second word individually
+        combined_score: Score for combined words
+        individual_threshold: Threshold below which individual matches are poor (default: 85.0)
+        improvement_threshold: Minimum improvement required for combination (default: 5.0)
+    
+    Returns:
+        True if words should be combined, False otherwise
+    """
+    best_individual_score = max(individual_w1_score, individual_w2_score)
+    
+    if best_individual_score < individual_threshold:
+        # Individual words don't match well, combining is reasonable
+        return True
+    elif combined_score >= best_individual_score + improvement_threshold:
+        # Combined match is significantly better (at least improvement_threshold better)
+        return True
+    
+    return False
+
+
+# decode_html_entities moved to text_utils module
 
 def get_fuzzy_match_score(word: str, vocab: set[str], cutoff: float = 90.0) -> Optional[float]:
     """
@@ -353,12 +823,22 @@ def link_hypothesis_objects_by_context(hypothesis_list: List[TokenHypotheses]) -
 
     return hypothesis_list
 
-def assign_llm_candidates_to_all_token_hypotheses_by_context(token_hypothesis: TokenHypotheses, hypothesis_lookup: Optional[Dict[int, TokenHypotheses]] = None) -> TokenHypotheses:
+def assign_llm_candidates_to_all_token_hypotheses_by_context(
+    token_hypothesis: TokenHypotheses, 
+    hypothesis_lookup: Optional[Dict[int, TokenHypotheses]] = None,
+    context_score_threshold: float = 90.0
+) -> TokenHypotheses:
     """
     Assess each token candidate by context based on the before and after alto words.
-    If the before or after fuzzy match score is above 90, add the llm element to the possible_llm_elements_by_context list.
+    If the before or after fuzzy match score is above threshold, add the llm element to the possible_llm_elements_by_context list.
         - This allows for the possibility that the triplet on one side is a match, but not the other side.
     If hypothesis_lookup is provided, uses chosen_LLM_token from adjacent hypotheses when available (for split words).
+    
+    Args:
+        token_hypothesis: TokenHypotheses to process
+        hypothesis_lookup: Optional lookup for resolved hypotheses
+        context_score_threshold: Minimum context score threshold (default: 90.0)
+    
     Returns: TokenCandidate with updated possible_llm_elements_by_context set.
     """
     for token_candidate in token_hypothesis.candidates:
@@ -381,68 +861,17 @@ def assign_llm_candidates_to_all_token_hypotheses_by_context(token_hypothesis: T
             if not (can_match_before or can_match_after):
                 continue
             
-            # Get the text to compare for before word
-            before_fuzzy_match_score = 0.0
-            if before_alto_object is None and element.w_before is None:
-                # Both are at the start - perfect match
-                before_fuzzy_match_score = 100.0
-            elif before_alto_object is not None and element.w_before is not None:
-                # Both have before words - compare them
-                before_text_to_compare = None
-                if hypothesis_lookup and id(before_alto_object) in hypothesis_lookup:
-                    before_hyp = hypothesis_lookup[id(before_alto_object)]
-                    if before_hyp.chosen_LLM_token:
-                        before_text_to_compare = before_hyp.chosen_LLM_token.word
-                    else:
-                        # Use the best candidate's clean_form if available
-                        if before_hyp.candidates:
-                            before_text_to_compare = before_hyp.candidates[0].clean_form
-                
-                if before_text_to_compare is None:
-                    # Fall back to ALTO content
-                    before_alto_content = decode_html_entities(before_alto_object.content)
-                    before_text_to_compare = before_alto_content
-                
-                # Normalize for comparison
-                before_alto_normalized = normalize_for_matching(before_text_to_compare)
-                before_llm_normalized = normalize_for_matching(element.w_before.word)
-                
-                # Compare normalized forms for accurate matching
-                before_fuzzy_match_score = fuzz.ratio(before_alto_normalized, before_llm_normalized)
-            # If one is None and the other isn't, score remains 0.0 (not a match)
-            
-            # Get the text to compare for after word
-            after_fuzzy_match_score = 0.0
-            if after_alto_object is None and element.w_after is None:
-                # Both are at the end - perfect match
-                after_fuzzy_match_score = 100.0
-            elif after_alto_object is not None and element.w_after is not None:
-                # Both have after words - compare them
-                after_text_to_compare = None
-                if hypothesis_lookup and id(after_alto_object) in hypothesis_lookup:
-                    after_hyp = hypothesis_lookup[id(after_alto_object)]
-                    if after_hyp.chosen_LLM_token:
-                        after_text_to_compare = after_hyp.chosen_LLM_token.word
-                    else:
-                        # Use the best candidate's clean_form if available
-                        if after_hyp.candidates:
-                            after_text_to_compare = after_hyp.candidates[0].clean_form
-                
-                if after_text_to_compare is None:
-                    # Fall back to ALTO content
-                    after_alto_content = decode_html_entities(after_alto_object.content)
-                    after_text_to_compare = after_alto_content
-                
-                # Normalize for comparison
-                after_alto_normalized = normalize_for_matching(after_text_to_compare)
-                after_llm_normalized = normalize_for_matching(element.w_after.word)
-                
-                # Compare normalized forms for accurate matching
-                after_fuzzy_match_score = fuzz.ratio(after_alto_normalized, after_llm_normalized)
-            # If one is None and the other isn't, score remains 0.0 (not a match)
+            # Calculate context scores using helper function
+            before_fuzzy_match_score, after_fuzzy_match_score = calculate_context_scores(
+                before_alto_object,
+                after_alto_object,
+                element,
+                hypothesis_lookup,
+                context_score_threshold
+            )
 
-            #if the words match, and both before or after fuzzy match scores are above 90, add the llm element to the possible_llm_elements_by_context list
-            if before_fuzzy_match_score > 90 or after_fuzzy_match_score > 90:
+            # If the words match, and both before or after fuzzy match scores are above threshold, add the llm element to the possible_llm_elements_by_context list
+            if before_fuzzy_match_score > context_score_threshold or after_fuzzy_match_score > context_score_threshold:
                 token_candidate.possible_llm_elements_by_context.append((element, float(before_fuzzy_match_score), float(after_fuzzy_match_score)))
 
     return token_hypothesis
@@ -454,13 +883,7 @@ def assign_llm_candidates_to_all_token_hypotheses_by_fuzzy_matching(hypothesis_l
     Returns: List[TokenHypotheses] with possible_llm_elements_by_fuzzy_match set.
     """
     # Create a lookup dictionary for O(1) access instead of O(n) search
-    # Map normalized word -> list of LLMTokens with that normalized word
-    # Use word_normalized to match against candidate.clean_form (which is also normalized)
-    llm_word_lookup: Dict[str, List[LLMToken]] = {}
-    for llm_element in llm_elements:
-        if llm_element.word_normalized not in llm_word_lookup:
-            llm_word_lookup[llm_element.word_normalized] = []
-        llm_word_lookup[llm_element.word_normalized].append(llm_element)
+    llm_word_lookup = create_llm_word_lookup(llm_elements)
     
     # Now iterate through candidates and look up matches efficiently
     for token_hypothesis in hypothesis_list:
@@ -472,71 +895,19 @@ def assign_llm_candidates_to_all_token_hypotheses_by_fuzzy_matching(hypothesis_l
 
     return hypothesis_list
 
-def normalize_for_matching(word: str) -> str:
-    """
-    Strips a string of all characters aside from alphanumeric and hyphens. Then strips whitespace.
-    Preserves hyphens (including trailing hyphens) to maintain word-wrapping information.
-    
-    Args:
-        word (str): word to clean.
-
-    Returns:
-        word (str): word without special characters other than hyphens.
-
-    Example:
-    >>> normalize_for_matching("unco-")
-    'unco-'
-
-    >>> normalize_for_matching("unconscious.")
-    'unconscious'
-
-    >>> normalize_for_matching("unco--nscious")
-    'unco--nscious'
-
-    >>> normalize_for_matching("unconscious:")
-    'unconscious'
-    
-    >>> normalize_for_matching("anti-aircraft")
-    'antiaircraft'
-    """
-    s = word.lower()
-    # Preserve hyphens (including trailing hyphens that indicate word wrapping)
-    # but remove all other non-alphanumeric characters
-    # Character class: [^0-9a-z] means "not alphanumeric", then add hyphen variants (regular hyphen (-), en dash (–), em dash (—))
-    # In character classes, hyphens must be at start/end or escaped to be literal (e.g. \-)
-    s = re.sub(r"[^0-9a-z\-–—]", "", s)  # Preserves all hyphen variants including trailing ones
-    return s.strip()  # Only strips whitespace, preserves trailing hyphens
+# normalize_for_matching and is_hyphenish moved to text_utils module
 
 
-def is_hyphenish(word: XMLOBJ.StringWord) -> bool:
-    """
-    Determines if a given string contains a hyphen or hyphen-variant.
-    
-    Args:
-        word (str): word to assess.
-
-    Returns:
-        bool: True if contains hyphen, False if no hyphen.
-
-    Example:
-    >>> is_hyphenish("unco-")
-    True
-
-    >>> is_hyphenish("unconscious")
-    False
-
-    >>> is_hyphenish("unco--")
-    True
-
-    >>> is_hyphenish("unco—")
-    True
-    """
-    # Decode HTML entities before checking for hyphens
-    decoded_content = decode_html_entities(word.content)
-    return decoded_content.rstrip().endswith(HY_PHENS)
-
-
-def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List[LLMToken], page: XMLOBJ.Page = None) -> List[TokenHypotheses]:
+def link_hyphen_pairs(
+    hypothesis_list: List[TokenHypotheses], 
+    llm_elements: List[LLMToken], 
+    page: XMLOBJ.Page = None,
+    fuzzy_cutoff_individual: float = 85.0,
+    fuzzy_cutoff_combined: float = 80.0,
+    context_validation_threshold: float = 70.0,
+    individual_score_threshold: float = 85.0,
+    combination_improvement_threshold: float = 5.0
+) -> List[TokenHypotheses]:
     """
     Links corresponding halves of hyphenated words (or words that should be combined).
     Works with flagged TokenHypotheses objects and uses LLM tokens for matching.
@@ -545,6 +916,12 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
     Args:
         hypothesis_list: List of TokenHypotheses objects (some may be flagged)
         llm_elements: List of LLMToken objects from clean text
+        page: Optional page object for column boundary detection
+        fuzzy_cutoff_individual: Cutoff for individual word fuzzy matching (default: 85.0)
+        fuzzy_cutoff_combined: Cutoff for combined word fuzzy matching (default: 80.0)
+        context_validation_threshold: Minimum context score threshold (default: 70.0)
+        individual_score_threshold: Threshold for individual word scores (default: 85.0)
+        combination_improvement_threshold: Minimum improvement for combination (default: 5.0)
         
     Returns:
         List[TokenHypotheses] with hyphen pairs linked and combined
@@ -553,11 +930,7 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
     clean_vocab = set(e.word_normalized for e in llm_elements)
     
     # Create lookup: normalized word -> list of LLMTokens
-    llm_word_lookup: Dict[str, List[LLMToken]] = {}
-    for llm_element in llm_elements:
-        if llm_element.word_normalized not in llm_word_lookup:
-            llm_word_lookup[llm_element.word_normalized] = []
-        llm_word_lookup[llm_element.word_normalized].append(llm_element)
+    llm_word_lookup = create_llm_word_lookup(llm_elements)
     
     new_hypothesis_list: List[TokenHypotheses] = []
     processed_indices = set()
@@ -567,8 +940,8 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
             continue
         
         # Process flagged words and words ending with hyphens (potential first half of hyphenated word)
-        decoded_w1 = decode_html_entities(hyp1.anchor.content)
-        is_literal_hyphen = decoded_w1.rstrip().endswith(HY_PHENS)
+        decoded_w1 = text_utils.decode_html_entities(hyp1.anchor.content)
+        is_literal_hyphen = text_utils.is_hyphenish(hyp1.anchor)
         
         if not hyp1.flagged_for_error and not is_literal_hyphen:
             # Not flagged and not a hyphen-ending word, keep as is
@@ -581,7 +954,7 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
         has_good_match = False
         if len(hyp1.candidates) > 0:
             for cand in hyp1.candidates:
-                if cand.fuzzy_score >= 85.0 or len(cand.possible_llm_elements_by_fuzzy_match) > 0:
+                if cand.fuzzy_score >= fuzzy_cutoff_individual or len(cand.possible_llm_elements_by_fuzzy_match) > 0:
                     has_good_match = True
                     break
         
@@ -592,17 +965,10 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
             continue
         
         # Check if individual word has a good fuzzy match before trying to combine
-        normalized_w1 = normalize_for_matching(decoded_w1)
+        normalized_w1 = text_utils.normalize_for_matching(decoded_w1)
         
         # Check if w1 alone matches something well
-        individual_w1_match = None
-        if normalized_w1:
-            if normalized_w1 in clean_vocab:
-                individual_w1_match = (normalized_w1, 100.0)
-            else:
-                candidate = best_fuzzy_match_rapid(normalized_w1, clean_vocab, cutoff=85.0)
-                if candidate:
-                    individual_w1_match = (candidate.clean_form, candidate.fuzzy_score)
+        individual_w1_match = check_individual_word_match(normalized_w1, clean_vocab, cutoff=fuzzy_cutoff_individual)
         
         # base1 is the word without trailing hyphens (for literal hyphen case)
         base1 = decoded_w1.rstrip("-–—") if is_literal_hyphen else decoded_w1
@@ -645,30 +1011,13 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
         # This ensures the correct match is found when the after_word is the right partner (hard match)
         goto_create_combined = False
         if after_word_idx is not None and after_word_idx not in processed_indices:
-            hyp2_after = hypothesis_list[after_word_idx]
-            decoded_w2_after = decode_html_entities(hyp2_after.anchor.content)
-            normalized_w2_after = normalize_for_matching(decoded_w2_after)
-            
-            # Try combining with after_word
-            if is_literal_hyphen:
-                merged_after = base1 + decoded_w2_after
-            else:
-                merged_after = decoded_w1 + decoded_w2_after
-            
-            merged_normalized_after = normalize_for_matching(merged_after)
-            
-            # Check if combined form matches vocab
-            if merged_normalized_after in clean_vocab:
-                # Found exact match with after_word - use it immediately (hard match)
-                matching_llm_tokens_after = llm_word_lookup.get(merged_normalized_after, [])
-                if matching_llm_tokens_after:
-                    # Use first match - after_word is highest priority
-                    best_match = merged_normalized_after
-                    best_match_score = 100.0
-                    best_partner_idx = after_word_idx
-                    best_llm_token = matching_llm_tokens_after[0]
-                    best_context_score = 100.0  # After_word match gets highest priority
-                    goto_create_combined = True
+            after_word_result = _check_after_word_match(
+                hyp1, after_word_idx, hypothesis_list, is_literal_hyphen,
+                base1, decoded_w1, clean_vocab, llm_word_lookup
+            )
+            if after_word_result is not None:
+                best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = after_word_result
+                goto_create_combined = True
         
         # Only search other words if a match with after_word was not found
         if not goto_create_combined:
@@ -709,18 +1058,11 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                             continue  # Too far in reading order - skip to pass 2
                 
                 # Decode and normalize second word
-                decoded_w2 = decode_html_entities(hyp2.anchor.content)
-                normalized_w2 = normalize_for_matching(decoded_w2)
+                decoded_w2 = text_utils.decode_html_entities(hyp2.anchor.content)
+                normalized_w2 = text_utils.normalize_for_matching(decoded_w2)
                 
                 # Check if w2 alone matches something well
-                individual_w2_match = None
-                if normalized_w2:
-                    if normalized_w2 in clean_vocab:
-                        individual_w2_match = (normalized_w2, 100.0)
-                    else:
-                        candidate = best_fuzzy_match_rapid(normalized_w2, clean_vocab, cutoff=85.0)
-                        if candidate:
-                            individual_w2_match = (candidate.clean_form, candidate.fuzzy_score)
+                individual_w2_match = check_individual_word_match(normalized_w2, clean_vocab, cutoff=fuzzy_cutoff_individual)
                 
                 # Try combining: base1 + w2 (for literal hyphens) or w1 + w2 (for non-hyphen splits)
                 if is_literal_hyphen:
@@ -728,7 +1070,7 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                 else:
                     merged = decoded_w1 + decoded_w2
                 
-                merged_normalized = normalize_for_matching(merged)
+                merged_normalized = text_utils.normalize_for_matching(merged)
                 
                 if not merged_normalized:
                     continue
@@ -753,19 +1095,10 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                         if llm_token.w_before is None or llm_token.w_after is None:
                             continue
                         
-                        # Check context matches
-                        before_score = 0.0
-                        after_score = 0.0
-                        
-                        if before_alto is not None:
-                            before_alto_norm = normalize_for_matching(decode_html_entities(before_alto.content))
-                            before_llm_norm = normalize_for_matching(llm_token.w_before.word)
-                            before_score = fuzz.ratio(before_alto_norm, before_llm_norm)
-                        
-                        if after_alto is not None:
-                            after_alto_norm = normalize_for_matching(decode_html_entities(after_alto.content))
-                            after_llm_norm = normalize_for_matching(llm_token.w_after.word)
-                            after_score = fuzz.ratio(after_alto_norm, after_llm_norm)
+                        # Check context matches using helper function
+                        before_score, after_score = calculate_context_scores(
+                            before_alto, after_alto, llm_token, None
+                        )
                         
                         # Prefer matches with good context scores
                         context_score = (before_score + after_score) / 2.0
@@ -779,27 +1112,23 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                     selected_llm = candidate_context_match if candidate_context_match else (matching_llm_tokens[0] if matching_llm_tokens else None)
                     
                     if selected_llm:
-                        # Require minimum context scores - at least one side must be > 50% or average > 40%
-                        min_context_required = (candidate_context_score > 70.0) or (selected_before_score > 70.0) or (selected_after_score > 70.0)
-                        
-                        if not min_context_required:
+                        # Require minimum context scores using helper function
+                        if not validate_context_scores(selected_before_score, selected_after_score, candidate_context_score, threshold=context_validation_threshold):
                             # Context scores too low, skip this match
                             continue
                         
                         # Check if individual words have better matches - only combine if combined is significantly better
                         individual_w1_score = individual_w1_match[1] if individual_w1_match else 0.0
                         individual_w2_score = individual_w2_match[1] if individual_w2_match else 0.0
-                        best_individual_score = max(individual_w1_score, individual_w2_score)
                         
-                        # Only combine if combined match is significantly better (at least 5% better) than individual matches
-                        # Or if individual matches are poor (< 85.0)
-                        should_combine = False
-                        if best_individual_score < 85.0:
-                            # Individual words don't match well, combining is reasonable
-                            should_combine = True
-                        elif 100.0 >= best_individual_score + 5.0:
-                            # Combined match is significantly better (at least 5% better)
-                            should_combine = True
+                        # Use helper function to determine if words should be combined
+                        should_combine = should_combine_words(
+                            individual_w1_score,
+                            individual_w2_score,
+                            100.0,  # combined_score for exact match
+                            individual_threshold=individual_score_threshold,
+                            improvement_threshold=combination_improvement_threshold
+                        )
                         
                         if should_combine:
                             # Only update if this is a better match
@@ -836,46 +1165,17 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
             # This handles cases where paragraph reordering makes words far apart spatially
             # but they should still be combined (e.g., "sor-" + "ties" = "sorties")
             if best_match_score < 100.0:  # Only if no exact match yet
-                for j in all_other_indices:
-                    if j in processed_indices or j in search_indices_pass1:
-                        continue  # Skip if already processed in pass 1
-                    
-                    hyp2 = hypothesis_list[j]
-                    
-                    # Decode and normalize second word
-                    decoded_w2 = decode_html_entities(hyp2.anchor.content)
-                    normalized_w2 = normalize_for_matching(decoded_w2)
-                    
-                    # Try combining: base1 + w2 (for literal hyphens) or w1 + w2 (for non-hyphen splits)
-                    if is_literal_hyphen:
-                        merged = base1 + decoded_w2
-                    else:
-                        merged = decoded_w1 + decoded_w2
-                    
-                    merged_normalized = normalize_for_matching(merged)
-                    
-                    if not merged_normalized:
-                        continue
-                    
-                    # Only check for exact vocabulary matches in pass 2 (not fuzzy)
-                    # This prioritizes exact matches even when words are far apart due to reordering
-                    if merged_normalized in clean_vocab:
-                        # Found exact match - this is a valid combination despite distance
-                        matching_llm_tokens = llm_word_lookup.get(merged_normalized, [])
-                        if matching_llm_tokens:
-                            # Use first match - exact vocab match gets priority
-                            # Note: Skip context checking here since spatial distance is unreliable
-                            # due to paragraph reordering. The exact vocab match is strong enough.
-                            best_match = merged_normalized
-                            best_match_score = 100.0
-                            best_partner_idx = j
-                            best_llm_token = matching_llm_tokens[0]
-                            best_context_score = 100.0  # Exact vocab match gets high priority
-                            break  # Found exact match, stop searching for better matches
+                pass2_result = _search_all_words_for_exact_match(
+                    hyp1, i, all_other_indices, hypothesis_list, processed_indices,
+                    search_indices_pass1, is_literal_hyphen, base1, decoded_w1,
+                    clean_vocab, llm_word_lookup
+                )
+                if pass2_result is not None:
+                    best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
             else:
                 # Try fuzzy match (only if no exact match yet)
                 if best_match_score < 100.0:
-                    candidate = best_fuzzy_match_rapid(merged_normalized, clean_vocab, cutoff=80.0)
+                    candidate = best_fuzzy_match_rapid(merged_normalized, clean_vocab, cutoff=fuzzy_cutoff_combined)
                     if candidate and candidate.fuzzy_score > best_match_score:
                         # Check if matching LLM tokens found
                         matching_llm_tokens = llm_word_lookup.get(candidate.clean_form, [])
@@ -893,18 +1193,10 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                                 if llm_token.w_before is None or llm_token.w_after is None:
                                     continue
                                 
-                                before_score = 0.0
-                                after_score = 0.0
-                                
-                                if before_alto is not None:
-                                    before_alto_norm = normalize_for_matching(decode_html_entities(before_alto.content))
-                                    before_llm_norm = normalize_for_matching(llm_token.w_before.word)
-                                    before_score = fuzz.ratio(before_alto_norm, before_llm_norm)
-                                
-                                if after_alto is not None:
-                                    after_alto_norm = normalize_for_matching(decode_html_entities(after_alto.content))
-                                    after_llm_norm = normalize_for_matching(llm_token.w_after.word)
-                                    after_score = fuzz.ratio(after_alto_norm, after_llm_norm)
+                                # Use helper function to calculate context scores
+                                before_score, after_score = calculate_context_scores(
+                                    before_alto, after_alto, llm_token, None
+                                )
                                 
                                 context_score = (before_score + after_score) / 2.0
                                 if context_score > candidate_context_score:
@@ -916,27 +1208,23 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
                             selected_llm = candidate_context_match if candidate_context_match else (matching_llm_tokens[0] if matching_llm_tokens else None)
                             
                             if selected_llm:
-                                # Require minimum context scores - at least one side must be > 50% or average > 40%
-                                min_context_required = (candidate_context_score > 70.0) or (selected_before_score > 70.0) or (selected_after_score > 70.0)
-                                
-                                if not min_context_required:
+                                # Require minimum context scores using helper function
+                                if not validate_context_scores(selected_before_score, selected_after_score, candidate_context_score, threshold=context_validation_threshold):
                                     # Context scores too low, skip this match
                                     continue
                                 
                                 # Check if individual words have better matches - only combine if combined is significantly better
                                 individual_w1_score = individual_w1_match[1] if individual_w1_match else 0.0
                                 individual_w2_score = individual_w2_match[1] if individual_w2_match else 0.0
-                                best_individual_score = max(individual_w1_score, individual_w2_score)
                                 
-                                # Only combine if combined match is significantly better (at least 5% better) than individual matches
-                                # Or if individual matches are poor (< 85.0)
-                                should_combine = False
-                                if best_individual_score < 85.0:
-                                    # Individual words don't match well, combining is reasonable
-                                    should_combine = True
-                                elif candidate.fuzzy_score > best_individual_score + 5.0:
-                                    # Combined match is significantly better
-                                    should_combine = True
+                                # Use helper function to determine if words should be combined
+                                should_combine = should_combine_words(
+                                    individual_w1_score,
+                                    individual_w2_score,
+                                    candidate.fuzzy_score,
+                                    individual_threshold=individual_score_threshold,
+                                    improvement_threshold=combination_improvement_threshold
+                                )
                                 
                                 if should_combine:
                                     # Only update if better fuzzy score or better context
@@ -951,44 +1239,9 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
         # If match found, create combined hypothesis
         if best_match and best_partner_idx is not None:
             hyp2 = hypothesis_list[best_partner_idx]
-            
-            # Calculate actual context scores
-            before_score = 0.0
-            after_score = 0.0
-            
-            if hyp1.anchor.before_word is not None and best_llm_token.w_before is not None:
-                before_alto_norm = normalize_for_matching(decode_html_entities(hyp1.anchor.before_word.content))
-                before_llm_norm = normalize_for_matching(best_llm_token.w_before.word)
-                before_score = fuzz.ratio(before_alto_norm, before_llm_norm)
-            
-            if hyp2.anchor.after_word is not None and best_llm_token.w_after is not None:
-                after_alto_norm = normalize_for_matching(decode_html_entities(hyp2.anchor.after_word.content))
-                after_llm_norm = normalize_for_matching(best_llm_token.w_after.word)
-                after_score = fuzz.ratio(after_alto_norm, after_llm_norm)
-            
-            # Create combined TokenHypotheses
-            # Use hyp1's anchor as base, but combine both words
-            combined_anchor = hyp1.anchor
-            combined_hypothesis = TokenHypotheses(anchor=combined_anchor)
-            
-            # Create candidate with both ALTO words
-            combined_candidate = TokenCandidate(
-                clean_form=best_match,
-                kind="word",
-                alto_words=[hyp1.anchor, hyp2.anchor],
-                fuzzy_score=best_match_score
+            combined_hypothesis = _create_combined_hypothesis(
+                hyp1, hyp2, best_match, best_match_score, best_llm_token
             )
-            combined_candidate.possible_llm_elements_by_fuzzy_match = [best_llm_token]
-            combined_candidate.possible_llm_elements_by_context = [(best_llm_token, before_score, after_score)]
-            combined_hypothesis.candidates.append(combined_candidate)
-            combined_hypothesis.chosen_LLM_token = best_llm_token
-            combined_hypothesis.chosen_index = 0
-            combined_hypothesis.flagged_for_error = False
-            
-            # Set context: before word from hyp1, after word from hyp2
-            combined_hypothesis.anchor.before_word = hyp1.anchor.before_word
-            combined_hypothesis.anchor.after_word = hyp2.anchor.after_word
-            
             new_hypothesis_list.append(combined_hypothesis)
             processed_indices.add(i)
             processed_indices.add(best_partner_idx)
@@ -998,9 +1251,19 @@ def link_hyphen_pairs(hypothesis_list: List[TokenHypotheses], llm_elements: List
     
     return new_hypothesis_list
 
-def search_for_word_merges(hypothesis_list: List[TokenHypotheses], llm_elements: List[LLMToken]) -> List[TokenHypotheses]:
+def search_for_word_merges(
+    hypothesis_list: List[TokenHypotheses], 
+    llm_elements: List[LLMToken],
+    fuzzy_cutoff: float = 90.0
+) -> List[TokenHypotheses]:
     """
     Handle word merges in the hypothesis list.
+    
+    Args:
+        hypothesis_list: List of TokenHypotheses objects
+        llm_elements: List of LLMToken objects
+        fuzzy_cutoff: Cutoff for fuzzy matching (default: 90.0)
+    
     Returns: List[TokenHypotheses] with updated left_matched and right_matched set.
     """
     # Build new list instead of modifying in place (more efficient)
@@ -1014,7 +1277,7 @@ def search_for_word_merges(hypothesis_list: List[TokenHypotheses], llm_elements:
             
         # test fuzzy matching on words that might be 2 actual words merged into one. Split by special characters.
         # Decode HTML entities before splitting
-        decoded_anchor_content = decode_html_entities(hypothesis_object.anchor.content)
+        decoded_anchor_content = text_utils.decode_html_entities(hypothesis_object.anchor.content)
         split_words = ADVANCED_SPLIT_RE.split(decoded_anchor_content)
         
         if len(split_words) <= 1:
@@ -1024,43 +1287,12 @@ def search_for_word_merges(hypothesis_list: List[TokenHypotheses], llm_elements:
             
         # Create list of hypothesis objects for split words
         anchor = hypothesis_object.anchor
-        split_hypotheses_objects: List[TokenHypotheses] = []
         
-        # Get clean vocab for fuzzy matching (need to pass it or get it from llm_elements)
-        # Create vocab from llm_elements
+        # Get clean vocab for fuzzy matching
         clean_vocab = set(e.word_normalized for e in llm_elements)
         
-        for word in split_words:
-            # Normalize the split word for matching
-            normalized_word = normalize_for_matching(word)
-            
-            # Create hypothesis object for this split word
-            split_anchor = XMLOBJ.StringWord(
-                id=anchor.id, 
-                width=anchor.width, 
-                height=anchor.height, 
-                hpos=anchor.hpos, 
-                vpos=anchor.vpos, 
-                content=word, 
-                wc=anchor.wc
-            )
-            split_hypothesis = TokenHypotheses(anchor=split_anchor)
-            
-            # Create candidates for this split word (similar to create_hypothesis_list)
-            # First check for exact match in normalized vocab
-            if normalized_word in clean_vocab:
-                split_hypothesis.candidates.append(
-                    TokenCandidate(clean_form=normalized_word, kind="word", alto_words=[split_anchor], fuzzy_score=100.0)
-                )
-            else:
-                # If no exact match, try fuzzy matching
-                token_candidates = fuzzy_match_rapid(normalized_word, clean_vocab, cutoff=90.0, limit=None)
-                for token_candidate in token_candidates:
-                    split_hypothesis.candidates.append(
-                        TokenCandidate(clean_form=token_candidate[0], kind="word", alto_words=[split_anchor], fuzzy_score=token_candidate[1])
-                    )
-            
-            split_hypotheses_objects.append(split_hypothesis)
+        # Create split hypotheses using helper function
+        split_hypotheses_objects = _create_split_hypotheses(anchor, split_words, clean_vocab, fuzzy_cutoff)
         
         # Assign possible llm elements based on fuzzy matching
         split_hypotheses_objects = assign_llm_candidates_to_all_token_hypotheses_by_fuzzy_matching(
@@ -1068,26 +1300,8 @@ def search_for_word_merges(hypothesis_list: List[TokenHypotheses], llm_elements:
         )
         
         # Run context matching pipeline on split hypotheses to get full matches
-        # Set word triplets for split hypotheses:
-        # - First split: before_word = original's before_word, after_word = second split (if exists)
-        # - Middle splits: before_word = previous split, after_word = next split
-        # - Last split: before_word = previous split (if exists), after_word = original's after_word
-        for i, split_hyp in enumerate(split_hypotheses_objects):
-            if i == 0:
-                # First split
-                split_hyp.anchor.before_word = anchor.before_word
-                if len(split_hypotheses_objects) > 1:
-                    split_hyp.anchor.after_word = split_hypotheses_objects[1].anchor
-                else:
-                    split_hyp.anchor.after_word = anchor.after_word
-            elif i == len(split_hypotheses_objects) - 1:
-                # Last split
-                split_hyp.anchor.before_word = split_hypotheses_objects[i-1].anchor
-                split_hyp.anchor.after_word = anchor.after_word
-            else:
-                # Middle split
-                split_hyp.anchor.before_word = split_hypotheses_objects[i-1].anchor
-                split_hyp.anchor.after_word = split_hypotheses_objects[i+1].anchor
+        # Set word triplets for split hypotheses using helper function
+        _setup_split_triplets(split_hypotheses_objects, anchor)
         
         # First pass: Process each split hypothesis for context matching (using raw ALTO content)
         for split_hyp in split_hypotheses_objects:
@@ -1116,16 +1330,8 @@ def search_for_word_merges(hypothesis_list: List[TokenHypotheses], llm_elements:
         split_hypotheses_objects = find_best_candidates_for_all_hypothesis_objects(split_hypotheses_objects, llm_elements)
         
         # Optimize: Create lookup dictionaries for O(1) membership testing
-        # Use id() as key since LLMToken might not be hashable
-        # Build lookup maps: map LLMToken id -> index in list for fast lookups
-        candidate_fuzzy_lookups: List[Dict[int, LLMToken]] = []
-        for split_hyp in split_hypotheses_objects:
-            lookup = {}
-            if len(split_hyp.candidates) > 0:
-                # Build a dict mapping id(token) -> token for fast lookups
-                for token in split_hyp.candidates[0].possible_llm_elements_by_fuzzy_match:
-                    lookup[id(token)] = token
-            candidate_fuzzy_lookups.append(lookup)
+        # Use helper function to create lookups
+        candidate_fuzzy_lookups = _create_candidate_fuzzy_lookups(split_hypotheses_objects)
         
         # Now do the linking with optimized lookups
         for i, split_hypothesis_object in enumerate(split_hypotheses_objects):
@@ -1194,7 +1400,7 @@ def create_LLM_element_list(llm_clean_text: str) -> List[LLMToken]:
     i = 0
     while i < len(tokens):
         word = tokens[i]
-        word_normalized = normalize_for_matching(word) #removes special characters and whitespace, but not hyphens
+        word_normalized = text_utils.normalize_for_matching(word) #removes special characters and whitespace, but not hyphens
         llm_element_before = llm_elements[i-1] if i-1 >= 0 and len(llm_elements) > 0 else None 
         
         llm_element = LLMToken(word=word, word_normalized=word_normalized, w_before=llm_element_before)
@@ -1210,21 +1416,31 @@ def create_LLM_element_list(llm_clean_text: str) -> List[LLMToken]:
 
     return llm_elements
 
-def create_hypothesis_list(alto_words: List[XMLOBJ.StringWord], clean_vocab: set[str]) -> List[TokenHypotheses]:
+def create_hypothesis_list(
+    alto_words: List[XMLOBJ.StringWord], 
+    clean_vocab: set[str],
+    fuzzy_cutoff: float = 80.0
+) -> List[TokenHypotheses]:
     """
     Creates a list of TokenHypotheses from the alto words.
     Assigns possible word candidates to each TokenHypotheses object.
-    - each fuzzy match above 90 is a possible token candidate.
+    - each fuzzy match above cutoff is a possible token candidate.
     - each token candidate is a possible interpretation of the alto word.
+    
+    Args:
+        alto_words: List of ALTO StringWord objects
+        clean_vocab: Set of normalized vocabulary words
+        fuzzy_cutoff: Minimum fuzzy match score threshold (default: 80.0)
+    
     Returns: List[TokenHypotheses] with candidates set.
     """
     hypothesis_list: List[TokenHypotheses] = []
     for alto_word in alto_words:
         token_hypothesis_object = TokenHypotheses(anchor=alto_word)
         # Decode HTML entities in ALTO word content before fuzzy matching
-        decoded_content = decode_html_entities(alto_word.content)
+        decoded_content = text_utils.decode_html_entities(alto_word.content)
         # Normalize the content for matching (removes punctuation, lowercases)
-        normalized_content = normalize_for_matching(decoded_content)
+        normalized_content = text_utils.normalize_for_matching(decoded_content)
         
         # First check for exact match in normalized vocab
         if normalized_content in clean_vocab:
@@ -1233,9 +1449,9 @@ def create_hypothesis_list(alto_words: List[XMLOBJ.StringWord], clean_vocab: set
             )
         else:
             # If no exact match, try fuzzy matching
-            # Use a lower threshold (80.0) to catch spelling errors like "Hanol" → "Hanoi" (80% match)
+            # Use a lower threshold to catch spelling errors like "Hanol" → "Hanoi" (80% match)
             # These will still go through context matching to ensure correct selection
-            token_candidates = fuzzy_match_rapid(normalized_content, clean_vocab, cutoff=80.0, limit=None)
+            token_candidates = fuzzy_match_rapid(normalized_content, clean_vocab, cutoff=fuzzy_cutoff, limit=None)
             for token_candidate in token_candidates:
                 token_hypothesis_object.candidates.append(TokenCandidate(clean_form=token_candidate[0], kind="word", alto_words=[alto_word], fuzzy_score=token_candidate[1]))
         hypothesis_list.append(token_hypothesis_object)
@@ -1379,5 +1595,5 @@ if __name__ == "__main__":
     # viz.visualize_full_pipeline(hypothesis_list, max_hypotheses=15)
     
     # Show hypothesis sequence mapping (ordered list showing ALTO → LLM mapping)
-    viz.visualize_hypothesis_sequence(hypothesis_list, max_hypotheses=100)
+    viz.visualize_hypothesis_sequence(hypothesis_list, max_hypotheses=200)
     
