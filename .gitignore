@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# output files - results of the OCR text alignment process
+outputs/
+
+# cursor chat export files - full chat logs. Summary of chat contents are in the chats/INDEX.md file.
+raw_chat_files/
+
+# ALTO XML files - will add a folder for example files later. In the meantime, upload your own xml file to the root directory and corresponding clean text string in `map_up_text.py`'s `main()` function.
+/*.xml
