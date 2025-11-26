@@ -7,6 +7,9 @@ This directory contains exported chat conversations related to the ocr-text-alig
 <!-- Add entries below as you export chats. Format:
 - [filename.md](filename.md) - Date: YYYY-MM-DD | Summary: Brief description of what was discussed | LLM: Model name if available
 -->
+- [26-11-2025_chat_iterative-pipeline-and-error-count-fix.md](26-11-2025_chat_iterative-pipeline-and-error-count-fix.md)
+    - Date: 2025-11-26
+    - Summary: Refactored pipeline to use iterative approach instead of complex single-pass logic. Created `run_one_iteration()` and `run_iterative_pipeline()` functions that re-run hyphen linking, word merges, reference updates, and context matching until stable. Fixed error counting discrepancy (was showing 28 errors, actually 4) by matching display logic: only count errors when `flagged_for_error = True` AND `chosen_LLM_token is None`. Also fixed summary to show both total and displayed counts for all metrics.
 
 - [26-11-2025_chat_refactor-proximity-scoring-and-mapping-scripts.md](26-11-2025_chat_refactor-proximity-scoring-and-mapping-scripts.md)
     - Date: 2025-11-26

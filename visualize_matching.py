@@ -442,8 +442,8 @@ def visualize_pipeline_for_hypothesis(hypothesis: TokenHypotheses, index: int = 
             
             # Show what ALTO words are being compared
             if candidate.alto_words:
-                before_alto = decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words[0].before_word else "N/A"
-                after_alto = decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words[-1].after_word else "N/A"
+                before_alto = text_utils.decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words[0].before_word else "N/A"
+                after_alto = text_utils.decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words[-1].after_word else "N/A"
                 console.print(f"      ALTO context: '{before_alto}' → '{text_utils.decode_html_entities(hypothesis.anchor.content)}' → '{after_alto}'")
                 console.print(f"      LLM context:  '{llm_elem.w_before.word if llm_elem.w_before else 'N/A'}' → '{llm_elem.word}' → '{llm_elem.w_after.word if llm_elem.w_after else 'N/A'}'")
 
@@ -563,8 +563,8 @@ def visualize_context_matching_details(hypothesis_list: List[TokenHypotheses], m
             
             # Get ALTO context
             if candidate.alto_words:
-                before_alto = decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words[0].before_word else "N/A"
-                after_alto = decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words[-1].after_word else "N/A"
+                before_alto = text_utils.decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words[0].before_word else "N/A"
+                after_alto = text_utils.decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words[-1].after_word else "N/A"
             else:
                 before_alto = "N/A"
                 after_alto = "N/A"
@@ -659,14 +659,20 @@ def visualize_hypothesis_sequence(hypothesis_list: List[TokenHypotheses], max_hy
     
     console.print(table)
     
-    # Show summary stats
-    matched_count = sum(1 for h in hypothesis_list[:max_hypotheses] if h.chosen_LLM_token)
-    error_count = sum(1 for h in hypothesis_list[:max_hypotheses] if h.flagged_for_error)
-    pending_count = sum(1 for h in hypothesis_list[:max_hypotheses] if h.candidates and not h.chosen_LLM_token and not h.flagged_for_error)
-    linked_count = sum(1 for h in hypothesis_list[:max_hypotheses] if h.left_matched or h.right_matched)
+    # Show summary stats - count ALL hypotheses, not just displayed ones
+    # Error = flagged_for_error AND no chosen_LLM_token (matches display logic)
+    matched_count = sum(1 for h in hypothesis_list if h.chosen_LLM_token)
+    error_count = sum(1 for h in hypothesis_list if h.flagged_for_error and not h.chosen_LLM_token)
+    pending_count = sum(1 for h in hypothesis_list if h.candidates and not h.chosen_LLM_token and not h.flagged_for_error)
+    linked_count = sum(1 for h in hypothesis_list if h.left_matched or h.right_matched)
     
-    console.print(f"\n[bold]Summary:[/bold]")
-    console.print(f"  Matched: [green]{matched_count}[/green] | Errors: [red]{error_count}[/red] | Pending: [yellow]{pending_count}[/yellow] | Linked: [cyan]{linked_count}[/cyan]")
+    # Count displayed vs total
+    displayed_matched = sum(1 for h in hypothesis_list[:max_hypotheses] if h.chosen_LLM_token)
+    displayed_errors = sum(1 for h in hypothesis_list[:max_hypotheses] if h.flagged_for_error and not h.chosen_LLM_token)
+    displayed_pending = sum(1 for h in hypothesis_list[:max_hypotheses] if h.candidates and not h.chosen_LLM_token and not h.flagged_for_error)
+    
+    console.print(f"\n[bold]Summary (showing first {max_hypotheses} of {len(hypothesis_list)}):[/bold]")
+    console.print(f"  Matched: [green]{matched_count}[/green] ({displayed_matched} shown) | Errors: [red]{error_count}[/red] ({displayed_errors} shown) | Pending: [yellow]{pending_count}[/yellow] ({displayed_pending} shown) | Linked: [cyan]{linked_count}[/cyan]")
 
 
 def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses], hypothesis_list_after: List[TokenHypotheses]):
@@ -875,8 +881,8 @@ def visualize_hyphen_linking_process(hypothesis_list_before: List[TokenHypothese
         word1 = combined_candidate.alto_words[0]
         word2 = combined_candidate.alto_words[1]
         
-        decoded_w1 = decode_html_entities(word1.content)
-        decoded_w2 = decode_html_entities(word2.content)
+        decoded_w1 = text_utils.decode_html_entities(word1.content)
+        decoded_w2 = text_utils.decode_html_entities(word2.content)
         is_literal_hyphen = decoded_w1.rstrip().endswith(("-", "-", "—", "--"))
         
         console.print(f"\n[bold yellow]Hyphen Pair #{i}:[/bold yellow]")
@@ -890,7 +896,7 @@ def visualize_hyphen_linking_process(hypothesis_list_before: List[TokenHypothese
         else:
             merged = decoded_w1 + decoded_w2
         
-        merged_normalized = normalize_for_matching(merged)
+        merged_normalized = text_utils.normalize_for_matching(merged)
         console.print(f"  Combined: [cyan]{merged}[/cyan] → normalized: [cyan]{merged_normalized}[/cyan]")
         
         # Show matching results
