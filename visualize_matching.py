@@ -28,7 +28,8 @@ except ImportError:
             print(*args)
 
 import xml_obj as XMLOBJ
-from map_up_text import TokenCandidate, TokenHypotheses, ALL_HYPOTHESES, LLMToken, decode_html_entities
+import text_utils
+from map_up_text import TokenCandidate, TokenHypotheses, ALL_HYPOTHESES, LLMToken
 
 console = Console() if RICH_AVAILABLE else Console()
 
@@ -96,7 +97,8 @@ def print_hyphen_analysis(page: XMLOBJ.Page, vocab: set[str]):
     """
     Print a detailed analysis of hyphenated words and their potential matches.
     """
-    from map_up_text import is_hyphenish, normalize_for_matching, best_fuzzy_match_rapid
+    from map_up_text import best_fuzzy_match_rapid
+    from text_utils import is_hyphenish, normalize_for_matching
     
     words = list(page.all_strings())
     hyphen_words = [w for w in words if is_hyphenish(w)]
@@ -154,7 +156,8 @@ def print_matching_table(page: XMLOBJ.Page, vocab: set[str], max_words: int = 20
     """
     Print a table showing OCR words and their best matches.
     """
-    from map_up_text import normalize_for_matching, best_fuzzy_match_rapid
+    from text_utils import normalize_for_matching
+    from map_up_text import best_fuzzy_match_rapid
     
     words = list(page.all_strings())[:max_words]
     
@@ -194,7 +197,8 @@ def visualize_hyphen_linking_process(page: XMLOBJ.Page, vocab: set[str]):
     """
     Show a step-by-step visualization of the hyphen linking process.
     """
-    from map_up_text import is_hyphenish, normalize_for_matching, best_fuzzy_match_rapid
+    from map_up_text import best_fuzzy_match_rapid
+    from text_utils import is_hyphenish, normalize_for_matching
     
     words = list(page.all_strings())
     hyphen_words = [w for w in words if is_hyphenish(w)]
@@ -289,7 +293,7 @@ def print_vocab_stats(vocab: set[str], clean_text: str):
     Print statistics about the vocabulary.
     """
     from collections import Counter
-    from map_up_text import normalize_for_matching
+    from text_utils import normalize_for_matching
     
     clean_tokens = [normalize_for_matching(t) for t in clean_text.split()]
     clean_freq = Counter(clean_tokens)
@@ -307,7 +311,7 @@ def create_summary_dashboard(page: XMLOBJ.Page, vocab: set[str], clean_text: str
     """
     Create a comprehensive summary dashboard.
     """
-    from map_up_text import is_hyphenish, normalize_for_matching
+    from text_utils import is_hyphenish, normalize_for_matching
     
     words = list(page.all_strings())
     hyphen_words = [w for w in words if is_hyphenish(w)]
@@ -341,7 +345,7 @@ def visualize_pipeline_for_hypothesis(hypothesis: TokenHypotheses, index: int = 
     """
     idx_str = f"#{index}" if index is not None else ""
     alto_word = hypothesis.anchor
-    decoded_content = decode_html_entities(alto_word.content)
+    decoded_content = text_utils.decode_html_entities(alto_word.content)
     
     console.print(f"\n[bold cyan]{'='*80}[/bold cyan]")
     console.print(f"[bold cyan]HYPOTHESIS {idx_str}: ALTO Word → Pipeline[/bold cyan]")
@@ -390,8 +394,8 @@ def visualize_pipeline_for_hypothesis(hypothesis: TokenHypotheses, index: int = 
                 after_word = llm_elem.w_after.word if llm_elem.w_after else "N/A"
                 
                 # Get ALTO context words
-                before_alto = decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words and candidate.alto_words[0].before_word else "N/A"
-                after_alto = decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words and candidate.alto_words[-1].after_word else "N/A"
+                before_alto = text_utils.decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words and candidate.alto_words[0].before_word else "N/A"
+                after_alto = text_utils.decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words and candidate.alto_words[-1].after_word else "N/A"
                 
                 console.print(f"      [{j+1}] {marker} '{llm_elem.word}'; {llm_elem.word_normalized}; {before_word}, {after_word}")
                 console.print(f"          Context scores:")
@@ -410,8 +414,8 @@ def visualize_pipeline_for_hypothesis(hypothesis: TokenHypotheses, index: int = 
         console.print(f"    LLM token normalized: {hypothesis.chosen_LLM_token.word_normalized}")
         
         # Show neighbors
-        before_alto_neighbor = decode_html_entities(hypothesis.anchor.before_word.content) if hypothesis.anchor.before_word else "N/A"
-        after_alto_neighbor = decode_html_entities(hypothesis.anchor.after_word.content) if hypothesis.anchor.after_word else "N/A"
+        before_alto_neighbor = text_utils.decode_html_entities(hypothesis.anchor.before_word.content) if hypothesis.anchor.before_word else "N/A"
+        after_alto_neighbor = text_utils.decode_html_entities(hypothesis.anchor.after_word.content) if hypothesis.anchor.after_word else "N/A"
         before_llm_neighbor = hypothesis.chosen_LLM_token.w_before.word if hypothesis.chosen_LLM_token.w_before else "N/A"
         after_llm_neighbor = hypothesis.chosen_LLM_token.w_after.word if hypothesis.chosen_LLM_token.w_after else "N/A"
         
@@ -440,7 +444,7 @@ def visualize_pipeline_for_hypothesis(hypothesis: TokenHypotheses, index: int = 
             if candidate.alto_words:
                 before_alto = decode_html_entities(candidate.alto_words[0].before_word.content) if candidate.alto_words[0].before_word else "N/A"
                 after_alto = decode_html_entities(candidate.alto_words[-1].after_word.content) if candidate.alto_words[-1].after_word else "N/A"
-                console.print(f"      ALTO context: '{before_alto}' → '{decode_html_entities(hypothesis.anchor.content)}' → '{after_alto}'")
+                console.print(f"      ALTO context: '{before_alto}' → '{text_utils.decode_html_entities(hypothesis.anchor.content)}' → '{after_alto}'")
                 console.print(f"      LLM context:  '{llm_elem.w_before.word if llm_elem.w_before else 'N/A'}' → '{llm_elem.word}' → '{llm_elem.w_after.word if llm_elem.w_after else 'N/A'}'")
 
 
@@ -448,7 +452,7 @@ def visualize_hyphenated_words_pipeline(hypothesis_list: List[TokenHypotheses], 
     """
     Visualize the pipeline specifically for hyphenated words, showing fuzzy matching.
     """
-    from map_up_text import is_hyphenish
+    from text_utils import is_hyphenish
     
     alto_words = list(page.all_strings())
     hyphen_words = [w for w in alto_words if is_hyphenish(w)]
@@ -475,7 +479,7 @@ def visualize_hyphenated_words_pipeline(hypothesis_list: List[TokenHypotheses], 
             console.print(f"  [yellow]No hypothesis found for this word[/yellow]")
             continue
         
-        decoded_content = decode_html_entities(hyphen_word.content)
+        decoded_content = text_utils.decode_html_entities(hyphen_word.content)
         base = decoded_content.rstrip("-–—")
         
         console.print(f"\n[bold yellow]Hyphen Word #{i}:[/bold yellow] [red]{hyphen_word.content}[/red]")
@@ -493,7 +497,7 @@ def visualize_hyphenated_words_pipeline(hypothesis_list: List[TokenHypotheses], 
                 if len(candidate.alto_words) > 1:
                     console.print(f"        [dim]→ Merged from {len(candidate.alto_words)} ALTO words[/dim]")
                     for alto_w in candidate.alto_words:
-                        console.print(f"          - {decode_html_entities(alto_w.content)}")
+                        console.print(f"          - {text_utils.decode_html_entities(alto_w.content)}")
         else:
             console.print(f"  [red]✗ No candidates found[/red]")
         
@@ -547,7 +551,7 @@ def visualize_context_matching_details(hypothesis_list: List[TokenHypotheses], m
         
         shown += 1
         alto_word = hypothesis.anchor
-        decoded_content = decode_html_entities(alto_word.content)
+        decoded_content = text_utils.decode_html_entities(alto_word.content)
         
         console.print(f"\n[bold yellow]Hypothesis #{shown}:[/bold yellow] [red]{decoded_content}[/red]")
         
@@ -586,7 +590,7 @@ def visualize_hypothesis_sequence(hypothesis_list: List[TokenHypotheses], max_hy
     Show a sequential list of hypotheses showing the mapping from ALTO words to LLM tokens.
     This helps verify that words are properly mapped in order.
     """
-    from map_up_text import decode_html_entities
+    import text_utils
     
     console.print(f"\n[bold cyan]{'='*80}[/bold cyan]")
     console.print(f"[bold cyan]HYPOTHESIS SEQUENCE MAPPING[/bold cyan]")
@@ -607,10 +611,10 @@ def visualize_hypothesis_sequence(hypothesis_list: List[TokenHypotheses], max_hy
         # Get ALTO word(s)
         alto_words_str = ""
         if hypothesis.candidates and hypothesis.candidates[0].alto_words:
-            alto_words = [decode_html_entities(w.content) for w in hypothesis.candidates[0].alto_words]
+            alto_words = [text_utils.decode_html_entities(w.content) for w in hypothesis.candidates[0].alto_words]
             alto_words_str = " + ".join(alto_words) if len(alto_words) > 1 else alto_words[0]
         else:
-            alto_words_str = decode_html_entities(hypothesis.anchor.content)
+            alto_words_str = text_utils.decode_html_entities(hypothesis.anchor.content)
         
         # Get LLM token
         if hypothesis.chosen_LLM_token:
@@ -674,7 +678,8 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
     - Linking results between adjacent splits
     - Final outcomes
     """
-    from map_up_text import decode_html_entities, ADVANCED_SPLIT_RE
+    import text_utils
+    from map_up_text import ADVANCED_SPLIT_RE
     
     # Find hypotheses that were split (flagged in before, but not in after, or new ones)
     # Build a map of original anchor IDs to track splits
@@ -689,7 +694,7 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
         if not orig_hyp.flagged_for_error:
             continue
         
-        decoded_content = decode_html_entities(orig_hyp.anchor.content)
+        decoded_content = text_utils.decode_html_entities(orig_hyp.anchor.content)
         split_words = ADVANCED_SPLIT_RE.split(decoded_content)
         
         if len(split_words) > 1:
@@ -704,7 +709,7 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
                 if (new_hyp.anchor.hpos == orig_hyp.anchor.hpos and 
                     new_hyp.anchor.vpos == orig_hyp.anchor.vpos):
                     # Check if content matches one of the split words
-                    new_decoded = decode_html_entities(new_hyp.anchor.content)
+                    new_decoded = text_utils.decode_html_entities(new_hyp.anchor.content)
                     # Also check if anchor ID matches (split function preserves ID)
                     if new_decoded in split_words or (hasattr(new_hyp.anchor, 'id') and 
                                                      hasattr(orig_hyp.anchor, 'id') and
@@ -713,8 +718,8 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
                             resulting_splits.append(new_hyp)
             
             # Sort splits by their order in split_words to maintain sequence
-            resulting_splits.sort(key=lambda h: split_words.index(decode_html_entities(h.anchor.content)) 
-                                  if decode_html_entities(h.anchor.content) in split_words else 999)
+            resulting_splits.sort(key=lambda h: split_words.index(text_utils.decode_html_entities(h.anchor.content)) 
+                                  if text_utils.decode_html_entities(h.anchor.content) in split_words else 999)
             
             if resulting_splits:
                 split_results[id(orig_hyp.anchor)] = (orig_hyp, resulting_splits)
@@ -729,7 +734,7 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
     console.print(f"[bold cyan]{'='*80}[/bold cyan]\n")
     
     for orig_id, (original_hyp, split_hypotheses) in split_results.items():
-        decoded_original = decode_html_entities(original_hyp.anchor.content)
+        decoded_original = text_utils.decode_html_entities(original_hyp.anchor.content)
         split_words = ADVANCED_SPLIT_RE.split(decoded_original)
         
         console.print(f"\n[bold yellow]Original Word (Flagged for Error):[/bold yellow]")
@@ -741,7 +746,7 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
         console.print(f"\n  [bold]Split Results:[/bold]")
         
         for i, split_hyp in enumerate(split_hypotheses):
-            split_decoded = decode_html_entities(split_hyp.anchor.content)
+            split_decoded = text_utils.decode_html_entities(split_hyp.anchor.content)
             console.print(f"\n    [bold]Split #{i+1}:[/bold] [cyan]{split_decoded}[/cyan]")
             
             if not split_hyp.candidates:
@@ -782,8 +787,8 @@ def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses],
                         
                         # Try to find the resolved value (from hypothesis lookup if this is a split word)
                         # For now, show ALTO content but note if it should be resolved
-                        before_alto = decode_html_entities(before_alto_obj.content) if before_alto_obj else "N/A"
-                        after_alto = decode_html_entities(after_alto_obj.content) if after_alto_obj else "N/A"
+                        before_alto = text_utils.decode_html_entities(before_alto_obj.content) if before_alto_obj else "N/A"
+                        after_alto = text_utils.decode_html_entities(after_alto_obj.content) if after_alto_obj else "N/A"
                         
                         # Check if this is a split word context (before/after might be from other splits)
                         # If so, show what was actually compared (which would be chosen_LLM_token if available)
@@ -837,7 +842,7 @@ def visualize_hyphen_linking_process(hypothesis_list_before: List[TokenHypothese
     """
     Visualize the hyphen linking process, showing which flagged words were combined.
     """
-    from map_up_text import decode_html_entities, normalize_for_matching
+    import text_utils
     
     # Find hypotheses that were combined (flagged in before, not in after, or combined)
     # Track original flagged hypotheses
@@ -913,8 +918,8 @@ def visualize_hyphen_linking_process(hypothesis_list_before: List[TokenHypothese
                 console.print(f"\n  [bold green]✓ FINAL SELECTION:[/bold green] '{combined_hyp.chosen_LLM_token.word}'")
                 
                 # Show neighbors and linking status
-                before_alto_neighbor = decode_html_entities(word1.before_word.content) if word1.before_word else "N/A"
-                after_alto_neighbor = decode_html_entities(word2.after_word.content) if word2.after_word else "N/A"
+                before_alto_neighbor = text_utils.decode_html_entities(word1.before_word.content) if word1.before_word else "N/A"
+                after_alto_neighbor = text_utils.decode_html_entities(word2.after_word.content) if word2.after_word else "N/A"
                 before_llm_neighbor = combined_hyp.chosen_LLM_token.w_before.word if combined_hyp.chosen_LLM_token.w_before else "N/A"
                 after_llm_neighbor = combined_hyp.chosen_LLM_token.w_after.word if combined_hyp.chosen_LLM_token.w_after else "N/A"
                 
