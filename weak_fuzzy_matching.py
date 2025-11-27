@@ -235,13 +235,6 @@ def find_matching_llm_tokens_for_flagged_alto(
         if left_score >= threshold and right_score >= threshold and word_fuzzy_score >= MIN_WORD_FUZZY_SCORE:
             candidates.append((llm_token, left_score, right_score, word_fuzzy_score))
     
-    # Debug output if no candidates found
-    if not candidates and best_matches:
-        print(f"      Debug: Top matches that didn't meet all requirements:")
-        for word, l_score, r_score, w_fuzzy, w_before, w_after in best_matches[:3]:
-            print(f"        '{word}' (L:{l_score:.1f}, R:{r_score:.1f}, word_fuzzy:{w_fuzzy:.1f}, "
-                  f"w_before='{w_before}', w_after='{w_after}')")
-    
     return candidates
 
 
@@ -386,15 +379,11 @@ def _score_candidate_by_fit(
     llm_word = llm_token.word
     
     paragraph_words = get_paragraph_words(hyp, hypothesis_list, page)
-    print(f"        Paragraph words found: {len(paragraph_words)}")
     if not paragraph_words:
-        print(f"        No paragraph words found for '{alto_content}'")
         return None
     
     avg_char_size = calculate_average_character_size(paragraph_words)
-    print(f"        Average char size: {avg_char_size:.2f} pixels/char")
     if avg_char_size == 0.0:
-        print(f"        Average char size is 0 - cannot estimate width")
         return None
     
     estimated_width = estimate_word_width(llm_token.word, avg_char_size)
@@ -403,15 +392,9 @@ def _score_candidate_by_fit(
         hyp.anchor, estimated_width, BOUNDING_BOX_TOLERANCE
     )
     
-    print(f"        Width: actual={actual_width:.1f}, estimated={estimated_width:.1f} (for '{llm_word}')")
-    print(f"        Fit score: {fit_score:.1f} (tolerance={BOUNDING_BOX_TOLERANCE*100}%)")
-    print(f"        Word fuzzy score: {word_fuzzy_score:.1f}")
-    
     neighbor_avg = (left_score + right_score) / 2.0
     # Weighted combination: neighbor context (40%), word fuzzy match (30%), fit score (30%)
     total_score = (neighbor_avg * 0.4) + (word_fuzzy_score * 0.3) + (fit_score * 0.3)
-    
-    print(f"        Total score: {total_score:.1f} = (neighbor_avg {neighbor_avg:.1f} * 0.4) + (word_fuzzy {word_fuzzy_score:.1f} * 0.3) + (fit {fit_score:.1f} * 0.3)")
     
     return (total_score, fit_score)
 
@@ -541,13 +524,9 @@ def match_weak_fuzzy_words(
     # Find all flagged ALTO words that are still unmatched (actual errors)
     # ERROR = flagged_for_error AND no chosen_LLM_token
     flagged_hyps = [hyp for hyp in hypothesis_list if hyp.flagged_for_error and hyp.chosen_LLM_token is None]
-    print(f"\n[WEAK FUZZY MATCHING] Found {len(flagged_hyps)} flagged ALTO words (ERROR status)")
     
     # Find all unmatched LLM tokens
     unmatched_tokens = find_unmatched_llm_tokens(llm_elements, hypothesis_list)
-    print(f"[WEAK FUZZY MATCHING] Found {len(unmatched_tokens)} unmatched LLM tokens")
-    print(f"  (Note: This includes LLM tokens that don't correspond to any ALTO word)")
-    print(f"  (Only ~14 should be relevant: 10 PENDING + 4 ERROR)")
     
     processed_count = 0
     for flagged_hyp in flagged_hyps:
@@ -581,21 +560,8 @@ def match_weak_fuzzy_words(
                 if right_neighbor_hyp:
                     break
         
-        print(f"\n[WEAK FUZZY] Checking flagged ALTO: '{alto_content}'")
-        if left_neighbor_hyp:
-            left_display = left_neighbor_hyp.chosen_LLM_token.word if left_neighbor_hyp.chosen_LLM_token else left_neighbor_hyp.anchor.content
-            print(f"  Left neighbor: '{left_neighbor_hyp.anchor.content}' -> '{left_display}'")
-        else:
-            print(f"  Left neighbor: None")
-        if right_neighbor_hyp:
-            right_display = right_neighbor_hyp.chosen_LLM_token.word if right_neighbor_hyp.chosen_LLM_token else right_neighbor_hyp.anchor.content
-            print(f"  Right neighbor: '{right_neighbor_hyp.anchor.content}' -> '{right_display}'")
-        else:
-            print(f"  Right neighbor: None")
-        
         # Need at least one neighbor to proceed
         if not left_neighbor_hyp and not right_neighbor_hyp:
-            print(f"  ✗ Skipping: No neighbors found")
             continue
         
         # Find unmatched LLM tokens with matching neighbors
@@ -604,30 +570,9 @@ def match_weak_fuzzy_words(
         )
         
         if not candidates:
-            # Debug: show why no candidates were found
-            flagged_alto_decoded = text_utils.decode_html_entities(flagged_hyp.anchor.content)
-            flagged_alto_normalized = text_utils.normalize_for_matching(flagged_alto_decoded)
-            print(f"  ✗ No LLM token candidates found with matching neighbors")
-            print(f"    Requirements: L>={NEIGHBOR_STRENGTH_THRESHOLD}, R>={NEIGHBOR_STRENGTH_THRESHOLD}, word_fuzzy>={MIN_WORD_FUZZY_SCORE}")
-            print(f"    Checking {len(unmatched_tokens)} unmatched LLM tokens")
-            # Show a few examples of what we're looking for
-            if left_neighbor_hyp:
-                left_text = left_neighbor_hyp.chosen_LLM_token.word if left_neighbor_hyp.chosen_LLM_token else left_neighbor_hyp.anchor.content
-                print(f"    Looking for LLM tokens where w_before matches: '{left_text}'")
-            if right_neighbor_hyp:
-                right_text = right_neighbor_hyp.chosen_LLM_token.word if right_neighbor_hyp.chosen_LLM_token else right_neighbor_hyp.anchor.content
-                print(f"    Looking for LLM tokens where w_after matches: '{right_text}'")
-            print(f"    And word itself matches: '{flagged_alto_normalized}'")
             continue
         
         processed_count += 1
-        print(f"\n[WEAK FUZZY] Processing flagged ALTO #{processed_count}: '{alto_content}'")
-        print(f"  Found {len(candidates)} LLM token candidates with matching neighbors")
-        
-        for llm_token, left_score, right_score, word_fuzzy_score in candidates:
-            print(f"    - LLM: '{llm_token.word}' (L:{left_score:.1f}, R:{right_score:.1f}, word_fuzzy:{word_fuzzy_score:.1f})")
-            print(f"      LLM neighbors: before='{llm_token.w_before.word if llm_token.w_before else None}', "
-                  f"after='{llm_token.w_after.word if llm_token.w_after else None}'")
         
         # Calculate size and score candidates
         scored_candidates = []
@@ -639,26 +584,15 @@ def match_weak_fuzzy_words(
             if score_result:
                 total_score, fit_score = score_result
                 scored_candidates.append((llm_token, total_score, fit_score, left_score, right_score, word_fuzzy_score))
-                print(f"    Scored: '{llm_token.word}' -> total={total_score:.1f}, fit={fit_score:.1f}")
-            else:
-                print(f"    Failed to score: '{llm_token.word}' (no paragraph words or avg_char_size=0)")
         
         if not scored_candidates:
-            print(f"  No scored candidates - skipping")
             continue
         
         # Sort by total score and select best
         scored_candidates.sort(key=lambda x: x[1], reverse=True)
         best_llm_token, best_total, best_fit, best_left, best_right, best_word_fuzzy = scored_candidates[0]
         
-        print(f"  Best candidate: '{best_llm_token.word}' (total={best_total:.1f}, fit={best_fit:.1f}, L:{best_left:.1f}, R:{best_right:.1f}, word_fuzzy:{best_word_fuzzy:.1f})")
-        
         if best_fit >= MIN_FIT_SCORE:
             _create_match_for_hypothesis(flagged_hyp, best_llm_token, best_total, left_neighbor_hyp, right_neighbor_hyp)
-            print(f"  ✓ MATCHED: '{alto_content}' -> '{best_llm_token.word}'")
-        else:
-            print(f"  ✗ REJECTED: fit score {best_fit:.1f} < minimum {MIN_FIT_SCORE}")
-    
-    print(f"\n[WEAK FUZZY MATCHING] Processed {processed_count} flagged ALTO words with matching neighbors")
     return hypothesis_list
 

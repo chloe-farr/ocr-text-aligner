@@ -214,3 +214,7 @@ raw_chat_files/
 
 # ALTO XML files - will add a folder for example files later. In the meantime, upload your own xml file to the root directory and corresponding clean text string in `map_up_text.py`'s `main()` function.
 /*.xml
+
+#Files that show work but are irrelevant to the program.
+work/ 
+inputs/
