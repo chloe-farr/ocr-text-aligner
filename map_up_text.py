@@ -728,6 +728,8 @@ def find_best_candidates_by_context(hypothesis_object: TokenHypotheses) -> List[
                 # Set chosen_index
                 if perfect_matches[0][0] in hypothesis_object.candidates:
                     hypothesis_object.chosen_index = hypothesis_object.candidates.index(perfect_matches[0][0])
+                # Unflag since it's been resolved
+                hypothesis_object.flagged_for_error = False
         else:
             # Multiple perfect matches - requires proximity assessment (not yet implemented)
             # Store all perfect matches for later proximity-based selection
@@ -775,6 +777,8 @@ def narrow_hypothesis_token_candidates_by_context(hypothesis_list: List[TokenHyp
             # Set the chosen_index to the candidate's position
             if candidate in token_hypothesis.candidates:
                 token_hypothesis.chosen_index = token_hypothesis.candidates.index(candidate)
+            # Unflag since it's been resolved
+            token_hypothesis.flagged_for_error = False
             continue  # Skip the rest of the processing for this hypothesis
         elif len(perfect_matches) > 1:
             # Multiple perfect matches - requires proximity assessment (not yet implemented)
@@ -847,6 +851,8 @@ def narrow_hypothesis_token_candidates_by_context(hypothesis_list: List[TokenHyp
             token_hypothesis.best_candidates_by_context[0][2] == 100 and 
             token_hypothesis.best_candidates_by_context[0][3] == 100):
             token_hypothesis.chosen_LLM_token = token_hypothesis.best_candidates_by_context[0][1]
+            # Unflag since it's been resolved
+            token_hypothesis.flagged_for_error = False
 
     return hypothesis_list
 
@@ -877,6 +883,8 @@ def find_best_candidates_for_all_hypothesis_objects(hypothesis_list: List[TokenH
                             break
                     if hypothesis_object.chosen_index is not None:
                         break
+                # Unflag since it's been resolved
+                hypothesis_object.flagged_for_error = False
         
         if hypothesis_object.chosen_LLM_token is not None:
             hypothesis_object.chosen_LLM_token.matched = True
@@ -2024,7 +2032,77 @@ if __name__ == "__main__":
     # Run iterative pipeline until stable
     hypothesis_list = run_iterative_pipeline(hypothesis_list, llm_elements, page, max_iterations=5)
 
+    # Re-run context matching after iterative pipeline (neighbors may have been resolved)
+    # First, ensure linking is up to date so context matching can use linked neighbors
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+    
+    # Re-run fuzzy matching to ensure all candidates have fuzzy matches (in case new words were created)
+    hypothesis_list = assign_llm_candidates_to_all_token_hypotheses_by_fuzzy_matching(hypothesis_list, llm_elements)
+    
+    alto_to_hypothesis_lookup = {}
+    for hyp in hypothesis_list:
+        alto_to_hypothesis_lookup[id(hyp.anchor)] = hyp
+        for candidate in hyp.candidates:
+            for alto_word in candidate.alto_words:
+                alto_to_hypothesis_lookup[id(alto_word)] = hyp
+    
+    # Re-run context matching for ALL words to pick up newly resolved neighbors
+    for hypothesis in hypothesis_list:
+        if hypothesis.candidates:
+            for candidate in hypothesis.candidates:
+                candidate.possible_llm_elements_by_context.clear()
+            assign_llm_candidates_to_all_token_hypotheses_by_context(
+                hypothesis, alto_to_hypothesis_lookup
+            )
+    
+    hypothesis_list = narrow_hypothesis_token_candidates_by_context(hypothesis_list)
+    hypothesis_list = find_best_candidates_for_all_hypothesis_objects(hypothesis_list, llm_elements)
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
 
+    """
+    Third round of matching:
+    Additional processes to handle edge cases:
+    - Paragraph reordering: Reorder paragraphs to match LLM text order for PENDING words
+    - Weak fuzzy matching: Match words with no LLM candidates using bounding box size
+    """
+    # Paragraph reordering (non-intrusive - only affects PENDING words)
+    import paragraph_reordering
+    hypothesis_list = paragraph_reordering.reorder_paragraphs(
+        hypothesis_list, llm_elements, page
+    )
+    
+    # Re-run context matching after reordering (for all words to pick up newly resolved neighbors)
+    # First, ensure linking is up to date
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+    
+    # Re-run fuzzy matching to ensure all candidates have fuzzy matches
+    hypothesis_list = assign_llm_candidates_to_all_token_hypotheses_by_fuzzy_matching(hypothesis_list, llm_elements)
+    
+    alto_to_hypothesis_lookup = {}
+    for hyp in hypothesis_list:
+        alto_to_hypothesis_lookup[id(hyp.anchor)] = hyp
+        for candidate in hyp.candidates:
+            for alto_word in candidate.alto_words:
+                alto_to_hypothesis_lookup[id(alto_word)] = hyp
+    
+    # Re-run context matching for ALL words (not just PENDING) to pick up newly resolved neighbors
+    for hypothesis in hypothesis_list:
+        if hypothesis.candidates:
+            for candidate in hypothesis.candidates:
+                candidate.possible_llm_elements_by_context.clear()
+            assign_llm_candidates_to_all_token_hypotheses_by_context(
+                hypothesis, alto_to_hypothesis_lookup
+            )
+    
+    hypothesis_list = narrow_hypothesis_token_candidates_by_context(hypothesis_list)
+    hypothesis_list = find_best_candidates_for_all_hypothesis_objects(hypothesis_list, llm_elements)
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+    
+    # Weak fuzzy matching (non-intrusive - only fills in unmatched words)
+    import weak_fuzzy_matching
+    hypothesis_list = weak_fuzzy_matching.match_weak_fuzzy_words(
+        hypothesis_list, llm_elements, page
+    )
 
     # VISUALIZATION
     print("\n" + "="*70)
