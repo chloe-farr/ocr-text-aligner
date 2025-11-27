@@ -216,5 +216,4 @@ raw_chat_files/
 /*.xml
 
 #Files that show work but are irrelevant to the program.
-work/ 
-inputs/
+work/
