@@ -619,7 +619,19 @@ def visualize_hypothesis_sequence(hypothesis_list: List[TokenHypotheses], max_hy
         # Get LLM token
         if hypothesis.chosen_LLM_token:
             llm_token_str = hypothesis.chosen_LLM_token.word
-            status = "[bold green]✓ MATCHED[/bold green]"
+            # Check if required neighbors are linked
+            # A neighbor is "required" if the LLM token has w_before/w_after (not None)
+            # but the corresponding link is missing
+            missing_left = (hypothesis.chosen_LLM_token.w_before is not None and 
+                          hypothesis.left_matched is None)
+            missing_right = (hypothesis.chosen_LLM_token.w_after is not None and 
+                           hypothesis.right_matched is None)
+            
+            if missing_left or missing_right:
+                # Has chosen_LLM_token but missing required neighbors - mark as PENDING
+                status = "[yellow]⚠ PENDING[/yellow]"
+            else:
+                status = "[bold green]✓ MATCHED[/bold green]"
         else:
             llm_token_str = "[dim]N/A[/dim]"
             if hypothesis.flagged_for_error:
@@ -673,6 +685,164 @@ def visualize_hypothesis_sequence(hypothesis_list: List[TokenHypotheses], max_hy
     
     console.print(f"\n[bold]Summary (showing first {max_hypotheses} of {len(hypothesis_list)}):[/bold]")
     console.print(f"  Matched: [green]{matched_count}[/green] ({displayed_matched} shown) | Errors: [red]{error_count}[/red] ({displayed_errors} shown) | Pending: [yellow]{pending_count}[/yellow] ({displayed_pending} shown) | Linked: [cyan]{linked_count}[/cyan]")
+
+
+def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], llm_elements: List[LLMToken], max_display: int = 100):
+    """
+    Show a comprehensive table mapping LLM tokens to TokenHypotheses objects.
+    This helps verify that mappings are correct and identify conflicts.
+    
+    Args:
+        hypothesis_list: List of all TokenHypotheses
+        llm_elements: List of all LLM tokens
+        max_display: Maximum number of rows to display
+    """
+    console.print(f"\n[bold cyan]{'='*100}[/bold cyan]")
+    console.print(f"[bold cyan]LLM TOKEN ↔ TOKENHYPOTHESES MAPPING TABLE[/bold cyan]")
+    console.print(f"[bold cyan]{'='*100}[/bold cyan]\n")
+    
+    # Build mapping from LLM tokens to hypotheses (using id() since LLMToken is not hashable)
+    llm_to_hypotheses: Dict[int, List[TokenHypotheses]] = {}
+    llm_id_to_token: Dict[int, LLMToken] = {}  # Map id to token for lookup
+    for hyp in hypothesis_list:
+        if hyp.chosen_LLM_token:
+            llm_id = id(hyp.chosen_LLM_token)
+            if llm_id not in llm_to_hypotheses:
+                llm_to_hypotheses[llm_id] = []
+                llm_id_to_token[llm_id] = hyp.chosen_LLM_token
+            llm_to_hypotheses[llm_id].append(hyp)
+    
+    # Create main mapping table
+    table = Table(show_header=True, header_style="bold cyan")
+    table.add_column("#", style="dim", width=5)
+    table.add_column("Hypothesis Index", style="dim", width=12)
+    table.add_column("ALTO Word(s)", style="red", width=30)
+    table.add_column("→", style="dim", width=3, justify="center")
+    table.add_column("LLM Token", style="green", width=30)
+    table.add_column("LLM Index", style="dim", width=10)
+    table.add_column("Status", width=12)
+    table.add_column("Conflict?", width=10, justify="center")
+    
+    # Track conflicts (using id() for set membership)
+    conflicts = []
+    matched_llm_token_ids = set()
+    
+    for display_idx, hypothesis in enumerate(hypothesis_list[:max_display], 1):
+        # Get the actual index in the full hypothesis_list
+        hyp_idx = display_idx - 1  # Since enumerate starts at 1, subtract 1 for 0-based index
+        # Get ALTO word(s)
+        alto_words_str = ""
+        if hypothesis.candidates and hypothesis.candidates[0].alto_words:
+            alto_words = [text_utils.decode_html_entities(w.content) for w in hypothesis.candidates[0].alto_words]
+            alto_words_str = " + ".join(alto_words) if len(alto_words) > 1 else alto_words[0]
+        else:
+            alto_words_str = text_utils.decode_html_entities(hypothesis.anchor.content)
+        
+        # Get LLM token info
+        if hypothesis.chosen_LLM_token:
+            llm_token = hypothesis.chosen_LLM_token
+            llm_token_str = llm_token.word
+            # Find LLM token index
+            llm_index = None
+            for idx, llm in enumerate(llm_elements):
+                if llm == llm_token:
+                    llm_index = idx
+                    break
+            llm_index_str = str(llm_index) if llm_index is not None else "?"
+            
+            # Check for conflicts (same LLM token mapped to multiple hypotheses)
+            llm_id = id(llm_token)
+            if llm_id in matched_llm_token_ids:
+                # Already seen this token - check if it's a conflict
+                if len(llm_to_hypotheses.get(llm_id, [])) > 1:
+                    conflict_str = "[bold red]⚠ YES[/bold red]"
+                    conflicts.append((hypothesis, llm_token, llm_to_hypotheses[llm_id]))
+                else:
+                    conflict_str = "[dim]No[/dim]"
+            else:
+                matched_llm_token_ids.add(llm_id)
+                if len(llm_to_hypotheses.get(llm_id, [])) > 1:
+                    conflict_str = "[bold red]⚠ YES[/bold red]"
+                    conflicts.append((hypothesis, llm_token, llm_to_hypotheses[llm_id]))
+                else:
+                    conflict_str = "[dim]No[/dim]"
+            
+            # Check if required neighbors are linked
+            missing_left = (hypothesis.chosen_LLM_token.w_before is not None and 
+                          hypothesis.left_matched is None)
+            missing_right = (hypothesis.chosen_LLM_token.w_after is not None and 
+                           hypothesis.right_matched is None)
+            
+            if missing_left or missing_right:
+                # Has chosen_LLM_token but missing required neighbors - mark as PENDING
+                status = "[yellow]⚠ PENDING[/yellow]"
+            else:
+                status = "[bold green]✓ MATCHED[/bold green]"
+        else:
+            llm_token_str = "[dim]N/A[/dim]"
+            llm_index_str = "[dim]N/A[/dim]"
+            conflict_str = "[dim]N/A[/dim]"
+            if hypothesis.flagged_for_error:
+                status = "[bold red]✗ ERROR[/bold red]"
+            elif hypothesis.candidates:
+                status = "[yellow]⚠ PENDING[/yellow]"
+            else:
+                status = "[red]✗ NO CAND[/red]"
+        
+        table.add_row(
+            str(display_idx),
+            f"Hyp[{hyp_idx}]",
+            alto_words_str,
+            "→",
+            llm_token_str,
+            llm_index_str,
+            status,
+            conflict_str
+        )
+    
+    console.print(table)
+    
+    # Show conflicts summary
+    if conflicts:
+        console.print(f"\n[bold red]⚠ CONFLICTS DETECTED:[/bold red]")
+        unique_conflicts = {}  # Use id as key
+        for hyp, llm_token, hyp_list in conflicts:
+            llm_id = id(llm_token)
+            if llm_id not in unique_conflicts:
+                unique_conflicts[llm_id] = (llm_token, hyp_list)
+        
+        for llm_id, (llm_token, hyp_list) in unique_conflicts.items():
+            console.print(f"\n  [red]LLM Token '{llm_token.word}' is mapped to {len(hyp_list)} hypotheses:[/red]")
+            for hyp in hyp_list:
+                alto_str = text_utils.decode_html_entities(hyp.anchor.content)
+                console.print(f"    - Hyp[{hypothesis_list.index(hyp)}]: '{alto_str}'")
+    else:
+        console.print(f"\n[bold green]✓ No conflicts detected - all LLM tokens map to unique hypotheses[/bold green]")
+    
+    # Show unmatched items
+    unmatched_llm = [llm for llm in llm_elements if id(llm) not in matched_llm_token_ids]
+    unmatched_hyp = [hyp for hyp in hypothesis_list if not hyp.chosen_LLM_token]
+    
+    console.print(f"\n[bold]Summary:[/bold]")
+    console.print(f"  Total Hypotheses: {len(hypothesis_list)}")
+    console.print(f"  Total LLM Tokens: {len(llm_elements)}")
+    console.print(f"  Matched Hypotheses: [green]{len(matched_llm_token_ids)}[/green]")
+    console.print(f"  Unmatched Hypotheses: [yellow]{len(unmatched_hyp)}[/yellow]")
+    console.print(f"  Unmatched LLM Tokens: [yellow]{len(unmatched_llm)}[/yellow]")
+    
+    if unmatched_llm and len(unmatched_llm) <= 20:
+        console.print(f"\n[bold yellow]Unmatched LLM Tokens:[/bold yellow]")
+        for llm in unmatched_llm[:20]:
+            idx = llm_elements.index(llm) if llm in llm_elements else "?"
+            console.print(f"  [{idx}] '{llm.word}'")
+    
+    if unmatched_hyp and len(unmatched_hyp) <= 20:
+        console.print(f"\n[bold yellow]Unmatched Hypotheses:[/bold yellow]")
+        for hyp in unmatched_hyp[:20]:
+            alto_str = text_utils.decode_html_entities(hyp.anchor.content)
+            idx = hypothesis_list.index(hyp)
+            status = "ERROR" if hyp.flagged_for_error else ("PENDING" if hyp.candidates else "NO CAND")
+            console.print(f"  Hyp[{idx}]: '{alto_str}' ({status})")
 
 
 def visualize_word_merges_process(hypothesis_list_before: List[TokenHypotheses], hypothesis_list_after: List[TokenHypotheses]):

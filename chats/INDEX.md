@@ -8,6 +8,10 @@ This directory contains exported chat conversations related to the ocr-text-alig
 - [filename.md](filename.md) - Date: YYYY-MM-DD | Summary: Brief description of what was discussed | LLM: Model name if available
 -->
 
+-[26-11-2025_chat_debugging_nitpicky_edgecases.md](26-11-2025_chat_debugging_nitpicky_edgecases.md)
+    - Date: 2025-11-26
+    - Summary: Fixed context matching to properly distinguish between multiple LLM tokens with the same word by calculating context scores for all candidates and selecting the best match. Fixed visualization to mark words as PENDING if they have chosen_LLM_token but are missing required neighbor links. Fixed combined hyphenated words not getting LLM tokens assigned and added final pass to match PENDING words with unmatched LLM tokens in their candidates.
+
 - [26_11_2025_chat_fillintheblank.md](26_11_2025_chat_fillintheblank.md)
     - Date: 2025-11-26
     - Summary: Implemented weak fuzzy matching to handle words with very weak fuzzy scores (no LLM candidates) by using physical bounding box size and strong neighbor context. It fills in the blank: finds ALTO words where before/after neighbors strongly match an unmatched LLM token's before/after neighbors, then verifies physical size fit. Non-intrusive: only matches words with NO existing candidates.

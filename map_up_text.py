@@ -273,15 +273,23 @@ def _search_all_words_for_exact_match(
                 # Found exact match - this is a valid combination despite distance
                 matching_llm_tokens = llm_word_lookup.get(candidate_normalized, [])
                 if matching_llm_tokens:
-                    # Use first match - exact vocab match gets priority
-                    # Note: Skip context checking here since spatial distance is unreliable
-                    # due to paragraph reordering. The exact vocab match is strong enough.
+                    # When multiple LLM tokens match, select the one with best context
+                    best_llm_token = matching_llm_tokens[0]
+                    best_context_score = 0.0
+                    for llm_token in matching_llm_tokens:
+                        before_score, after_score = calculate_context_scores(
+                            hyp1.anchor.before_word, hyp2.anchor.after_word, llm_token, None
+                        )
+                        context_score = (before_score + after_score) / 2.0
+                        if context_score > best_context_score:
+                            best_context_score = context_score
+                            best_llm_token = llm_token
                     return (
                         candidate_normalized,
                         100.0,
                         j,
-                        matching_llm_tokens[0],
-                        100.0  # Exact vocab match gets high priority
+                        best_llm_token,
+                        best_context_score
                     )
         
         # If no exact match, try fuzzy matching
@@ -301,12 +309,23 @@ def _search_all_words_for_exact_match(
         if best_fuzzy_match and best_fuzzy_score >= 80.0:
             matching_llm_tokens = llm_word_lookup.get(best_fuzzy_match, [])
             if matching_llm_tokens:
+                # When multiple LLM tokens match, select the one with best context
+                best_llm_token = matching_llm_tokens[0]
+                best_context_score = 0.0
+                for llm_token in matching_llm_tokens:
+                    before_score, after_score = calculate_context_scores(
+                        hyp1.anchor.before_word, hyp2.anchor.after_word, llm_token, None
+                    )
+                    context_score = (before_score + after_score) / 2.0
+                    if context_score > best_context_score:
+                        best_context_score = context_score
+                        best_llm_token = llm_token
                 return (
                     best_fuzzy_match,
                     best_fuzzy_score,
                     j,
-                    matching_llm_tokens[0],
-                    best_fuzzy_score  # Use fuzzy score
+                    best_llm_token,
+                    best_context_score
                 )
     
     return None
@@ -355,9 +374,15 @@ def _create_combined_hypothesis(
     combined_candidate.possible_llm_elements_by_fuzzy_match = [best_llm_token]
     combined_candidate.possible_llm_elements_by_context = [(best_llm_token, before_score, after_score)]
     combined_hypothesis.candidates.append(combined_candidate)
-    combined_hypothesis.chosen_LLM_token = best_llm_token
-    combined_hypothesis.chosen_index = 0
-    combined_hypothesis.flagged_for_error = False
+    # Only assign if LLM token is not already matched to another hypothesis
+    # If already matched, leave as PENDING - it will be resolved later
+    if not best_llm_token.matched:
+        combined_hypothesis.chosen_LLM_token = best_llm_token
+        combined_hypothesis.chosen_index = 0
+        combined_hypothesis.flagged_for_error = False
+        # Mark as matched immediately to prevent conflicts
+        best_llm_token.matched = True
+    # If already matched, leave as PENDING (will be resolved later)
     
     # Set context: before word from hyp1, after word from hyp2
     combined_hypothesis.anchor.before_word = hyp1.anchor.before_word
@@ -424,13 +449,23 @@ def _check_after_word_match(
             # Found exact match with after_word - use it immediately (hard match)
             matching_llm_tokens_after = llm_word_lookup.get(candidate_normalized, [])
             if matching_llm_tokens_after:
-                # Use first match - after_word is highest priority
+                # When multiple LLM tokens match, select the one with best context
+                best_llm_token = matching_llm_tokens_after[0]
+                best_context_score = 0.0
+                for llm_token in matching_llm_tokens_after:
+                    before_score, after_score = calculate_context_scores(
+                        hyp1.anchor.before_word, hyp2_after.anchor.after_word, llm_token, None
+                    )
+                    context_score = (before_score + after_score) / 2.0
+                    if context_score > best_context_score:
+                        best_context_score = context_score
+                        best_llm_token = llm_token
                 return (
                     candidate_normalized,
                     100.0,
                     after_word_idx,
-                    matching_llm_tokens_after[0],
-                    100.0  # After_word match gets highest priority
+                    best_llm_token,
+                    best_context_score
                 )
     
     # If no exact match, try fuzzy matching (for cases like "damsaged" → "damaged")
@@ -450,12 +485,23 @@ def _check_after_word_match(
     if best_fuzzy_match and best_fuzzy_score >= 80.0:
         matching_llm_tokens_after = llm_word_lookup.get(best_fuzzy_match, [])
         if matching_llm_tokens_after:
+            # When multiple LLM tokens match, select the one with best context
+            best_llm_token = matching_llm_tokens_after[0]
+            best_context_score = 0.0
+            for llm_token in matching_llm_tokens_after:
+                before_score, after_score = calculate_context_scores(
+                    hyp1.anchor.before_word, hyp2_after.anchor.after_word, llm_token, None
+                )
+                context_score = (before_score + after_score) / 2.0
+                if context_score > best_context_score:
+                    best_context_score = context_score
+                    best_llm_token = llm_token
             return (
                 best_fuzzy_match,
                 best_fuzzy_score,
                 after_word_idx,
-                matching_llm_tokens_after[0],
-                best_fuzzy_score  # Use fuzzy score
+                best_llm_token,
+                best_context_score
             )
     
     return None
@@ -722,14 +768,19 @@ def find_best_candidates_by_context(hypothesis_object: TokenHypotheses) -> List[
         if len(perfect_matches) == 1:
             # Single perfect match - select it immediately
             hypothesis_object.best_candidates_by_context = perfect_matches
-            # Also set the chosen token if not already set
+            # Also set the chosen token if not already set and the LLM token is not already matched
             if hypothesis_object.chosen_LLM_token is None:
-                hypothesis_object.chosen_LLM_token = perfect_matches[0][1]
-                # Set chosen_index
-                if perfect_matches[0][0] in hypothesis_object.candidates:
-                    hypothesis_object.chosen_index = hypothesis_object.candidates.index(perfect_matches[0][0])
-                # Unflag since it's been resolved
-                hypothesis_object.flagged_for_error = False
+                llm_token = perfect_matches[0][1]
+                if not llm_token.matched:
+                    hypothesis_object.chosen_LLM_token = llm_token
+                    # Mark as matched immediately to prevent conflicts
+                    llm_token.matched = True
+                    # Set chosen_index
+                    if perfect_matches[0][0] in hypothesis_object.candidates:
+                        hypothesis_object.chosen_index = hypothesis_object.candidates.index(perfect_matches[0][0])
+                    # Unflag since it's been resolved
+                    hypothesis_object.flagged_for_error = False
+                # If LLM token is already matched, leave as PENDING (don't set chosen_LLM_token)
         else:
             # Multiple perfect matches - requires proximity assessment (not yet implemented)
             # Store all perfect matches for later proximity-based selection
@@ -773,12 +824,17 @@ def narrow_hypothesis_token_candidates_by_context(hypothesis_list: List[TokenHyp
         # If there is only one perfect match, select it immediately
         if len(perfect_matches) == 1:
             candidate, llm_element, _, _ = perfect_matches[0]
-            token_hypothesis.chosen_LLM_token = llm_element
-            # Set the chosen_index to the candidate's position
-            if candidate in token_hypothesis.candidates:
-                token_hypothesis.chosen_index = token_hypothesis.candidates.index(candidate)
-            # Unflag since it's been resolved
-            token_hypothesis.flagged_for_error = False
+            # Only set chosen_LLM_token if the LLM token is not already matched to another word
+            if not llm_element.matched:
+                token_hypothesis.chosen_LLM_token = llm_element
+                # Mark as matched immediately to prevent conflicts
+                llm_element.matched = True
+                # Set the chosen_index to the candidate's position
+                if candidate in token_hypothesis.candidates:
+                    token_hypothesis.chosen_index = token_hypothesis.candidates.index(candidate)
+                # Unflag since it's been resolved
+                token_hypothesis.flagged_for_error = False
+            # If LLM token is already matched, leave as PENDING (don't set chosen_LLM_token)
             continue  # Skip the rest of the processing for this hypothesis
         elif len(perfect_matches) > 1:
             # Multiple perfect matches - requires proximity assessment (not yet implemented)
@@ -850,9 +906,15 @@ def narrow_hypothesis_token_candidates_by_context(hypothesis_list: List[TokenHyp
             len(token_hypothesis.best_candidates_by_context) == 1 and 
             token_hypothesis.best_candidates_by_context[0][2] == 100 and 
             token_hypothesis.best_candidates_by_context[0][3] == 100):
-            token_hypothesis.chosen_LLM_token = token_hypothesis.best_candidates_by_context[0][1]
-            # Unflag since it's been resolved
-            token_hypothesis.flagged_for_error = False
+            llm_token = token_hypothesis.best_candidates_by_context[0][1]
+            # Only set chosen_LLM_token if the LLM token is not already matched to another word
+            if not llm_token.matched:
+                token_hypothesis.chosen_LLM_token = llm_token
+                # Mark as matched immediately to prevent conflicts
+                llm_token.matched = True
+                # Unflag since it's been resolved
+                token_hypothesis.flagged_for_error = False
+            # If LLM token is already matched, leave as PENDING (don't set chosen_LLM_token)
 
     return hypothesis_list
 
@@ -874,19 +936,25 @@ def find_best_candidates_for_all_hypothesis_objects(hypothesis_list: List[TokenH
                 hypothesis_object, llm_elements, hypothesis_list
             )
             if best_llm_token:
-                hypothesis_object.chosen_LLM_token = best_llm_token
-                # Find and set the chosen_index
-                for i, candidate in enumerate(hypothesis_object.candidates):
-                    for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
-                        if llm_elem == best_llm_token:
-                            hypothesis_object.chosen_index = i
+                # Only assign if LLM token is not already matched to another hypothesis
+                if not best_llm_token.matched:
+                    hypothesis_object.chosen_LLM_token = best_llm_token
+                    # Mark as matched immediately to prevent conflicts
+                    best_llm_token.matched = True
+                    # Find and set the chosen_index
+                    for i, candidate in enumerate(hypothesis_object.candidates):
+                        for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
+                            if llm_elem == best_llm_token:
+                                hypothesis_object.chosen_index = i
+                                break
+                        if hypothesis_object.chosen_index is not None:
                             break
-                    if hypothesis_object.chosen_index is not None:
-                        break
-                # Unflag since it's been resolved
-                hypothesis_object.flagged_for_error = False
+                    # Unflag since it's been resolved
+                    hypothesis_object.flagged_for_error = False
+                # If already matched, leave as PENDING (don't set chosen_LLM_token)
         
-        if hypothesis_object.chosen_LLM_token is not None:
+        # Mark as matched if chosen (for backward compatibility with code that sets it elsewhere)
+        if hypothesis_object.chosen_LLM_token is not None and not hypothesis_object.chosen_LLM_token.matched:
             hypothesis_object.chosen_LLM_token.matched = True
     return hypothesis_list
 
@@ -1157,9 +1225,8 @@ def _evaluate_word_combination(
     selected_after_score = 0.0
     
     for llm_token in matching_llm_tokens:
-        if llm_token.w_before is None or llm_token.w_after is None:
-            continue
-        
+        # Don't skip tokens at boundaries - they might still be valid matches
+        # Calculate context scores for all tokens to find the best match
         before_score, after_score = calculate_context_scores(
             hyp1_before_word, hyp2_after_word, llm_token, None
         )
@@ -1171,6 +1238,7 @@ def _evaluate_word_combination(
             selected_before_score = before_score
             selected_after_score = after_score
     
+    # Only use fallback if we truly have no matches with any context
     selected_llm = candidate_context_match if candidate_context_match else (matching_llm_tokens[0] if matching_llm_tokens else None)
     if not selected_llm:
         return None
@@ -1398,6 +1466,16 @@ def link_hyphen_pairs(
     skip_indices = set()
     
     for i, hyp1 in enumerate(hypothesis_list):
+        # Skip if already combined (has candidates with multiple alto_words)
+        is_already_combined = False
+        for cand in hyp1.candidates:
+            if len(cand.alto_words) > 1:
+                is_already_combined = True
+                break
+        if is_already_combined:
+            skip_indices.add(i)
+            continue
+        
         decoded_w1 = text_utils.decode_html_entities(hyp1.anchor.content)
         is_literal_hyphen = text_utils.is_hyphenish(hyp1.anchor)
         
@@ -1427,6 +1505,15 @@ def link_hyphen_pairs(
     for i in all_indices_to_process:
         hyp1 = hypothesis_list[i]
         if i in processed_indices:
+            continue
+        
+        # Skip if already combined (has candidates with multiple alto_words)
+        is_already_combined = False
+        for cand in hyp1.candidates:
+            if len(cand.alto_words) > 1:
+                is_already_combined = True
+                break
+        if is_already_combined:
             continue
         
         # Process flagged words and words ending with hyphens (potential first half of hyphenated word)
@@ -1573,7 +1660,22 @@ def link_hyphen_pairs(
         
         # If match found, store the combination (don't add to list yet - preserve order)
         if best_match and best_partner_idx is not None:
+            # Check if partner is already part of another combination
+            if best_partner_idx in processed_indices:
+                # Partner already combined - skip this combination
+                continue
+            
             hyp2 = hypothesis_list[best_partner_idx]
+            # Check if hyp2 is already combined (has multiple alto_words in candidates)
+            is_hyp2_combined = False
+            for cand in hyp2.candidates:
+                if len(cand.alto_words) > 1:
+                    is_hyp2_combined = True
+                    break
+            if is_hyp2_combined:
+                # Partner already combined - skip this combination
+                continue
+            
             combined_hypothesis = _create_combined_hypothesis(
                 hyp1, hyp2, best_match, best_match_score, best_llm_token
             )
@@ -2103,6 +2205,52 @@ if __name__ == "__main__":
     hypothesis_list = weak_fuzzy_matching.match_weak_fuzzy_words(
         hypothesis_list, llm_elements, page
     )
+    
+    # After weak fuzzy matching resolves conflicts, re-run candidate selection
+    # This will match PENDING words that now have available perfect matches
+    hypothesis_list = find_best_candidates_for_all_hypothesis_objects(hypothesis_list, llm_elements)
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+    
+    # Final pass: Match PENDING words that have candidates with unmatched LLM tokens
+    # This handles cases where words have good candidates but weren't matched due to conflicts
+    for hyp in hypothesis_list:
+        if hyp.chosen_LLM_token is None and hyp.candidates:
+            # Try to find an unmatched LLM token in candidates
+            for candidate in hyp.candidates:
+                # Check fuzzy matches first
+                for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
+                    if not llm_token.matched:
+                        hyp.chosen_LLM_token = llm_token
+                        llm_token.matched = True
+                        if candidate in hyp.candidates:
+                            hyp.chosen_index = hyp.candidates.index(candidate)
+                        hyp.flagged_for_error = False
+                        break
+                if hyp.chosen_LLM_token:
+                    break
+                # Check context matches (prefer good context scores)
+                if candidate.possible_llm_elements_by_context:
+                    # Sort by context score (best first)
+                    sorted_context = sorted(
+                        candidate.possible_llm_elements_by_context,
+                        key=lambda x: (x[1] + x[2]) / 2.0,
+                        reverse=True
+                    )
+                    for llm_token, before_score, after_score in sorted_context:
+                        if not llm_token.matched:
+                            # Only match if context scores are reasonable (at least one side is good)
+                            if before_score >= 70.0 or after_score >= 70.0:
+                                hyp.chosen_LLM_token = llm_token
+                                llm_token.matched = True
+                                if candidate in hyp.candidates:
+                                    hyp.chosen_index = hyp.candidates.index(candidate)
+                                hyp.flagged_for_error = False
+                                break
+                if hyp.chosen_LLM_token:
+                    break
+    
+    # Re-link after final matching
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
 
     # VISUALIZATION
     print("\n" + "="*70)
@@ -2132,4 +2280,7 @@ if __name__ == "__main__":
     
     # Show hypothesis sequence mapping (ordered list showing ALTO → LLM mapping)
     viz.visualize_hypothesis_sequence(hypothesis_list, max_hypotheses=600)
+    
+    # Show comprehensive LLM token mapping table
+    viz.visualize_llm_token_mapping_table(hypothesis_list, llm_elements, max_display=600)
     
