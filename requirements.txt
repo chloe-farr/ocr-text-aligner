@@ -1,3 +1,4 @@
 rapidfuzz
 matplotlib
 rich
+reportlab

@@ -62,16 +62,43 @@ The current implementation assumes:
 
 3. **Run the alignment pipeline:**
    ```bash
-   python map_up_text.py
+   python3 map_up_text.py
+   ```
+
+   **Flags**
+   - `--show-table` - bool: Display the full LLM token mapping table in terminal (default: show only summary)
+   ```bash
+   python3 map_up_text.py --show-table
+   ```
+   - `--show-ocr-accuracy` - bool: Display OCR accuracy analysis at the beginning
+   ```bash
+   python3 map_up_text.py --show-ocr-accuracy
+   ```
+   - `--track-word` - str: Display pipeline flowchart for a specific word
+   ```bash
+   python3 map_up_text.py --track-word "dams"
+   ```
+  
+  
+   **Combine flags to display all above**
+   ```bash
+   python3 map_up_text.py --show-table --show-ocr-accuracy --track-word "dams"
    ```
 
 The script will:
-- Load the ALTO XML file
+- Load the ALTO XML file (hardcoded in map_up_text.py. Later will be replaced with a command-line argument for the file path.)
 - Process the clean text
 - Perform fuzzy matching and context analysis
 - Handle hyphenated words, merges, and splits
-- Generate visualizations of the matching process - displayed in the terminal
-- displays the final results as a table - displayed in the terminal
+- Generate visualizations of the matching process 
+   - outputs a png file with a vizualization recreation of the text in place.
+- displays the final results as a table 
+   - displayed in the terminal with flag `--show-table`
+   - outputs a pdf file with the table.
+
+Missing from current version:
+- This only works if the LLM cleaned text is perfect, and the OCR isn't too terrible. 
+- Not tested on a full page yet. Currently tested only one one article with a nested paragraph. I manually parsed out the intervening text in the cleantext, in order to ensure that (should the llm successfully reorder the paragraphs according to articles), the xml text would still map as desired.
 
 ## Project Structure
 
@@ -96,6 +123,7 @@ Planned features:
 - Command-line interface for file input/output
 - Create a new XML file with the aligned results
 - Batch processing support
+- Generate a new searchable PDF with the aligned results
 
 ## License
 
