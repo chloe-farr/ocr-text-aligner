@@ -1,0 +1,513 @@
+<?xml version="1.0" ?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/standards/alto/v4/alto-4-2.xsd">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>page-1.png</fileName>
+    </sourceImageInformation>
+    <OCRProcessing ID="OCR_001">
+      <preProcessingStep ID="PRE_001">
+        <processingSoftware>
+          <softwareName>Tesseract</softwareName>
+          <softwareVersion>5.5.1</softwareVersion>
+        </processingSoftware>
+      </preProcessingStep>
+    </OCRProcessing>
+  </Description>
+  <Layout>
+    <Page ID="PAGE_001" WIDTH="4424" HEIGHT="6105" PHYSICAL_IMG_NR="1">
+      <TextBlock ID="BLOCK_036" HPOS="586" VPOS="1025" WIDTH="2784" HEIGHT="177">
+        <TextLine ID="LINE_036_001" HPOS="586" VPOS="1025" WIDTH="2784" HEIGHT="177">
+          <String ID="WORD_036_001_001" HPOS="586" VPOS="1025" WIDTH="602" HEIGHT="170" CONTENT="Witness:" WC="96"/>
+          <String ID="WORD_036_001_002" HPOS="1219" VPOS="1046" WIDTH="468" HEIGHT="156" CONTENT="Hanoi" WC="95"/>
+          <String ID="WORD_036_001_003" HPOS="1720" VPOS="1026" WIDTH="450" HEIGHT="169" CONTENT="Heart" WC="96"/>
+          <String ID="WORD_036_001_004" HPOS="2195" VPOS="1027" WIDTH="377" HEIGHT="164" CONTENT="Raid" WC="96"/>
+          <String ID="WORD_036_001_005" HPOS="2622" VPOS="1058" WIDTH="219" HEIGHT="131" CONTENT="‘No" WC="96"/>
+          <String ID="WORD_036_001_006" HPOS="2876" VPOS="1042" WIDTH="494" HEIGHT="148" CONTENT="Error’" WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_037" HPOS="515" VPOS="1251" WIDTH="377" HEIGHT="83">
+        <TextLine ID="LINE_037_001" HPOS="515" VPOS="1251" WIDTH="377" HEIGHT="83">
+          <String ID="WORD_037_001_001" HPOS="539" VPOS="1278" WIDTH="626" HEIGHT="1300" CONTENT="HANOI" WC="93"/>
+          <String ID="WORD_037_001_002" HPOS="642" VPOS="1280" WIDTH="698" HEIGHT="1302" CONTENT="(AP)" WC="93"/>
+          <String ID="WORD_037_001_007" HPOS="751" VPOS="1281" WIDTH="9" HEIGHT="20" CONTENT="I" WC="96"/>
+          <String ID="WORD_037_001_008" HPOS="773" VPOS="1281" WIDTH="119" HEIGHT="21" CONTENT="witnessed’" WC="94"/>
+          <String ID="WORD_037_001_009" HPOS="515" VPOS="1308" WIDTH="36" HEIGHT="19" CONTENT="the" WC="95"/>
+          <String ID="WORD_037_001_010" HPOS="578" VPOS="1309" WIDTH="75" HEIGHT="21" CONTENT="attack" WC="95"/>
+          <String ID="WORD_037_001_011" HPOS="678" VPOS="1309" WIDTH="69" HEIGHT="21" CONTENT="which" WC="96"/>
+          <String ID="WORD_037_001_012" HPOS="773" VPOS="1310" WIDTH="117" HEIGHT="24" CONTENT="destroyed" WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_038" HPOS="515" VPOS="1337" WIDTH="384" HEIGHT="25">
+        <TextLine ID="LINE_038_001" HPOS="515" VPOS="1337" WIDTH="384" HEIGHT="25">
+          <String ID="WORD_038_001_001" HPOS="515" VPOS="1337" WIDTH="36" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_038_001_002" HPOS="576" VPOS="1337" WIDTH="87" HEIGHT="21" CONTENT="French" WC="95"/>
+          <String ID="WORD_038_001_003" HPOS="687" VPOS="1338" WIDTH="126" HEIGHT="24" CONTENT="diplomatic" WC="68"/>
+          <String ID="WORD_038_001_004" HPOS="838" VPOS="1340" WIDTH="61" HEIGHT="19" CONTENT="resi--" WC="68"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_039" HPOS="515" VPOS="1365" WIDTH="375" HEIGHT="280">
+        <TextLine ID="LINE_039_001" HPOS="515" VPOS="1365" WIDTH="375" HEIGHT="108">
+          <String ID="WORD_039_001_001" HPOS="515" VPOS="1365" WIDTH="75" HEIGHT="24" CONTENT="dence," WC="96"/>
+          <String ID="WORD_039_001_002" HPOS="612" VPOS="1366" WIDTH="107" HEIGHT="25" CONTENT="seriously" WC="96"/>
+          <String ID="WORD_039_001_003" HPOS="739" VPOS="1367" WIDTH="95" HEIGHT="24" CONTENT="injuring" WC="96"/>
+          <String ID="WORD_039_001_004" HPOS="853" VPOS="1368" WIDTH="36" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_039_001_005" HPOS="515" VPOS="1394" WIDTH="124" HEIGHT="24" CONTENT="delegation" WC="80"/>
+          <String ID="WORD_039_001_006" HPOS="664" VPOS="1395" WIDTH="63" HEIGHT="23" CONTENT="head," WC="96"/>
+          <String ID="WORD_039_001_007" HPOS="753" VPOS="1396" WIDTH="75" HEIGHT="20" CONTENT="Pierre" WC="91"/>
+          <String ID="WORD_039_001_008" HPOS="854" VPOS="1397" WIDTH="36" HEIGHT="19" CONTENT="Su-" WC="91"/>
+          <String ID="WORD_039_001_009" HPOS="516" VPOS="1422" WIDTH="48" HEIGHT="23" CONTENT="sini," WC="96"/>
+          <String ID="WORD_039_001_010" HPOS="584" VPOS="1423" WIDTH="42" HEIGHT="20" CONTENT="and" WC="96"/>
+          <String ID="WORD_039_001_011" HPOS="645" VPOS="1424" WIDTH="91" HEIGHT="24" CONTENT="burying" WC="96"/>
+          <String ID="WORD_039_001_012" HPOS="753" VPOS="1424" WIDTH="48" HEIGHT="20" CONTENT="four" WC="96"/>
+          <String ID="WORD_039_001_013" HPOS="818" VPOS="1425" WIDTH="22" HEIGHT="19" CONTENT="of" WC="96"/>
+          <String ID="WORD_039_001_014" HPOS="856" VPOS="1425" WIDTH="33" HEIGHT="20" CONTENT="his" WC="96"/>
+          <String ID="WORD_039_001_015" HPOS="516" VPOS="1451" WIDTH="142" HEIGHT="21" CONTENT="Vietnamese" WC="96"/>
+          <String ID="WORD_039_001_016" HPOS="668" VPOS="1453" WIDTH="53" HEIGHT="19" CONTENT="staff" WC="96"/>
+          <String ID="WORD_039_001_017" HPOS="731" VPOS="1453" WIDTH="20" HEIGHT="19" CONTENT="in" WC="96"/>
+          <String ID="WORD_039_001_018" HPOS="761" VPOS="1453" WIDTH="80" HEIGHT="20" CONTENT="debris." WC="96"/>
+        </TextLine>
+        <TextLine ID="LINE_039_002" HPOS="515" VPOS="1480" WIDTH="375" HEIGHT="165">
+          <String ID="WORD_039_002_001" HPOS="539" VPOS="1480" WIDTH="36" HEIGHT="19" CONTENT="We" WC="96"/>
+          <String ID="WORD_039_002_002" HPOS="594" VPOS="1485" WIDTH="60" HEIGHT="15" CONTENT="were" WC="96"/>
+          <String ID="WORD_039_002_003" HPOS="673" VPOS="1480" WIDTH="85" HEIGHT="25" CONTENT="filming" WC="96"/>
+          <String ID="WORD_039_002_004" HPOS="776" VPOS="1487" WIDTH="41" HEIGHT="14" CONTENT="one" WC="96"/>
+          <String ID="WORD_039_002_005" HPOS="838" VPOS="1482" WIDTH="51" HEIGHT="20" CONTENT="mile" WC="96"/>
+          <String ID="WORD_039_002_006" HPOS="515" VPOS="1513" WIDTH="64" HEIGHT="19" CONTENT="away" WC="96"/>
+          <String ID="WORD_039_002_007" HPOS="591" VPOS="1508" WIDTH="63" HEIGHT="21" CONTENT="when" WC="96"/>
+          <String ID="WORD_039_002_008" HPOS="668" VPOS="1510" WIDTH="22" HEIGHT="19" CONTENT="at" WC="96"/>
+          <String ID="WORD_039_002_009" HPOS="703" VPOS="1510" WIDTH="56" HEIGHT="20" CONTENT="least" WC="96"/>
+          <String ID="WORD_039_002_010" HPOS="772" VPOS="1510" WIDTH="61" HEIGHT="20" CONTENT="three" WC="96"/>
+          <String ID="WORD_039_002_011" HPOS="846" VPOS="1511" WIDTH="43" HEIGHT="23" CONTENT="jets" WC="96"/>
+          <String ID="WORD_039_002_012" HPOS="516" VPOS="1537" WIDTH="101" HEIGHT="24" CONTENT="swooped" WC="96"/>
+          <String ID="WORD_039_002_013" HPOS="636" VPOS="1538" WIDTH="126" HEIGHT="24" CONTENT="repeatedly" WC="96"/>
+          <String ID="WORD_039_002_014" HPOS="781" VPOS="1544" WIDTH="53" HEIGHT="14" CONTENT="over" WC="96"/>
+          <String ID="WORD_039_002_015" HPOS="853" VPOS="1539" WIDTH="36" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_039_002_016" HPOS="516" VPOS="1565" WIDTH="65" HEIGHT="21" CONTENT="heart" WC="96"/>
+          <String ID="WORD_039_002_017" HPOS="594" VPOS="1561" WIDTH="35" HEIGHT="34" CONTENT="of." WC="80"/>
+          <String ID="WORD_039_002_018" HPOS="639" VPOS="1561" WIDTH="38" HEIGHT="34" CONTENT="the" WC="80"/>
+          <String ID="WORD_039_002_019" HPOS="692" VPOS="1567" WIDTH="81" HEIGHT="24" CONTENT="capital" WC="93"/>
+          <String ID="WORD_039_002_020" HPOS="790" VPOS="1567" WIDTH="100" HEIGHT="20" CONTENT="Wednes-" WC="93"/>
+          <String ID="WORD_039_002_021" HPOS="515" VPOS="1594" WIDTH="50" HEIGHT="24" CONTENT="day." WC="93"/>
+          <String ID="WORD_039_002_022" HPOS="590" VPOS="1594" WIDTH="21" HEIGHT="20" CONTENT="It" WC="96"/>
+          <String ID="WORD_039_002_023" HPOS="634" VPOS="1599" WIDTH="46" HEIGHT="15" CONTENT="was" WC="95"/>
+          <String ID="WORD_039_002_024" HPOS="699" VPOS="1595" WIDTH="69" HEIGHT="22" CONTENT="‘lunch" WC="0"/>
+          <String ID="WORD_039_002_025" HPOS="792" VPOS="1595" WIDTH="61" HEIGHT="21" CONTENT="hour." WC="92"/>
+          <String ID="WORD_039_002_026" HPOS="879" VPOS="1597" WIDTH="9" HEIGHT="18" CONTENT="I" WC="96"/>
+          <String ID="WORD_039_002_027" HPOS="516" VPOS="1623" WIDTH="93" HEIGHT="20" CONTENT="counted" WC="96"/>
+          <String ID="WORD_039_002_028" HPOS="624" VPOS="1624" WIDTH="24" HEIGHT="19" CONTENT="at" WC="95"/>
+          <String ID="WORD_039_002_029" HPOS="663" VPOS="1623" WIDTH="57" HEIGHT="22" CONTENT="least" WC="95"/>
+          <String ID="WORD_039_002_030" HPOS="733" VPOS="1629" WIDTH="14" HEIGHT="16" CONTENT="a" WC="96"/>
+          <String ID="WORD_039_002_031" HPOS="762" VPOS="1624" WIDTH="67" HEIGHT="21" CONTENT="dozen" WC="93"/>
+          <String ID="WORD_039_002_032" HPOS="845" VPOS="1630" WIDTH="45" HEIGHT="15" CONTENT="sor-" WC="92"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_040" HPOS="940" VPOS="1254" WIDTH="766" HEIGHT="131">
+        <TextLine ID="LINE_040_001" HPOS="940" VPOS="1254" WIDTH="766" HEIGHT="131">
+          <String ID="WORD_040_001_001" HPOS="943" VPOS="1255" WIDTH="20" HEIGHT="21" CONTENT="@" eC="90"/>
+          <String ID="WORD_040_001_002" HPOS="980" VPOS="1254" WIDTH="95" HEIGHT="20" CONTENT="Michol" WC="84"/>
+          <String ID="WORD_040_001_003" HPOS="1094" VPOS="1255" WIDTH="99" HEIGHT="19" CONTENT="Maclear" WC="91"/>
+          <String ID="WORD_040_001_004" HPOS="1210" VPOS="1256" WIDTH="19" HEIGHT="19" CONTENT="is" WC="95"/>
+          <String ID="WORD_040_001_005" HPOS="1245" VPOS="1261" WIDTH="15" HEIGHT="14" CONTENT="a" WC="92"/>
+          <String ID="WORD_040_001_006" HPOS="1278" VPOS="1254" WIDTH="113" HEIGHT="21" CONTENT="Canadian" WC="96"/>
+          <String ID="WORD_040_001_007" HPOS="1409" VPOS="1254" WIDTH="169" HEIGHT="23" CONTENT="correspondent" WC="94"/>
+          <String ID="WORD_040_001_008" HPOS="1596" VPOS="1255" WIDTH="68" HEIGHT="19" CONTENT="based" WC="71"/>
+          <String ID="WORD_040_001_009" HPOS="1681" VPOS="1254" WIDTH="23" HEIGHT="20" CONTENT="in" WC="94"/>
+          <String ID="WORD_040_001_010" HPOS="940" VPOS="1290" WIDTH="88" HEIGHT="19" CONTENT="London" WC="96"/>
+          <String ID="WORD_040_001_011" HPOS="1044" VPOS="1291" WIDTH="35" HEIGHT="18" CONTENT="for" WC="95"/>
+          <String ID="WORD_040_001_012" HPOS="1095" VPOS="1291" WIDTH="110" HEIGHT="18" CONTENT="Canada’s" WC="96"/>
+          <String ID="WORD_040_001_013" HPOS="1220" VPOS="1291" WIDTH="53" HEIGHT="19" CONTENT="CTV" WC="87"/>
+          <String ID="WORD_040_001_014" HPOS="1288" VPOS="1290" WIDTH="114" HEIGHT="19" CONTENT="television" WC="96"/>
+          <String ID="WORD_040_001_015" HPOS="1418" VPOS="1290" WIDTH="104" HEIGHT="19" CONTENT="network." WC="95"/>
+          <String ID="WORD_040_001_016" HPOS="1538" VPOS="1290" WIDTH="32" HEIGHT="18" CONTENT="He" WC="96"/>
+          <String ID="WORD_040_001_017" HPOS="1585" VPOS="1295" WIDTH="48" HEIGHT="15" CONTENT="now" WC="36"/>
+          <String ID="WORD_040_001_018" HPOS="1648" VPOS="1290" WIDTH="19" HEIGHT="19" CONTENT="is" WC="36"/>
+          <String ID="WORD_040_001_019" HPOS="1683" VPOS="1290" WIDTH="23" HEIGHT="18" CONTENT="‘in" WC="86"/>
+          <String ID="WORD_040_001_020" HPOS="940" VPOS="1325" WIDTH="71" HEIGHT="19" CONTENT="Hanol" WC="74"/>
+          <String ID="WORD_040_001_021" HPOS="1028" VPOS="1331" WIDTH="27" HEIGHT="13" CONTENT="on" WC="93"/>
+          <String ID="WORD_040_001_022" HPOS="1072" VPOS="1326" WIDTH="195" HEIGHT="24" CONTENT="assignment—his" WC="89"/>
+          <String ID="WORD_040_001_023" HPOS="1285" VPOS="1326" WIDTH="59" HEIGHT="20" CONTENT="third" WC="95"/>
+          <String ID="WORD_040_001_024" HPOS="1360" VPOS="1326" WIDTH="44" HEIGHT="23" CONTENT="trip" WC="96"/>
+          <String ID="WORD_040_001_025" HPOS="1421" VPOS="1326" WIDTH="21" HEIGHT="18" CONTENT="to" WC="96"/>
+          <String ID="WORD_040_001_026" HPOS="1460" VPOS="1325" WIDTH="67" HEIGHT="20" CONTENT="North" WC="93"/>
+          <String ID="WORD_040_001_027" HPOS="1545" VPOS="1325" WIDTH="108" HEIGHT="19" CONTENT="Vietnani." WC="23"/>
+          <String ID="WORD_040_001_028" HPOS="1672" VPOS="1324" WIDTH="34" HEIGHT="20" CONTENT="He" WC="95"/>
+          <String ID="WORD_040_001_029" HPOS="941" VPOS="1361" WIDTH="52" HEIGHT="19" CONTENT="filed" WC="96"/>
+          <String ID="WORD_040_001_030" HPOS="1011" VPOS="1362" WIDTH="36" HEIGHT="18" CONTENT="the" WC="96"/>
+          <String ID="WORD_040_001_031" HPOS="1065" VPOS="1361" WIDTH="109" HEIGHT="24" CONTENT="following" WC="96"/>
+          <String ID="WORD_040_001_032" HPOS="1192" VPOS="1362" WIDTH="73" HEIGHT="23" CONTENT="report" WC="95"/>
+          <String ID="WORD_040_001_033" HPOS="1283" VPOS="1360" WIDTH="135" HEIGHT="25" CONTENT="Wednesday" WC="96"/>
+          <String ID="WORD_040_001_034" HPOS="1436" VPOS="1362" WIDTH="21" HEIGHT="18" CONTENT="to" WC="96"/>
+          <String ID="WORD_040_001_035" HPOS="1475" VPOS="1361" WIDTH="53" HEIGHT="19" CONTENT="CTV" WC="88"/>
+          <String ID="WORD_040_001_036" HPOS="1546" VPOS="1361" WIDTH="42" HEIGHT="19" CONTENT="and" WC="96"/>
+          <String ID="WORD_040_001_037" HPOS="1605" VPOS="1360" WIDTH="45" HEIGHT="20" CONTENT="The" WC="92"/>
+          <String ID="WORD_040_001_038" HPOS="1668" VPOS="1359" WIDTH="38" HEIGHT="20" CONTENT="As-" WC="87"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_041" HPOS="940" VPOS="1396" WIDTH="185" HEIGHT="20">
+        <TextLine ID="LINE_041_001" HPOS="940" VPOS="1396" WIDTH="185" HEIGHT="20">
+          <String ID="WORD_041_001_001" HPOS="940" VPOS="1396" WIDTH="98" HEIGHT="20" CONTENT="sociated" WC="95"/>
+          <String ID="WORD_041_001_002" HPOS="1052" VPOS="1396" WIDTH="73" HEIGHT="19" CONTENT="Press." WC="79"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_042" HPOS="928" VPOS="1475" WIDTH="376" HEIGHT="173">
+        <TextLine ID="LINE_042_001" HPOS="928" VPOS="1475" WIDTH="376" HEIGHT="109">
+          <String ID="WORD_042_001_001" HPOS="928" VPOS="1475" WIDTH="41" HEIGHT="19" CONTENT="ties" WC="96"/>
+          <String ID="WORD_042_001_002" HPOS="989" VPOS="1475" WIDTH="28" HEIGHT="23" CONTENT="by" WC="96"/>
+          <String ID="WORD_042_001_003" HPOS="1036" VPOS="1475" WIDTH="42" HEIGHT="23" CONTENT="jets" WC="96"/>
+          <String ID="WORD_042_001_004" HPOS="1098" VPOS="1475" WIDTH="42" HEIGHT="20" CONTENT="and" WC="95"/>
+          <String ID="WORD_042_001_005" HPOS="1158" VPOS="1475" WIDTH="100" HEIGHT="20" CONTENT="watched" WC="96"/>
+          <String ID="WORD_042_001_006" HPOS="1277" VPOS="1480" WIDTH="25" HEIGHT="14" CONTENT="as" WC="96"/>
+          <String ID="WORD_042_001_007" HPOS="928" VPOS="1508" WIDTH="47" HEIGHT="18" CONTENT="one," WC="95"/>
+          <String ID="WORD_042_001_008" HPOS="1015" VPOS="1503" WIDTH="87" HEIGHT="24" CONTENT="defying" WC="93"/>
+          <String ID="WORD_042_001_009" HPOS="1140" VPOS="1503" WIDTH="71" HEIGHT="25" CONTENT="heavy" WC="71"/>
+          <String ID="WORD_042_001_010" HPOS="1250" VPOS="1503" WIDTH="54" HEIGHT="20" CONTENT=" anti-" WC="43"/>
+          <String ID="WORD_042_001_011" HPOS="929" VPOS="1532" WIDTH="93" HEIGHT="20" CONTENT="aircraft" WC="47"/>
+          <String ID="WORD_042_001_012" HPOS="1038" VPOS="1533" WIDTH="48" HEIGHT="22" CONTENT="fire," WC="96"/>
+          <String ID="WORD_042_001_013" HPOS="1104" VPOS="1532" WIDTH="64" HEIGHT="20" CONTENT="dived" WC="96"/>
+          <String ID="WORD_042_001_014" HPOS="1185" VPOS="1537" WIDTH="53" HEIGHT="19" CONTENT="very" WC="96"/>
+          <String ID="WORD_042_001_015" HPOS="1254" VPOS="1531" WIDTH="48" HEIGHT="24" CONTENT="low," WC="96"/>
+          <String ID="WORD_042_001_016" HPOS="929" VPOS="1560" WIDTH="106" HEIGHT="24" CONTENT="dropping" WC="96"/>
+          <String ID="WORD_042_001_017" HPOS="1045" VPOS="1562" WIDTH="42" HEIGHT="18" CONTENT="two" WC="96"/>
+          <String ID="WORD_042_001_018" HPOS="1096" VPOS="1561" WIDTH="85" HEIGHT="19" CONTENT="bombs." WC="96"/>
+        </TextLine>
+        <TextLine ID="LINE_042_002" HPOS="928" VPOS="1595" WIDTH="376" HEIGHT="53">
+          <String ID="WORD_042_002_001" HPOS="952" VPOS="1595" WIDTH="70" HEIGHT="20" CONTENT="There" WC="96"/>
+          <String ID="WORD_042_002_002" HPOS="1038" VPOS="1600" WIDTH="45" HEIGHT="15" CONTENT="was" WC="96"/>
+          <String ID="WORD_042_002_003" HPOS="1100" VPOS="1600" WIDTH="28" HEIGHT="15" CONTENT="no" WC="96"/>
+          <String ID="WORD_042_002_004" HPOS="1143" VPOS="1595" WIDTH="122" HEIGHT="24" CONTENT="possibility" WC="96"/>
+          <String ID="WORD_042_002_005" HPOS="1280" VPOS="1595" WIDTH="23" HEIGHT="19" CONTENT="of" WC="96"/>
+          <String ID="WORD_042_002_006" HPOS="928" VPOS="1624" WIDTH="52" HEIGHT="24" CONTENT="pilot" WC="93"/>
+          <String ID="WORD_042_002_007" HPOS="994" VPOS="1629" WIDTH="68" HEIGHT="15" CONTENT="error." WC="96"/>
+          <String ID="WORD_042_002_008" HPOS="1076" VPOS="1624" WIDTH="59" HEIGHT="24" CONTENT="They" WC="94"/>
+          <String ID="WORD_042_002_009" HPOS="1148" VPOS="1628" WIDTH="58" HEIGHT="16" CONTENT="were" WC="84"/>
+          <String ID="WORD_042_002_010" HPOS="1220" VPOS="1624" WIDTH="84" HEIGHT="20" CONTENT="attack-" WC="92"/>
+        </TextLine>
+      </TextBlock>
+
+      <TextBlock ID="BLOCK_066" HPOS="1342" VPOS="1471" WIDTH="376" HEIGHT="169">
+        <TextLine ID="LINE_066_001" HPOS="1342" VPOS="1471" WIDTH="376" HEIGHT="169">
+          <String ID="WORD_066_001_001" HPOS="1344" VPOS="1475" WIDTH="36" HEIGHT="24" CONTENT="ing" WC="96"/>
+          <String ID="WORD_066_001_002" HPOS="1396" VPOS="1481" WIDTH="52" HEIGHT="18" CONTENT="very" WC="96"/>
+          <String ID="WORD_066_001_003" HPOS="1465" VPOS="1476" WIDTH="41" HEIGHT="20" CONTENT="low" WC="96"/>
+          <String ID="WORD_066_001_004" HPOS="1522" VPOS="1482" WIDTH="53" HEIGHT="14" CONTENT="over" WC="96"/>
+          <String ID="WORD_066_001_005" HPOS="1591" VPOS="1477" WIDTH="35" HEIGHT="20" CONTENT="the" WC="95"/>
+          <String ID="WORD_066_001_006" HPOS="1643" VPOS="1471" WIDTH="74" HEIGHT="27" CONTENT="centre" WC="96"/>
+          <String ID="WORD_066_001_007" HPOS="1342" VPOS="1505" WIDTH="23" HEIGHT="19" CONTENT="of" WC="96"/>
+          <String ID="WORD_066_001_008" HPOS="1378" VPOS="1504" WIDTH="35" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_066_001_009" HPOS="1428" VPOS="1505" WIDTH="88" HEIGHT="23" CONTENT="capital." WC="96"/>
+          <String ID="WORD_066_001_010" HPOS="1531" VPOS="1505" WIDTH="43" HEIGHT="20" CONTENT="The" WC="96"/>
+          <String ID="WORD_066_001_011" HPOS="1589" VPOS="1511" WIDTH="52" HEIGHT="15" CONTENT="area" WC="96"/>
+          <String ID="WORD_066_001_012" HPOS="1655" VPOS="1506" WIDTH="31" HEIGHT="20" CONTENT="hit" WC="96"/>
+          <String ID="WORD_066_001_013" HPOS="1700" VPOS="1506" WIDTH="17" HEIGHT="20" CONTENT="is" WC="96"/>
+          <String ID="WORD_066_001_014" HPOS="1342" VPOS="1533" WIDTH="37" HEIGHT="19" CONTENT="the" WC="66"/>
+          <String ID="WORD_066_001_015" HPOS="1405" VPOS="1533" WIDTH="127" HEIGHT="24" CONTENT="diplomatic" WC="84"/>
+          <String ID="WORD_066_001_016" HPOS="1559" VPOS="1535" WIDTH="90" HEIGHT="22" CONTENT="quarter" WC="95"/>
+          <String ID="WORD_066_001_017" HPOS="1675" VPOS="1536" WIDTH="42" HEIGHT="19" CONTENT="and" WC="95"/>
+          <String ID="WORD_066_001_018" HPOS="1343" VPOS="1561" WIDTH="62" HEIGHT="20" CONTENT="there" WC="92"/>
+          <String ID="WORD_066_001_019" HPOS="1441" VPOS="1566" WIDTH="39" HEIGHT="15" CONTENT="are" WC="92"/>
+          <String ID="WORD_066_001_020" HPOS="1516" VPOS="1567" WIDTH="27" HEIGHT="14" CONTENT="no" WC="79"/>
+          <String ID="WORD_066_001_021" HPOS="1578" VPOS="1562" WIDTH="140" HEIGHT="21" CONTENT="Vietnamese" WC="79"/>
+          <String ID="WORD_066_001_022" HPOS="1343" VPOS="1590" WIDTH="119" HEIGHT="19" CONTENT="ministries" WC="95"/>
+          <String ID="WORD_066_001_023" HPOS="1488" VPOS="1595" WIDTH="25" HEIGHT="14" CONTENT="or" WC="95"/>
+          <String ID="WORD_066_001_024" HPOS="1538" VPOS="1590" WIDTH="103" HEIGHT="21" CONTENT="factories" WC="89"/>
+          <String ID="WORD_066_001_025" HPOS="1667" VPOS="1598" WIDTH="51" HEIGHT="16" CONTENT="any-" WC="88"/>
+          <String ID="WORD_066_001_026" HPOS="1343" VPOS="1619" WIDTH="73" HEIGHT="21" CONTENT="where" WC="96"/>
+          <String ID="WORD_066_001_027" HPOS="1427" VPOS="1623" WIDTH="61" HEIGHT="16" CONTENT="near." WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_067" HPOS="1757" VPOS="1252" WIDTH="381" HEIGHT="388">
+        <TextLine ID="LINE_067_001" HPOS="1757" VPOS="1252" WIDTH="381" HEIGHT="388">
+          <String ID="WORD_067_001_001" HPOS="1779" VPOS="1252" WIDTH="10" HEIGHT="20" CONTENT="I" WC="88"/>
+          <String ID="WORD_067_001_002" HPOS="1801" VPOS="1252" WIDTH="119" HEIGHT="19" CONTENT="witnessed" WC="88"/>
+          <String ID="WORD_067_001_003" HPOS="1932" VPOS="1252" WIDTH="44" HEIGHT="19" CONTENT="and" WC="96"/>
+          <String ID="WORD_067_001_004" HPOS="1988" VPOS="1252" WIDTH="77" HEIGHT="19" CONTENT="filmed" WC="92"/>
+          <String ID="WORD_067_001_005" HPOS="2077" VPOS="1252" WIDTH="56" HEIGHT="20" CONTENT="dead" WC="96"/>
+          <String ID="WORD_067_001_006" HPOS="1757" VPOS="1280" WIDTH="68" HEIGHT="20" CONTENT="taken" WC="92"/>
+          <String ID="WORD_067_001_007" HPOS="1855" VPOS="1280" WIDTH="57" HEIGHT="20" CONTENT="from’" WC="55"/>
+          <String ID="WORD_067_001_008" HPOS="1942" VPOS="1280" WIDTH="77" HEIGHT="20" CONTENT="rubble" WC="95"/>
+          <String ID="WORD_067_001_009" HPOS="2048" VPOS="1280" WIDTH="22" HEIGHT="19" CONTENT="of" WC="59"/>
+          <String ID="WORD_067_001_010" HPOS="2099" VPOS="1280" WIDTH="37" HEIGHT="20" CONTENT="the" WC="59"/>
+          <String ID="WORD_067_001_011" HPOS="1758" VPOS="1308" WIDTH="86" HEIGHT="20" CONTENT="French" WC="96"/>
+          <String ID="WORD_067_001_012" HPOS="1863" VPOS="1308" WIDTH="120" HEIGHT="26" CONTENT="residence," WC="95"/>
+          <String ID="WORD_067_001_013" HPOS="2002" VPOS="1308" WIDTH="70" HEIGHT="20" CONTENT="Which" WC="96"/>
+          <String ID="WORD_067_001_014" HPOS="2089" VPOS="1314" WIDTH="46" HEIGHT="14" CONTENT="was" WC="96"/>
+          <String ID="WORD_067_001_015" HPOS="1759" VPOS="1336" WIDTH="66" HEIGHT="21" CONTENT="shorn" WC="96"/>
+          <String ID="WORD_067_001_016" HPOS="1844" VPOS="1336" WIDTH="20" HEIGHT="20" CONTENT="in" WC="94"/>
+          <String ID="WORD_067_001_017" HPOS="1882" VPOS="1336" WIDTH="52" HEIGHT="20" CONTENT="half," WC="94"/>
+          <String ID="WORD_067_001_018" HPOS="1954" VPOS="1337" WIDTH="85" HEIGHT="21" CONTENT="French" WC="96"/>
+          <String ID="WORD_067_001_019" HPOS="2056" VPOS="1337" WIDTH="80" HEIGHT="20" CONTENT="Consul" WC="96"/>
+          <String ID="WORD_067_001_020" HPOS="1757" VPOS="1364" WIDTH="111" HEIGHT="20" CONTENT="Christian" WC="93"/>
+          <String ID="WORD_067_001_021" HPOS="1889" VPOS="1364" WIDTH="69" HEIGHT="24" CONTENT="Calvy" WC="91"/>
+          <String ID="WORD_067_001_022" HPOS="1978" VPOS="1365" WIDTH="44" HEIGHT="19" CONTENT="told" WC="96"/>
+          <String ID="WORD_067_001_023" HPOS="2043" VPOS="1371" WIDTH="35" HEIGHT="14" CONTENT="me" WC="96"/>
+          <String ID="WORD_067_001_024" HPOS="2099" VPOS="1366" WIDTH="36" HEIGHT="18" CONTENT="the" WC="96"/>
+          <String ID="WORD_067_001_025" HPOS="1758" VPOS="1393" WIDTH="76" HEIGHT="20" CONTENT="attack" WC="96"/>
+          <String ID="WORD_067_001_026" HPOS="1848" VPOS="1398" WIDTH="64" HEIGHT="15" CONTENT="came" WC="96"/>
+          <String ID="WORD_067_001_027" HPOS="1926" VPOS="1393" WIDTH="90" HEIGHT="20" CONTENT="without" WC="96"/>
+          <String ID="WORD_067_001_028" HPOS="2029" VPOS="1394" WIDTH="106" HEIGHT="23" CONTENT="warning." WC="96"/>
+          <String ID="WORD_067_001_029" HPOS="1759" VPOS="1422" WIDTH="32" HEIGHT="19" CONTENT="He" WC="96"/>
+          <String ID="WORD_067_001_030" HPOS="1810" VPOS="1421" WIDTH="70" HEIGHT="20" CONTENT="called" WC="23"/>
+          <String ID="WORD_067_001_031" HPOS="1901" VPOS="1422" WIDTH="13" HEIGHT="19" CONTENT="it" WC="96"/>
+          <String ID="WORD_067_001_032" HPOS="1935" VPOS="1424" WIDTH="34" HEIGHT="17" CONTENT="too" WC="95"/>
+          <String ID="WORD_067_001_033" HPOS="1988" VPOS="1422" WIDTH="95" HEIGHT="20" CONTENT="horrible" WC="95"/>
+          <String ID="WORD_067_001_034" HPOS="2102" VPOS="1422" WIDTH="34" HEIGHT="19" CONTENT="fcr" WC="90"/>
+          <String ID="WORD_067_001_035" HPOS="1758" VPOS="1451" WIDTH="79" HEIGHT="19" CONTENT="words:" WC="82"/>
+          <String ID="WORD_067_001_036" HPOS="1857" VPOS="1451" WIDTH="32" HEIGHT="19" CONTENT="He" WC="96"/>
+          <String ID="WORD_067_001_037" HPOS="1907" VPOS="1451" WIDTH="49" HEIGHT="19" CONTENT="said" WC="95"/>
+          <String ID="WORD_067_001_038" HPOS="1974" VPOS="1451" WIDTH="27" HEIGHT="19" CONTENT="he" WC="95"/>
+          <String ID="WORD_067_001_039" HPOS="2020" VPOS="1451" WIDTH="63" HEIGHT="19" CONTENT="could" WC="95"/>
+          <String ID="WORD_067_001_040" HPOS="2101" VPOS="1452" WIDTH="36" HEIGHT="18" CONTENT="not" WC="95"/>
+          <String ID="WORD_067_001_041" HPOS="1757" VPOS="1483" WIDTH="56" HEIGHT="15" CONTENT="even" WC="96"/>
+          <String ID="WORD_067_001_042" HPOS="1845" VPOS="1479" WIDTH="97" HEIGHT="23" CONTENT="imagine" WC="96"/>
+          <String ID="WORD_067_001_043" HPOS="1975" VPOS="1479" WIDTH="86" HEIGHT="19" CONTENT="French" WC="94"/>
+          <String ID="WORD_067_001_044" HPOS="2094" VPOS="1479" WIDTH="42" HEIGHT="19" CONTENT="and" WC="95"/>
+          <String ID="WORD_067_001_045" HPOS="1757" VPOS="1507" WIDTH="68" HEIGHT="20" CONTENT="world" WC="95"/>
+          <String ID="WORD_067_001_046" HPOS="1839" VPOS="1507" WIDTH="104" HEIGHT="20" CONTENT="reaction." WC="96"/>
+          <String ID="WORD_067_001_047" HPOS="1958" VPOS="1508" WIDTH="71" HEIGHT="19" CONTENT="There" WC="96"/>
+          <String ID="WORD_067_001_048" HPOS="2042" VPOS="1512" WIDTH="59" HEIGHT="15" CONTENT="were" WC="96"/>
+          <String ID="WORD_067_001_049" HPOS="2115" VPOS="1509" WIDTH="23" HEIGHT="17" CONTENT="at" WC="96"/>
+          <String ID="WORD_067_001_050" HPOS="1757" VPOS="1535" WIDTH="57" HEIGHT="20" CONTENT="least" WC="94"/>
+          <String ID="WORD_067_001_051" HPOS="1837" VPOS="1536" WIDTH="60" HEIGHT="19" CONTENT="three" WC="94"/>
+          <String ID="WORD_067_001_052" HPOS="1920" VPOS="1535" WIDTH="123" HEIGHT="23" CONTENT="bombings." WC="96"/>
+          <String ID="WORD_067_001_053" HPOS="2066" VPOS="1535" WIDTH="71" HEIGHT="20" CONTENT="There" WC="96"/>
+          <String ID="WORD_067_001_054" HPOS="1758" VPOS="1569" WIDTH="39" HEIGHT="14" CONTENT="are" WC="96"/>
+          <String ID="WORD_067_001_055" HPOS="1811" VPOS="1564" WIDTH="45" HEIGHT="19" CONTENT="five" WC="96"/>
+          <String ID="WORD_067_001_056" HPOS="1871" VPOS="1565" WIDTH="107" HEIGHT="19" CONTENT="unknown" WC="96"/>
+          <String ID="WORD_067_001_057" HPOS="1993" VPOS="1564" WIDTH="57" HEIGHT="19" CONTENT="dead" WC="96"/>
+          <String ID="WORD_067_001_058" HPOS="2065" VPOS="1564" WIDTH="22" HEIGHT="19" CONTENT="in" WC="96"/>
+          <String ID="WORD_067_001_059" HPOS="2101" VPOS="1564" WIDTH="36" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_067_001_060" HPOS="1757" VPOS="1592" WIDTH="85" HEIGHT="20" CONTENT="central" WC="95"/>
+          <String ID="WORD_067_001_061" HPOS="1870" VPOS="1597" WIDTH="59" HEIGHT="18" CONTENT="area," WC="96"/>
+          <String ID="WORD_067_001_062" HPOS="1959" VPOS="1593" WIDTH="43" HEIGHT="19" CONTENT="and" WC="92"/>
+          <String ID="WORD_067_001_063" HPOS="2030" VPOS="1592" WIDTH="106" HEIGHT="24" CONTENT="probably" WC="92"/>
+          <String ID="WORD_067_001_064" HPOS="1759" VPOS="1626" WIDTH="66" HEIGHT="14" CONTENT="seven" WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_068" HPOS="2174" VPOS="1250" WIDTH="379" HEIGHT="76">
+        <TextLine ID="LINE_068_001" HPOS="2174" VPOS="1250" WIDTH="379" HEIGHT="76">
+          <String ID="WORD_068_001_001" HPOS="2199" VPOS="1251" WIDTH="8" HEIGHT="19" CONTENT="I" WC="96"/>
+          <String ID="WORD_068_001_002" HPOS="2221" VPOS="1256" WIDTH="45" HEIGHT="14" CONTENT="saw" WC="96"/>
+          <String ID="WORD_068_001_003" HPOS="2279" VPOS="1251" WIDTH="36" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_068_001_004" HPOS="2328" VPOS="1250" WIDTH="88" HEIGHT="20" CONTENT="French" WC="95"/>
+          <String ID="WORD_068_001_005" HPOS="2428" VPOS="1250" WIDTH="125" HEIGHT="24" CONTENT="delegation" WC="96"/>
+          <String ID="WORD_068_001_006" HPOS="2174" VPOS="1278" WIDTH="56" HEIGHT="20" CONTENT="head" WC="95"/>
+          <String ID="WORD_068_001_007" HPOS="2246" VPOS="1281" WIDTH="22" HEIGHT="18" CONTENT="at" WC="96"/>
+          <String ID="WORD_068_001_008" HPOS="2282" VPOS="1279" WIDTH="30" HEIGHT="19" CONTENT="St." WC="96"/>
+          <String ID="WORD_068_001_009" HPOS="2328" VPOS="1278" WIDTH="76" HEIGHT="20" CONTENT="Paul's" WC="55"/>
+          <String ID="WORD_068_001_010" HPOS="2417" VPOS="1277" WIDTH="101" HEIGHT="25" CONTENT="Hospital" WC="96"/>
+          <String ID="WORD_068_001_011" HPOS="2532" VPOS="1277" WIDTH="21" HEIGHT="21" CONTENT="in" WC="97"/>
+          <String ID="WORD_068_001_012" HPOS="2176" VPOS="1307" WIDTH="78" HEIGHT="19" CONTENT="Hanoi." WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_069" HPOS="2176" VPOS="1340" WIDTH="379" HEIGHT="85">
+        <TextLine ID="LINE_069_001" HPOS="2176" VPOS="1340" WIDTH="379" HEIGHT="85">
+          <String ID="WORD_069_001_001" HPOS="2200" VPOS="1342" WIDTH="33" HEIGHT="19" CONTENT="He" WC="96"/>
+          <String ID="WORD_069_001_002" HPOS="2269" VPOS="1340" WIDTH="44" HEIGHT="20" CONTENT="hard" WC="65"/>
+          <String ID="WORD_069_001_003" HPOS="2350" VPOS="1342" WIDTH="100" HEIGHT="18" CONTENT="extreme" WC="92"/>
+          <String ID="WORD_069_001_004" HPOS="2487" VPOS="1341" WIDTH="68" HEIGHT="20" CONTENT="facial" WC="80"/>
+          <String ID="WORD_069_001_005" HPOS="2176" VPOS="1369" WIDTH="73" HEIGHT="19" CONTENT="burns," WC="96"/>
+          <String ID="WORD_069_001_006" HPOS="2275" VPOS="1369" WIDTH="43" HEIGHT="19" CONTENT="and" WC="96"/>
+          <String ID="WORD_069_001_007" HPOS="2341" VPOS="1374" WIDTH="45" HEIGHT="14" CONTENT="was" WC="93"/>
+          <String ID="WORD_069_001_008" HPOS="2409" VPOS="1369" WIDTH="43" HEIGHT="20" CONTENT="still" WC="92"/>
+          <String ID="WORD_069_001_009" HPOS="2476" VPOS="1374" WIDTH="77" HEIGHT="15" CONTENT="uncon-" WC="90"/>
+          <String ID="WORD_069_001_010" HPOS="2178" VPOS="1397" WIDTH="79" HEIGHT="28" CONTENT="scious." WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_070" HPOS="2176" VPOS="1438" WIDTH="378" HEIGHT="105">
+        <TextLine ID="LINE_070_001" HPOS="2176" VPOS="1438" WIDTH="378" HEIGHT="105">
+          <String ID="WORD_070_001_001" HPOS="2201" VPOS="1439" WIDTH="18" HEIGHT="18" CONTENT="A" WC="96"/>
+          <String ID="WORD_070_001_002" HPOS="2241" VPOS="1438" WIDTH="76" HEIGHT="19" CONTENT="doctor" WC="96"/>
+          <String ID="WORD_070_001_003" HPOS="2339" VPOS="1438" WIDTH="48" HEIGHT="19" CONTENT="said" WC="96"/>
+          <String ID="WORD_070_001_004" HPOS="2411" VPOS="1439" WIDTH="15" HEIGHT="18" CONTENT="it" WC="94"/>
+          <String ID="WORD_070_001_005" HPOS="2447" VPOS="1445" WIDTH="44" HEIGHT="13" CONTENT="was" WC="93"/>
+          <String ID="WORD_070_001_006" HPOS="2514" VPOS="1440" WIDTH="39" HEIGHT="18" CONTENT="dif-" WC="92"/>
+          <String ID="WORD_070_001_007" HPOS="2177" VPOS="1466" WIDTH="63" HEIGHT="20" CONTENT="ficult" WC="96"/>
+          <String ID="WORD_070_001_008" HPOS="2258" VPOS="1468" WIDTH="23" HEIGHT="18" CONTENT="to" WC="96"/>
+          <String ID="WORD_070_001_009" HPOS="2299" VPOS="1471" WIDTH="40" HEIGHT="19" CONTENT="say" WC="96"/>
+          <String ID="WORD_070_001_010" HPOS="2359" VPOS="1466" WIDTH="16" HEIGHT="20" CONTENT="if" WC="95"/>
+          <String ID="WORD_070_001_011" HPOS="2395" VPOS="1467" WIDTH="35" HEIGHT="20" CONTENT="the" WC="95"/>
+          <String ID="WORD_070_001_012" HPOS="2448" VPOS="1467" WIDTH="106" HEIGHT="24" CONTENT="diplomat" WC="96"/>
+          <String ID="WORD_070_001_013" HPOS="2176" VPOS="1495" WIDTH="72" HEIGHT="19" CONTENT="would" WC="96"/>
+          <String ID="WORD_070_001_014" HPOS="2263" VPOS="1495" WIDTH="96" HEIGHT="22" CONTENT="survive," WC="96"/>
+          <String ID="WORD_070_001_015" HPOS="2376" VPOS="1495" WIDTH="38" HEIGHT="20" CONTENT="but" WC="96"/>
+          <String ID="WORD_070_001_016" HPOS="2430" VPOS="1495" WIDTH="33" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_070_001_017" HPOS="2479" VPOS="1496" WIDTH="75" HEIGHT="20" CONTENT="doctor" WC="96"/>
+          <String ID="WORD_070_001_018" HPOS="2178" VPOS="1523" WIDTH="100" HEIGHT="20" CONTENT="believed" WC="96"/>
+          <String ID="WORD_070_001_019" HPOS="2289" VPOS="1523" WIDTH="27" HEIGHT="19" CONTENT="he" WC="96"/>
+          <String ID="WORD_070_001_020" HPOS="2328" VPOS="1524" WIDTH="70" HEIGHT="19" CONTENT="could." WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_071" HPOS="2177" VPOS="1564" WIDTH="378" HEIGHT="86">
+        <TextLine ID="LINE_071_001" HPOS="2177" VPOS="1564" WIDTH="378" HEIGHT="86">
+          <String ID="WORD_071_001_001" HPOS="2209" VPOS="1564" WIDTH="63" HEIGHT="19" CONTENT="One" WC="0"/>
+          <String ID="WORD_071_001_002" HPOS="2317" VPOS="1564" WIDTH="86" HEIGHT="19" CONTENT="French" WC="67"/>
+          <String ID="WORD_071_001_003" HPOS="2411" VPOS="1560" WIDTH="17" HEIGHT="33" CONTENT="_—" WC="52"/>
+          <String ID="WORD_071_001_004" HPOS="2448" VPOS="1565" WIDTH="107" HEIGHT="23" CONTENT="diplomat" WC="95"/>
+          <String ID="WORD_071_001_005" HPOS="2177" VPOS="1592" WIDTH="111" HEIGHT="19" CONTENT="theorized" WC="95"/>
+          <String ID="WORD_071_001_006" HPOS="2301" VPOS="1592" WIDTH="47" HEIGHT="19" CONTENT="that" WC="96"/>
+          <String ID="WORD_071_001_007" HPOS="2360" VPOS="1592" WIDTH="36" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_071_001_008" HPOS="2409" VPOS="1594" WIDTH="74" HEIGHT="19" CONTENT="bombs" WC="96"/>
+          <String ID="WORD_071_001_009" HPOS="2496" VPOS="1600" WIDTH="59" HEIGHT="14" CONTENT="were" WC="95"/>
+          <String ID="WORD_071_001_010" HPOS="2177" VPOS="1625" WIDTH="13" HEIGHT="15" CONTENT="a" WC="96"/>
+          <String ID="WORD_071_001_011" HPOS="2211" VPOS="1620" WIDTH="75" HEIGHT="30" CONTENT="forced" WC="93"/>
+          <String ID="WORD_071_001_012" HPOS="2306" VPOS="1621" WIDTH="131" HEIGHT="24" CONTENT="drop*from" WC="76"/>
+          <String ID="WORD_071_001_013" HPOS="2459" VPOS="1628" WIDTH="12" HEIGHT="14" CONTENT="a" WC="96"/>
+          <String ID="WORD_071_001_014" HPOS="2492" VPOS="1622" WIDTH="62" HEIGHT="20" CONTENT="dams" WC="76"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_118" HPOS="2593" VPOS="1249" WIDTH="379" HEIGHT="138">
+        <TextLine ID="LINE_118_001" HPOS="2593" VPOS="1249" WIDTH="379" HEIGHT="138">
+          <String ID="WORD_118_001_001" HPOS="2594" VPOS="1250" WIDTH="56" HEIGHT="24" CONTENT="aged" WC="90"/>
+          <String ID="WORD_118_001_002" HPOS="2673" VPOS="1250" WIDTH="101" HEIGHT="24" CONTENT="jet,~but" WC="39"/>
+          <String ID="WORD_118_001_003" HPOS="2797" VPOS="1251" WIDTH="43" HEIGHT="20" CONTENT="this" WC="96"/>
+          <String ID="WORD_118_001_004" HPOS="2863" VPOS="1249" WIDTH="109" HEIGHT="26" CONTENT="diplomat" WC="96"/>
+          <String ID="WORD_118_001_005" HPOS="2593" VPOS="1278" WIDTH="71" HEIGHT="20" CONTENT="added" WC="83"/>
+          <String ID="WORD_118_001_006" HPOS="2678" VPOS="1279" WIDTH="28" HEIGHT="21" CONTENT="-be" WC="83"/>
+          <String ID="WORD_118_001_007" HPOS="2720" VPOS="1284" WIDTH="46" HEIGHT="14" CONTENT="was" WC="96"/>
+          <String ID="WORD_118_001_008" HPOS="2782" VPOS="1279" WIDTH="69" HEIGHT="20" CONTENT="inside" WC="95"/>
+          <String ID="WORD_118_001_009" HPOS="2866" VPOS="1279" WIDTH="36" HEIGHT="20" CONTENT="the" WC="93"/>
+          <String ID="WORD_118_001_010" HPOS="2916" VPOS="1279" WIDTH="54" HEIGHT="20" CONTENT="resi-" WC="76"/>
+          <String ID="WORD_118_001_011" HPOS="2595" VPOS="1306" WIDTH="68" HEIGHT="20" CONTENT="dence" WC="96"/>
+          <String ID="WORD_118_001_012" HPOS="2681" VPOS="1307" WIDTH="23" HEIGHT="20" CONTENT="af" WC="95"/>
+          <String ID="WORD_118_001_013" HPOS="2721" VPOS="1307" WIDTH="36" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_118_001_014" HPOS="2775" VPOS="1307" WIDTH="54" HEIGHT="20" CONTENT="time" WC="96"/>
+          <String ID="WORD_118_001_015" HPOS="2846" VPOS="1307" WIDTH="23" HEIGHT="20" CONTENT="of" WC="96"/>
+          <String ID="WORD_118_001_016" HPOS="2885" VPOS="1307" WIDTH="37" HEIGHT="21" CONTENT="the" WC="93"/>
+          <String ID="WORD_118_001_017" HPOS="2940" VPOS="1309" WIDTH="31" HEIGHT="19" CONTENT="at-" WC="90"/>
+          <String ID="WORD_118_001_018" HPOS="2593" VPOS="1336" WIDTH="51" HEIGHT="18" CONTENT="tack" WC="95"/>
+          <String ID="WORD_118_001_019" HPOS="2672" VPOS="1334" WIDTH="42" HEIGHT="21" CONTENT="and" WC="59"/>
+          <String ID="WORD_118_001_020" HPOS="2742" VPOS="1336" WIDTH="36" HEIGHT="19" CONTENT="did" WC="51"/>
+          <String ID="WORD_118_001_021" HPOS="2805" VPOS="1338" WIDTH="37" HEIGHT="17" CONTENT="not" WC="96"/>
+          <String ID="WORD_118_001_022" HPOS="2868" VPOS="1341" WIDTH="38" HEIGHT="15" CONTENT="see" WC="96"/>
+          <String ID="WORD_118_001_023" HPOS="2934" VPOS="1336" WIDTH="36" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_118_001_024" HPOS="2595" VPOS="1364" WIDTH="71" HEIGHT="23" CONTENT="plane." WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_119" HPOS="2618" VPOS="1404" WIDTH="352" HEIGHT="25">
+        <TextLine ID="LINE_119_001" HPOS="2618" VPOS="1404" WIDTH="352" HEIGHT="25">
+          <String ID="WORD_119_001_001" HPOS="2618" VPOS="1404" WIDTH="9" HEIGHT="20" CONTENT="I" WC="96"/>
+          <String ID="WORD_119_001_002" HPOS="2640" VPOS="1404" WIDTH="43" HEIGHT="23" CONTENT="did," WC="96"/>
+          <String ID="WORD_119_001_003" HPOS="2697" VPOS="1405" WIDTH="42" HEIGHT="19" CONTENT="and" WC="96"/>
+          <String ID="WORD_119_001_004" HPOS="2753" VPOS="1405" WIDTH="35" HEIGHT="19" CONTENT="the" WC="93"/>
+          <String ID="WORD_119_001_005" HPOS="2800" VPOS="1405" WIDTH="125" HEIGHT="24" CONTENT="low-hitting" WC="92"/>
+          <String ID="WORD_119_001_006" HPOS="2939" VPOS="1409" WIDTH="31" HEIGHT="19" CONTENT="jet" WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_120" HPOS="2594" VPOS="1412" WIDTH="537" HEIGHT="45">
+        <TextLine ID="LINE_120_001" HPOS="2594" VPOS="1412" WIDTH="537" HEIGHT="45">
+          <String ID="WORD_120_001_002" HPOS="2594" VPOS="1438" WIDTH="46" HEIGHT="15" CONTENT="was" WC="96"/>
+          <String ID="WORD_120_001_003" HPOS="2652" VPOS="1434" WIDTH="37" HEIGHT="19" CONTENT="not" WC="96"/>
+          <String ID="WORD_120_001_004" HPOS="2699" VPOS="1433" WIDTH="119" HEIGHT="24" CONTENT="damaged." WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_121" HPOS="2593" VPOS="1480" WIDTH="380" HEIGHT="167">
+        <TextLine ID="LINE_121_001" HPOS="2593" VPOS="1480" WIDTH="380" HEIGHT="167">
+          <String ID="WORD_121_001_001" HPOS="2618" VPOS="1480" WIDTH="91" HEIGHT="20" CONTENT="Several" WC="94"/>
+          <String ID="WORD_121_001_002" HPOS="2725" VPOS="1480" WIDTH="76" HEIGHT="23" CONTENT="planes" WC="96"/>
+          <String ID="WORD_121_001_003" HPOS="2818" VPOS="1482" WIDTH="64" HEIGHT="18" CONTENT="made" WC="93"/>
+          <String ID="WORD_121_001_004" HPOS="2898" VPOS="1487" WIDTH="72" HEIGHT="14" CONTENT="sever-" WC="90"/>
+          <String ID="WORD_121_001_005" HPOS="2594" VPOS="1508" WIDTH="21" HEIGHT="20" CONTENT="al" WC="96"/>
+          <String ID="WORD_121_001_006" HPOS="2627" VPOS="1508" WIDTH="87" HEIGHT="20" CONTENT="sorties." WC="96"/>
+          <String ID="WORD_121_001_007" HPOS="2728" VPOS="1509" WIDTH="9" HEIGHT="19" CONTENT="I" WC="96"/>
+          <String ID="WORD_121_001_008" HPOS="2749" VPOS="1514" WIDTH="46" HEIGHT="14" CONTENT="saw" WC="96"/>
+          <String ID="WORD_121_001_009" HPOS="2807" VPOS="1510" WIDTH="23" HEIGHT="19" CONTENT="at" WC="96"/>
+          <String ID="WORD_121_001_010" HPOS="2842" VPOS="1510" WIDTH="57" HEIGHT="20" CONTENT="least" WC="96"/>
+          <String ID="WORD_121_001_011" HPOS="2910" VPOS="1510" WIDTH="62" HEIGHT="20" CONTENT="three" WC="96"/>
+          <String ID="WORD_121_001_012" HPOS="2593" VPOS="1537" WIDTH="51" HEIGHT="24" CONTENT="jets." WC="95"/>
+          <String ID="WORD_121_001_013" HPOS="2668" VPOS="1536" WIDTH="45" HEIGHT="20" CONTENT="The" WC="96"/>
+          <String ID="WORD_121_001_014" HPOS="2737" VPOS="1536" WIDTH="113" HEIGHT="21" CONTENT="Canadian" WC="89"/>
+          <String ID="WORD_121_001_015" HPOS="2874" VPOS="1538" WIDTH="97" HEIGHT="22" CONTENT="military" WC="89"/>
+          <String ID="WORD_121_001_016" HPOS="2593" VPOS="1567" WIDTH="88" HEIGHT="20" CONTENT="attache" WC="96"/>
+          <String ID="WORD_121_001_017" HPOS="2699" VPOS="1566" WIDTH="59" HEIGHT="25" CONTENT="here," WC="95"/>
+          <String ID="WORD_121_001_018" HPOS="2778" VPOS="1573" WIDTH="13" HEIGHT="14" CONTENT="a" WC="95"/>
+          <String ID="WORD_121_001_019" HPOS="2808" VPOS="1567" WIDTH="52" HEIGHT="24" CONTENT="Maj." WC="96"/>
+          <String ID="WORD_121_001_020" HPOS="2879" VPOS="1567" WIDTH="90" HEIGHT="24" CONTENT="Dupuis," WC="96"/>
+          <String ID="WORD_121_001_021" HPOS="2594" VPOS="1599" WIDTH="52" HEIGHT="19" CONTENT="says" WC="95"/>
+          <String ID="WORD_121_001_022" HPOS="2663" VPOS="1593" WIDTH="28" HEIGHT="20" CONTENT="he" WC="95"/>
+          <String ID="WORD_121_001_023" HPOS="2707" VPOS="1599" WIDTH="47" HEIGHT="14" CONTENT="saw" WC="96"/>
+          <String ID="WORD_121_001_024" HPOS="2771" VPOS="1595" WIDTH="43" HEIGHT="19" CONTENT="five" WC="96"/>
+          <String ID="WORD_121_001_025" HPOS="2829" VPOS="1600" WIDTH="25" HEIGHT="15" CONTENT="or" WC="96"/>
+          <String ID="WORD_121_001_026" HPOS="2870" VPOS="1596" WIDTH="32" HEIGHT="18" CONTENT="six" WC="96"/>
+          <String ID="WORD_121_001_027" HPOS="2919" VPOS="1600" WIDTH="54" HEIGHT="14" CONTENT="over" WC="96"/>
+          <String ID="WORD_121_001_028" HPOS="2594" VPOS="1622" WIDTH="38" HEIGHT="20" CONTENT="the" WC="96"/>
+          <String ID="WORD_121_001_029" HPOS="2643" VPOS="1622" WIDTH="45" HEIGHT="25" CONTENT="city" WC="96"/>
+          <String ID="WORD_121_001_030" HPOS="2699" VPOS="1624" WIDTH="83" HEIGHT="19" CONTENT="centre." WC="95"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_124" HPOS="3010" VPOS="1249" WIDTH="377" HEIGHT="138">
+        <TextLine ID="LINE_124_001" HPOS="3010" VPOS="1249" WIDTH="377" HEIGHT="138">
+          <String ID="WORD_124_001_001" HPOS="3035" VPOS="1250" WIDTH="70" HEIGHT="20" CONTENT="Susini" WC="91"/>
+          <String ID="WORD_124_001_002" HPOS="3117" VPOS="1249" WIDTH="44" HEIGHT="20" CONTENT="had" WC="96"/>
+          <String ID="WORD_124_001_003" HPOS="3173" VPOS="1249" WIDTH="54" HEIGHT="20" CONTENT="been" WC="96"/>
+          <String ID="WORD_124_001_004" HPOS="3240" VPOS="1251" WIDTH="98" HEIGHT="21" CONTENT="greeting" WC="96"/>
+          <String ID="WORD_124_001_005" HPOS="3350" VPOS="1250" WIDTH="35" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_124_001_006" HPOS="3011" VPOS="1278" WIDTH="108" HEIGHT="21" CONTENT="Albanian" WC="93"/>
+          <String ID="WORD_124_001_007" HPOS="3138" VPOS="1278" WIDTH="146" HEIGHT="25" CONTENT="anibassador" WC="76"/>
+          <String ID="WORD_124_001_008" HPOS="3303" VPOS="1278" WIDTH="83" HEIGHT="20" CONTENT="outside" WC="96"/>
+          <String ID="WORD_124_001_009" HPOS="3010" VPOS="1307" WIDTH="36" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_124_001_010" HPOS="3059" VPOS="1307" WIDTH="114" HEIGHT="20" CONTENT="residence" WC="96"/>
+          <String ID="WORD_124_001_011" HPOS="3186" VPOS="1306" WIDTH="61" HEIGHT="19" CONTENT="when" WC="96"/>
+          <String ID="WORD_124_001_012" HPOS="3261" VPOS="1306" WIDTH="35" HEIGHT="19" CONTENT="the" WC="96"/>
+          <String ID="WORD_124_001_013" HPOS="3310" VPOS="1306" WIDTH="75" HEIGHT="19" CONTENT="bombs" WC="96"/>
+          <String ID="WORD_124_001_014" HPOS="3012" VPOS="1336" WIDTH="103" HEIGHT="23" CONTENT="dropped." WC="71"/>
+          <String ID="WORD_124_001_015" HPOS="3145" VPOS="1335" WIDTH="44" HEIGHT="20" CONTENT="The" WC="93"/>
+          <String ID="WORD_124_001_016" HPOS="3219" VPOS="1335" WIDTH="106" HEIGHT="19" CONTENT="Albanjan" WC="61"/>
+          <String ID="WORD_124_001_017" HPOS="3356" VPOS="1341" WIDTH="31" HEIGHT="12" CONTENT="es-" WC="61"/>
+          <String ID="WORD_124_001_018" HPOS="3011" VPOS="1364" WIDTH="68" HEIGHT="23" CONTENT="caped" WC="92"/>
+          <String ID="WORD_124_001_019" HPOS="3090" VPOS="1364" WIDTH="50" HEIGHT="19" CONTENT="with" WC="96"/>
+          <String ID="WORD_124_001_020" HPOS="3152" VPOS="1364" WIDTH="69" HEIGHT="19" CONTENT="lesser" WC="96"/>
+          <String ID="WORD_124_001_021" HPOS="3233" VPOS="1364" WIDTH="95" HEIGHT="20" CONTENT="injuries." WC="94"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_125" HPOS="3011" VPOS="1412" WIDTH="376" HEIGHT="103">
+        <TextLine ID="LINE_125_001" HPOS="3011" VPOS="1412" WIDTH="376" HEIGHT="103">
+          <String ID="WORD_120_001_001" HPOS="3035" VPOS="1412" WIDTH="96" HEIGHT="20" CONTENT="Another" WC="96"/>
+          <String ID="WORD_125_001_001" HPOS="3165" VPOS="1412" WIDTH="83" HEIGHT="19" CONTENT="French" WC="96"/>
+          <String ID="WORD_127_001_001" HPOS="3282" VPOS="1412" WIDTH="106" HEIGHT="22" CONTENT="diplomat" WC="96"/>
+          <String ID="WORD_125_001_002" HPOS="3012" VPOS="1441" WIDTH="57" HEIGHT="19" CONTENT="said:" WC="95"/>
+          <String ID="WORD_125_001_003" HPOS="3091" VPOS="1440" WIDTH="65" HEIGHT="19" CONTENT="‘This" WC="0"/>
+          <String ID="WORD_125_001_004" HPOS="3175" VPOS="1440" WIDTH="97" HEIGHT="23" CONTENT="happens" WC="96"/>
+          <String ID="WORD_125_001_005" HPOS="3292" VPOS="1440" WIDTH="20" HEIGHT="18" CONTENT="in" WC="93"/>
+          <String ID="WORD_125_001_006" HPOS="3332" VPOS="1440" WIDTH="55" HEIGHT="17" CONTENT="Viet-" WC="91"/>
+          <String ID="WORD_125_001_007" HPOS="3011" VPOS="1474" WIDTH="51" HEIGHT="14" CONTENT="nam" WC="96"/>
+          <String ID="WORD_125_001_008" HPOS="3077" VPOS="1474" WIDTH="67" HEIGHT="18" CONTENT="every" WC="96"/>
+          <String ID="WORD_125_001_009" HPOS="3158" VPOS="1469" WIDTH="42" HEIGHT="22" CONTENT="day" WC="96"/>
+          <String ID="WORD_125_001_010" HPOS="3215" VPOS="1468" WIDTH="42" HEIGHT="19" CONTENT="and" WC="96"/>
+          <String ID="WORD_125_001_011" HPOS="3272" VPOS="1468" WIDTH="35" HEIGHT="19" CONTENT="the" WC="95"/>
+          <String ID="WORD_125_001_012" HPOS="3320" VPOS="1468" WIDTH="67" HEIGHT="18" CONTENT="world" WC="95"/>
+          <String ID="WORD_122_001_001" HPOS="3011" VPOS="1502" WIDTH="54" HEIGHT="18" CONTENT="pays" WC="95"/>
+          <String ID="WORD_122_001_002" HPOS="3093" VPOS="1502" WIDTH="27" HEIGHT="14" CONTENT="no" WC="95"/>
+          <String ID="WORD_125_001_013" HPOS="3150" VPOS="1498" WIDTH="111" HEIGHT="17" CONTENT="attention." WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_128" HPOS="3293" VPOS="1497" WIDTH="91" HEIGHT="18">
+        <TextLine ID="LINE_128_001" HPOS="3293" VPOS="1497" WIDTH="91" HEIGHT="18">
+          <String ID="WORD_128_001_001" HPOS="3293" VPOS="1497" WIDTH="50" HEIGHT="18" CONTENT="Now" WC="88"/>
+          <String ID="WORD_128_001_002" HPOS="3373" VPOS="1499" WIDTH="11" HEIGHT="14" CONTENT="_it" WC="60"/>
+          <String ID="WORD_122_001_003" HPOS="3012" VPOS="1526" WIDTH="65" HEIGHT="19" CONTENT="will.”" WC="9"/>
+        </TextLine>
+      </TextBlock>
+      
+      <TextBlock ID="BLOCK_126" HPOS="3012" VPOS="1565" WIDTH="376" HEIGHT="53">
+        <TextLine ID="LINE_126_001" HPOS="3012" VPOS="1565" WIDTH="376" HEIGHT="53">
+          <String ID="WORD_126_001_001" HPOS="3035" VPOS="1567" WIDTH="18" HEIGHT="19" CONTENT="A" WC="95"/>
+          <String ID="WORD_126_001_002" HPOS="3064" VPOS="1566" WIDTH="82" HEIGHT="19" CONTENT="British" WC="96"/>
+          <String ID="WORD_126_001_003" HPOS="3159" VPOS="1566" WIDTH="87" HEIGHT="19" CONTENT="attache" WC="96"/>
+          <String ID="WORD_126_001_004" HPOS="3259" VPOS="1565" WIDTH="54" HEIGHT="19" CONTENT="said," WC="92"/>
+          <String ID="WORD_126_001_005" HPOS="3328" VPOS="1565" WIDTH="58" HEIGHT="19" CONTENT="‘“The" WC="66"/>
+          <String ID="WORD_126_001_006" HPOS="3012" VPOS="1595" WIDTH="78" HEIGHT="19" CONTENT="United" WC="65"/>
+          <String ID="WORD_126_001_007" HPOS="3115" VPOS="1594" WIDTH="72" HEIGHT="20" CONTENT="States" WC="65"/>
+          <String ID="WORD_126_001_008" HPOS="3211" VPOS="1594" WIDTH="40" HEIGHT="20" CONTENT="has" WC="96"/>
+          <String ID="WORD_126_001_009" HPOS="3275" VPOS="1599" WIDTH="54" HEIGHT="19" CONTENT="gone" WC="95"/>
+          <String ID="WORD_126_001_010" HPOS="3353" VPOS="1595" WIDTH="35" HEIGHT="18" CONTENT="too" WC="96"/>
+        </TextLine>
+      </TextBlock>
+      <TextBlock ID="BLOCK_123" HPOS="3014" VPOS="1623" WIDTH="55" HEIGHT="19">
+        <TextLine ID="LINE_123_001" HPOS="3014" VPOS="1623" WIDTH="55" HEIGHT="19">
+          <String ID="WORD_123_001_001" HPOS="3014" VPOS="1623" WIDTH="55" HEIGHT="19" CONTENT="far.”" WC="77"/>
+        </TextLine>
+      </TextBlock>
+</Page>
+</Layout>      
+</alto>
