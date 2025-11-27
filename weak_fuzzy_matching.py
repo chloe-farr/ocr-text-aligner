@@ -443,12 +443,14 @@ def _create_match_for_hypothesis(
     )
     candidate.possible_llm_elements_by_fuzzy_match = [llm_token]
     hyp.candidates.append(candidate)
-    hyp.chosen_LLM_token = llm_token
-    hyp.chosen_index = len(hyp.candidates) - 1
-    hyp.flagged_for_error = False
-    
-    # Mark middle LLM token as matched
-    llm_token.matched = True
+    # Only assign if LLM token is not already matched to another hypothesis
+    if not llm_token.matched:
+        hyp.chosen_LLM_token = llm_token
+        hyp.chosen_index = len(hyp.candidates) - 1
+        hyp.flagged_for_error = False
+        # Mark middle LLM token as matched immediately to prevent conflicts
+        llm_token.matched = True
+    # If already matched, don't assign (leave as PENDING or keep existing match)
     
     # Set StringWord matched and best_clean_content for middle word
     hyp.anchor.matched = True
@@ -456,9 +458,6 @@ def _create_match_for_hypothesis(
     
     # Handle left neighbor - always link, but only fully match if it has both neighbors
     if left_neighbor_hyp and llm_token.w_before:
-        # Mark left LLM token as matched
-        llm_token.w_before.matched = True
-        
         # Always link hypotheses (even if left neighbor isn't fully matched)
         hyp.left_matched = left_neighbor_hyp
         left_neighbor_hyp.right_matched = hyp
@@ -472,26 +471,28 @@ def _create_match_for_hypothesis(
             
             # Only fully match if it has both neighbors (at start OR has left_matched)
             if is_at_start or has_left_matched:
-                left_candidate = map_up_text.TokenCandidate(
-                    clean_form=text_utils.normalize_for_matching(llm_token.w_before.word),
-                    kind="word",
-                    alto_words=[left_neighbor_hyp.anchor],
-                    fuzzy_score=100.0
-                )
-                left_candidate.possible_llm_elements_by_fuzzy_match = [llm_token.w_before]
-                left_neighbor_hyp.candidates.append(left_candidate)
-                left_neighbor_hyp.chosen_LLM_token = llm_token.w_before
-                left_neighbor_hyp.chosen_index = len(left_neighbor_hyp.candidates) - 1
-                left_neighbor_hyp.flagged_for_error = False
-                left_neighbor_hyp.anchor.matched = True
-                left_neighbor_hyp.anchor.best_clean_content = llm_token.w_before.word
+                # Only assign if LLM token is not already matched to another hypothesis
+                if not llm_token.w_before.matched:
+                    left_candidate = map_up_text.TokenCandidate(
+                        clean_form=text_utils.normalize_for_matching(llm_token.w_before.word),
+                        kind="word",
+                        alto_words=[left_neighbor_hyp.anchor],
+                        fuzzy_score=100.0
+                    )
+                    left_candidate.possible_llm_elements_by_fuzzy_match = [llm_token.w_before]
+                    left_neighbor_hyp.candidates.append(left_candidate)
+                    left_neighbor_hyp.chosen_LLM_token = llm_token.w_before
+                    left_neighbor_hyp.chosen_index = len(left_neighbor_hyp.candidates) - 1
+                    left_neighbor_hyp.flagged_for_error = False
+                    left_neighbor_hyp.anchor.matched = True
+                    left_neighbor_hyp.anchor.best_clean_content = llm_token.w_before.word
+                    # Mark as matched immediately to prevent conflicts
+                    llm_token.w_before.matched = True
+                # If already matched, don't assign (leave as PENDING or keep existing match)
             # Otherwise, don't fully match - just link (left neighbor remains pending)
     
     # Handle right neighbor - always link and fully match if it doesn't have a match yet
     if right_neighbor_hyp and llm_token.w_after:
-        # Mark right LLM token as matched
-        llm_token.w_after.matched = True
-        
         # Always link hypotheses
         hyp.right_matched = right_neighbor_hyp
         right_neighbor_hyp.left_matched = hyp
@@ -499,19 +500,24 @@ def _create_match_for_hypothesis(
         # If right neighbor doesn't have a match yet, fully match it
         # (Right neighbor should be fully matched since it now has both neighbors: left=hyp, right=its after_word)
         if not right_neighbor_hyp.chosen_LLM_token:
-            right_candidate = map_up_text.TokenCandidate(
-                clean_form=text_utils.normalize_for_matching(llm_token.w_after.word),
-                kind="word",
-                alto_words=[right_neighbor_hyp.anchor],
-                fuzzy_score=100.0
-            )
-            right_candidate.possible_llm_elements_by_fuzzy_match = [llm_token.w_after]
-            right_neighbor_hyp.candidates.append(right_candidate)
-            right_neighbor_hyp.chosen_LLM_token = llm_token.w_after
-            right_neighbor_hyp.chosen_index = len(right_neighbor_hyp.candidates) - 1
-            right_neighbor_hyp.flagged_for_error = False
-            right_neighbor_hyp.anchor.matched = True
-            right_neighbor_hyp.anchor.best_clean_content = llm_token.w_after.word
+            # Only assign if LLM token is not already matched to another hypothesis
+            if not llm_token.w_after.matched:
+                right_candidate = map_up_text.TokenCandidate(
+                    clean_form=text_utils.normalize_for_matching(llm_token.w_after.word),
+                    kind="word",
+                    alto_words=[right_neighbor_hyp.anchor],
+                    fuzzy_score=100.0
+                )
+                right_candidate.possible_llm_elements_by_fuzzy_match = [llm_token.w_after]
+                right_neighbor_hyp.candidates.append(right_candidate)
+                right_neighbor_hyp.chosen_LLM_token = llm_token.w_after
+                right_neighbor_hyp.chosen_index = len(right_neighbor_hyp.candidates) - 1
+                right_neighbor_hyp.flagged_for_error = False
+                right_neighbor_hyp.anchor.matched = True
+                right_neighbor_hyp.anchor.best_clean_content = llm_token.w_after.word
+                # Mark right LLM token as matched immediately to prevent conflicts
+                llm_token.w_after.matched = True
+            # If already matched, don't assign (leave as PENDING or keep existing match)
 
 
 def match_weak_fuzzy_words(

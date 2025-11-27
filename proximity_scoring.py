@@ -780,8 +780,12 @@ def assess_proximity_for_multiple_matches(
         return None
     
     # Calculate proximity scores for each perfect match
+    # Only consider unmatched tokens (they may have been matched earlier but conflicts resolved)
     scored_candidates = []
     for candidate, llm_token, before_score, after_score in hypothesis.best_candidates_by_context:
+        # Skip if already matched to another hypothesis
+        if llm_token.matched:
+            continue
         proximity = calculate_proximity_score(hypothesis, llm_token, llm_elements, hypothesis_list)
         # Combine context score (already 100/100) with proximity as tie-breaker
         context_score = (before_score + after_score) / 2.0
@@ -791,7 +795,7 @@ def assess_proximity_for_multiple_matches(
     # Sort by total score (descending)
     scored_candidates.sort(key=lambda x: x[2], reverse=True)
     
-    # Return the best one
+    # Return the best unmatched one
     if scored_candidates:
         return scored_candidates[0][1]  # Return the LLM token
     
