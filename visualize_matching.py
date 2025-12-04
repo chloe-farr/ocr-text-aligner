@@ -47,21 +47,141 @@ from map_up_text import TokenCandidate, TokenHypotheses, LLMToken
 console = Console() if RICH_AVAILABLE else Console()
 
 
-def visualize_cleaned_text_positions(
+def visualize_original_ocr_text(
     hypothesis_list: List[TokenHypotheses],
     page: XMLOBJ.Page,
     xml_filename: str,
     output_dir: str = "outputs"
 ):
     """
+    Create a visualization of the original OCR text before any cleaning.
+    Words that don't fuzzy match are shown in red font.
+    
+    Args:
+        hypothesis_list: List of TokenHypotheses objects (from create_hypothesis_list, before any processing)
+        page: The page object for dimensions
+        xml_filename: The XML filename (e.g., "page-1alto-Maclear.xml")
+        output_dir: Directory to save the PNG file (default: "outputs")
+    
+    Returns:
+        The output file path that was used
+    """
+    if not MATPLOTLIB_AVAILABLE:
+        console.print("[yellow]matplotlib not available. Install with: pip install matplotlib[/yellow]")
+        return None
+    
+    # Extract base filename from XML filename (remove extension)
+    xml_base = os.path.splitext(os.path.basename(xml_filename))[0]
+    
+    # Create base output filename
+    base_filename = f"original-ocr-text_{xml_base}.png"
+    
+    # Check for existing files with this pattern
+    output_dir = os.path.abspath(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Pattern to match: original-ocr-text_{xml_base}_v*.png
+    pattern = os.path.join(output_dir, f"original-ocr-text_{xml_base}_v*.png")
+    existing_files = glob.glob(pattern)
+    
+    # Also check for the base filename (v0, no version suffix)
+    base_path = os.path.join(output_dir, base_filename)
+    if os.path.exists(base_path):
+        existing_files.append(base_path)
+    
+    # Count existing versions and determine next version number
+    version = len(existing_files)
+    
+    # Generate output path with version suffix
+    if version == 0:
+        # First version - no suffix
+        output_path = base_path
+    else:
+        # Add version suffix
+        output_path = os.path.join(output_dir, f"original-ocr-text_{xml_base}_v{version}.png")
+    
+    fig, ax = plt.subplots(1, 1, figsize=(12, 16))
+    
+    # Set up the plot with page dimensions
+    ax.set_xlim(0, page.width)
+    ax.set_ylim(page.height, 0)  # Invert y-axis for image coordinates
+    ax.set_aspect('equal')
+    ax.axis('off')  # Remove axes for cleaner visualization
+    
+    # Process each hypothesis
+    for hypothesis in hypothesis_list:
+        anchor = hypothesis.anchor
+        # Get original OCR text
+        text = text_utils.decode_html_entities(anchor.content)
+        
+        # Determine if word fuzzy matches (has candidates)
+        has_fuzzy_match = len(hypothesis.candidates) > 0
+        
+        # Calculate font size to fit within the bounding box
+        height_scale = 0.20
+        height_based_size = anchor.height * height_scale
+        
+        if len(text) > 0:
+            char_width_ratio = 0.6
+            width_based_size = (anchor.width * 0.85) / (char_width_ratio * len(text))
+        else:
+            width_based_size = height_based_size
+        
+        font_size = min(height_based_size, width_based_size)
+        font_size = max(4, min(font_size, 12))
+        
+        # Position text at center of bounding box
+        text_x = anchor.hpos + anchor.width / 2
+        text_y = anchor.vpos + anchor.height / 2
+        
+        # Color: red if no fuzzy match, black otherwise
+        text_color = 'red' if not has_fuzzy_match else 'black'
+        
+        # Add text to the plot
+        ax.text(
+            text_x,
+            text_y,
+            text,
+            fontsize=font_size,
+            ha='center',
+            va='center',
+            weight='normal',
+            color=text_color,
+            family='sans-serif'
+        )
+    
+    plt.tight_layout()
+    
+    # Save the figure
+    fig.savefig(output_path, dpi=150, bbox_inches='tight', pad_inches=0.1)
+    console.print(f"[green]Saved original OCR text visualization to: {output_path}[/green]")
+    
+    return fig
+
+
+def visualize_cleaned_text_positions(
+    hypothesis_list: List[TokenHypotheses],
+    page: XMLOBJ.Page,
+    xml_filename: str,
+    output_dir: str = "outputs",
+    original_alto_content_by_id: Optional[Dict[int, str]] = None
+):
+    """
     Create a visualization of cleaned text positioned using TokenHypotheses.
     Uses the anchor's hpos, vpos, width, height and the chosen_LLM_token's word value.
+    
+    Color coding:
+    - Green: Words that were corrected from the original XML
+    - Red: Words that are errors (flagged_for_error and no chosen_LLM_token)
+    - Dark orange: Words that are pending (has candidates but not matched, or missing neighbors)
+    - Black: Matched words that were not corrected
     
     Args:
         hypothesis_list: List of TokenHypotheses objects
         page: The page object for dimensions
         xml_filename: The XML filename (e.g., "page-1alto-Maclear.xml")
         output_dir: Directory to save the PNG file (default: "outputs")
+        original_alto_content_by_id: Optional mapping of anchor ID to original ALTO content
     
     Returns:
         The output file path that was used
@@ -110,40 +230,99 @@ def visualize_cleaned_text_positions(
     
     # Process each hypothesis
     for hypothesis in hypothesis_list:
-        if not hypothesis.chosen_LLM_token:
-            continue  # Skip hypotheses without a chosen LLM token
-        
         anchor = hypothesis.anchor
-        text = hypothesis.chosen_LLM_token.word
+        
+        # Determine text and color based on status
+        if hypothesis.chosen_LLM_token:
+            text = hypothesis.chosen_LLM_token.word
+            
+            # Check if word was corrected from original XML
+            # A word is corrected if the chosen LLM token differs from the original ALTO content(s)
+            is_corrected = False
+            if original_alto_content_by_id:
+                original_contents = []
+                # Get all original ALTO words (may be merged)
+                if hypothesis.chosen and hypothesis.chosen.alto_words:
+                    # Use chosen candidate's ALTO words (handles merged words)
+                    for alto_word in hypothesis.chosen.alto_words:
+                        alto_id = id(alto_word)
+                        if alto_id in original_alto_content_by_id:
+                            original_contents.append(original_alto_content_by_id[alto_id])
+                        else:
+                            # Fallback to current content if original not found
+                            original_contents.append(text_utils.decode_html_entities(alto_word.content))
+                else:
+                    # Fallback: use anchor's original content
+                    anchor_id = id(anchor)
+                    if anchor_id in original_alto_content_by_id:
+                        original_contents.append(original_alto_content_by_id[anchor_id])
+                    else:
+                        original_contents.append(text_utils.decode_html_entities(anchor.content))
+                
+                # Combine original contents and normalize for comparison
+                # For merged words like "dams" + "aged" = "damaged", compare "damsaged" vs "damaged"
+                original_combined = "".join(original_contents)
+                original_normalized = text_utils.normalize_for_matching(original_combined)
+                current_normalized = text_utils.normalize_for_matching(text)
+                # Consider corrected if normalized forms differ
+                is_corrected = (original_normalized != current_normalized)
+            
+            # Check if missing neighbors (PENDING)
+            # Check if required neighbors are linked AND have the correct LLM tokens
+            missing_left = False
+            if hypothesis.chosen_LLM_token.w_before is not None:
+                if hypothesis.left_matched is None:
+                    missing_left = True
+                elif (hypothesis.left_matched.chosen_LLM_token is None or
+                      hypothesis.left_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_before):
+                    missing_left = True
+            
+            missing_right = False
+            if hypothesis.chosen_LLM_token.w_after is not None:
+                if hypothesis.right_matched is None:
+                    missing_right = True
+                elif (hypothesis.right_matched.chosen_LLM_token is None or
+                      hypothesis.right_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_after):
+                    missing_right = True
+            
+            if is_corrected:
+                # Green: corrected from XML
+                text_color = 'green'
+            elif missing_left or missing_right:
+                # Dark orange: pending (missing neighbors or neighbors have wrong LLM tokens)
+                text_color = '#CC6600'  # Dark orange
+            else:
+                # Black: matched but not corrected
+                text_color = 'black'
+        else:
+            # No chosen LLM token
+            if hypothesis.flagged_for_error:
+                # Red: error
+                text = text_utils.decode_html_entities(anchor.content)
+                text_color = 'red'
+            elif hypothesis.candidates:
+                # Dark orange: pending (has candidates but not matched)
+                text = text_utils.decode_html_entities(anchor.content)
+                text_color = '#CC6600'  # Dark orange
+            else:
+                # Red: no candidates (error)
+                text = text_utils.decode_html_entities(anchor.content)
+                text_color = 'red'
         
         # Calculate font size to fit within the bounding box
-        # Font size in matplotlib points needs proper scaling to data coordinates
-        # The bounding boxes are in pixels (data coordinates), but font size is in points
-        
-        # Primary constraint: height of bounding box
-        # Text should fill most of the height (80-85%) to minimize empty space
-        # Scale factor converts pixel height to font points
-        # For typical pages: 50px height → ~8-10pt font works well
-        height_scale = 0.20  # Increased from 0.15 to ensure text fills boxes better
+        height_scale = 0.20
         height_based_size = anchor.height * height_scale
         
-        # Secondary constraint: width (for long words)
-        # Character width varies, but average is approximately 0.55-0.65 * font_size
-        # Use 85% of width to leave small margins
         if len(text) > 0:
-            char_width_ratio = 0.6  # Average character is ~60% of font size wide
+            char_width_ratio = 0.6
             width_based_size = (anchor.width * 0.85) / (char_width_ratio * len(text))
         else:
             width_based_size = height_based_size
         
-        # Use the smaller constraint to ensure text fits in both dimensions
         font_size = min(height_based_size, width_based_size)
-        
-        # Clamp to reasonable range - increased max to allow better box filling
-        # Minimum ensures readability, maximum prevents overflow but allows proper sizing
         font_size = max(4, min(font_size, 12))
         
-        # Position text at center of bounding box (in data coordinates)
+        # Position text at center of bounding box
         text_x = anchor.hpos + anchor.width / 2
         text_y = anchor.vpos + anchor.height / 2
         
@@ -156,7 +335,7 @@ def visualize_cleaned_text_positions(
             ha='center',
             va='center',
             weight='normal',
-            color='black',
+            color=text_color,
             family='sans-serif'
         )
     
@@ -264,17 +443,40 @@ def visualize_word_pipeline_flowchart(
         console.print(f"  [bold]Action:[/bold] Match normalized word against LLM vocabulary")
         normalized = text_utils.normalize_for_matching(decoded)
         console.print(f"  Normalized: [cyan]{normalized}[/cyan]")
+        console.print(f"  [dim]Threshold: ≥80% fuzzy match required[/dim]")
         
         if initial_hyp.candidates:
-            console.print(f"\n  [bold]Results:[/bold] Found {len(initial_hyp.candidates)} candidate(s)")
-            for i, cand in enumerate(initial_hyp.candidates[:3], 1):
-                console.print(f"    [{i}] '{cand.clean_form}' (score: {cand.fuzzy_score:.1f}%)")
+            console.print(f"\n  [bold]Results:[/bold] Found {len(initial_hyp.candidates)} candidate form(s)")
+            for i, cand in enumerate(initial_hyp.candidates[:5], 1):
+                console.print(f"    [{i}] Candidate form: [cyan]'{cand.clean_form}'[/cyan] (fuzzy score: {cand.fuzzy_score:.1f}%)")
                 if cand.possible_llm_elements_by_fuzzy_match:
-                    llm_words = [e.word for e in cand.possible_llm_elements_by_fuzzy_match[:2]]
-                    console.print(f"        → LLM matches: {', '.join(llm_words)}")
+                    # Count instances by word
+                    word_counts = {}
+                    for token in cand.possible_llm_elements_by_fuzzy_match:
+                        word = token.word
+                        if word not in word_counts:
+                            word_counts[word] = []
+                        word_counts[word].append(token)
+                    
+                    console.print(f"        → Total LLM token instances matching this form: {len(cand.possible_llm_elements_by_fuzzy_match)}")
+                    for word, tokens in word_counts.items():
+                        console.print(f"        → '{word}': {len(tokens)} instance(s) in LLM text")
+                        # Show unique neighbor contexts for this word
+                        neighbor_contexts = set()
+                        for token in tokens:
+                            before = token.w_before.word if token.w_before else "(start)"
+                            after = token.w_after.word if token.w_after else "(end)"
+                            neighbor_contexts.add(f"'{before}' ... '{after}'")
+                        if len(neighbor_contexts) <= 5:
+                            for ctx in sorted(neighbor_contexts):
+                                console.print(f"          • Context: {ctx}")
+                        elif len(neighbor_contexts) > 5:
+                            for ctx in sorted(list(neighbor_contexts))[:5]:
+                                console.print(f"          • Context: {ctx}")
+                            console.print(f"          • ... and {len(neighbor_contexts) - 5} more unique neighbor contexts")
         else:
             console.print(f"  [red]✗ No candidates found[/red]")
-            console.print(f"  [yellow]→ Flagged for error[/yellow]")
+            console.print(f"  [yellow]→ Flagged for error (no fuzzy match ≥80%)[/yellow]")
     
     console.print(f"\n  [bold]↓[/bold]")
     console.print(f"  [dim]Processing...[/dim]")
@@ -293,23 +495,49 @@ def visualize_word_pipeline_flowchart(
         console.print(f"  Context: ... '{before_word}' → '{decoded}' → '{after_word}' ...")
         
         has_context_matches = False
+        all_context_matches = []
+        
         for cand in context_hyp.candidates:
             if cand.possible_llm_elements_by_context:
                 has_context_matches = True
-                console.print(f"\n  [bold]Results:[/bold] Context matches found")
-                for llm_elem, before_score, after_score in cand.possible_llm_elements_by_context[:2]:
-                    before_llm = llm_elem.w_before.word if llm_elem.w_before else "N/A"
-                    after_llm = llm_elem.w_after.word if llm_elem.w_after else "N/A"
-                    avg_score = (before_score + after_score) / 2.0
-                    console.print(f"    '{llm_elem.word}' (context: {avg_score:.1f}%)")
-                    console.print(f"        ALTO: '{before_word}' ↔ LLM: '{before_llm}' = {before_score:.1f}%")
-                    console.print(f"        ALTO: '{after_word}' ↔ LLM: '{after_llm}' = {after_score:.1f}%")
-                break
+                # Deduplicate by LLM token ID to get unique instances
+                seen_token_ids = set()
+                for llm_elem, before_score, after_score in cand.possible_llm_elements_by_context:
+                    token_id = id(llm_elem)
+                    if token_id not in seen_token_ids:
+                        seen_token_ids.add(token_id)
+                        all_context_matches.append((llm_elem, before_score, after_score, cand))
         
-        if not has_context_matches:
-            console.print(f"  [yellow]⚠ No strong context matches[/yellow]")
+        if has_context_matches:
+            console.print(f"\n  [bold]Results:[/bold] Found {len(all_context_matches)} unique context match(es)")
+            console.print(f"  [dim]Testing each LLM token instance with its unique neighbors...[/dim]")
+            console.print(f"  [dim]Threshold: ≥90% context score required[/dim]")
+            
+            # Show all unique matches (each represents a different LLM token instance with different neighbors)
+            for idx, (llm_elem, before_score, after_score, cand) in enumerate(all_context_matches, 1):
+                before_llm = llm_elem.w_before.word if llm_elem.w_before else "N/A"
+                after_llm = llm_elem.w_after.word if llm_elem.w_after else "N/A"
+                avg_score = (before_score + after_score) / 2.0
+                
+                console.print(f"\n    [{idx}] Testing LLM token instance:")
+                console.print(f"        Word: [cyan]'{llm_elem.word}'[/cyan]")
+                console.print(f"        LLM context: ... '{before_llm}' → '{llm_elem.word}' → '{after_llm}' ...")
+                console.print(f"        Context scores:")
+                console.print(f"          • Before: ALTO '{before_word}' ↔ LLM '{before_llm}' = {before_score:.1f}%")
+                console.print(f"          • After:  ALTO '{after_word}' ↔ LLM '{after_llm}' = {after_score:.1f}%")
+                console.print(f"        Average context score: {avg_score:.1f}%")
+                if avg_score >= 90.0:
+                    console.print(f"        [green]✓ PASS[/green] (≥90%)")
+                elif avg_score >= 70.0:
+                    console.print(f"        [yellow]⚠ WEAK[/yellow] (70-90%)")
+                else:
+                    console.print(f"        [red]✗ FAIL[/red] (<70%)")
+        else:
+            console.print(f"\n  [yellow]⚠ No context matches found[/yellow]")
+            console.print(f"  [dim]Checked all {len(context_hyp.candidates)} candidate(s) for context matches[/dim]")
+            console.print(f"  [dim]Threshold: ≥90% context score required on at least one side[/dim]")
             if context_hyp.flagged_for_error:
-                console.print(f"  [red]→ Flagged for error[/red]")
+                console.print(f"  [red]→ Flagged for error (no context match found)[/red]")
     
     console.print(f"\n  [bold]↓[/bold]")
     console.print(f"  [dim]Processing...[/dim]")
@@ -321,26 +549,226 @@ def visualize_word_pipeline_flowchart(
     console.print(f"[bold yellow]└─────────────────────────────────────────────────────────┘[/bold yellow]")
     
     hyphen_hyp = tracked_hypotheses.get("after_hyphen_linking")
+    context_hyp = tracked_hypotheses.get("after_context_matching")  # Get previous stage for comparison
+    
     if hyphen_hyp:
+        decoded_hyphen = text_utils.decode_html_entities(hyphen_hyp.anchor.content)
         is_literal_hyphen = text_utils.is_hyphenish(hyphen_hyp.anchor)
-        console.print(f"  [bold]Check:[/bold] Is this a hyphenated word? {is_literal_hyphen}")
+        console.print(f"  [bold]Action:[/bold] Check if word should be combined with neighbors")
+        console.print(f"  [bold]Is literal hyphen?[/bold] {is_literal_hyphen}")
+        if is_literal_hyphen:
+            console.print(f"  Content: [cyan]{decoded_hyphen}[/cyan] (ends with hyphen)")
+        
+        # Get the previous stage to see what the word was before hyphen linking
+        if context_hyp:
+            prev_decoded = text_utils.decode_html_entities(context_hyp.anchor.content)
+            prev_after_word = context_hyp.anchor.after_word
+            console.print(f"  [dim]Previous state: '{prev_decoded}' → after_word: {text_utils.decode_html_entities(prev_after_word.content) if prev_after_word else 'N/A'}[/dim]")
         
         # Check if word was merged
         was_merged = False
         merged_parts = []
+        merged_candidate = None
         for cand in hyphen_hyp.candidates:
             if len(cand.alto_words) > 1:
                 was_merged = True
                 merged_parts = [text_utils.decode_html_entities(w.content) for w in cand.alto_words]
+                merged_candidate = cand
                 break
         
-        if was_merged:
-            console.print(f"  [bold green]✓ MERGED[/bold green]")
-            console.print(f"  Combined: [cyan]{' + '.join(merged_parts)}[/cyan]")
-            if hyphen_hyp.chosen_LLM_token:
-                console.print(f"  → Matched to: [green]'{hyphen_hyp.chosen_LLM_token.word}'[/green]")
+        if was_merged and merged_candidate:
+            console.print(f"\n  [bold green]✓ MERGED[/bold green]")
+            console.print(f"  Combined ALTO words: [cyan]{' + '.join(merged_parts)}[/cyan]")
+            
+            # Show the combined form and scores
+            combined_form = merged_candidate.clean_form
+            fuzzy_score = merged_candidate.fuzzy_score
+            console.print(f"  Combined form: [green]'{combined_form}'[/green]")
+            console.print(f"  Fuzzy match score: {fuzzy_score:.1f}%")
+            
+            # Show what LLM word it matched against
+            if merged_candidate.possible_llm_elements_by_fuzzy_match:
+                matched_llm_words = [t.word for t in merged_candidate.possible_llm_elements_by_fuzzy_match]
+                word_list = ', '.join(f"'{w}'" for w in matched_llm_words[:3])
+                console.print(f"  Matched to LLM word(s): {word_list}")
+                if len(matched_llm_words) > 3:
+                    console.print(f"    ... and {len(matched_llm_words) - 3} more")
+            elif hyphen_hyp.chosen_LLM_token:
+                console.print(f"  Matched to LLM token: [green]'{hyphen_hyp.chosen_LLM_token.word}'[/green]")
+            
+            # Show context scores if available
+            if merged_candidate.possible_llm_elements_by_context:
+                best_context = merged_candidate.possible_llm_elements_by_context[0]
+                llm_elem, before_score, after_score = best_context
+                avg_context = (before_score + after_score) / 2.0
+                console.print(f"  Context score: {avg_context:.1f}% (before: {before_score:.1f}%, after: {after_score:.1f}%)")
+            
+            if hyphen_hyp.chosen_LLM_token and hyphen_hyp.chosen_LLM_token not in (merged_candidate.possible_llm_elements_by_fuzzy_match or []):
+                console.print(f"  → Final chosen LLM token: [green]'{hyphen_hyp.chosen_LLM_token.word}'[/green]")
+            
+            # Show what was tested - the immediate after_word is prioritized
+            if context_hyp:
+                console.print(f"\n  [bold]Combination Testing Process:[/bold]")
+                
+                # Show the prioritized after_word
+                if context_hyp.anchor.after_word:
+                    after_word_text = text_utils.decode_html_entities(context_hyp.anchor.after_word.content)
+                    console.print(f"    [1] [bold]PRIORITIZED[/bold] '{decoded_hyphen}' + '{after_word_text}'")
+                    console.print(f"        → [green]✓ SELECTED[/green] (Immediate after_word has highest priority)")
+                    
+                    # Show what was attempted
+                    base1 = decoded_hyphen.rstrip("-–—") if is_literal_hyphen else decoded_hyphen
+                    attempted_merge = base1 + after_word_text
+                    attempted_with_hyphen = base1 + "-" + after_word_text if is_literal_hyphen else None
+                    
+                    console.print(f"        Combined: '{attempted_merge}'" + (f" or '{attempted_with_hyphen}'" if attempted_with_hyphen else ""))
+                    console.print(f"        Fuzzy score: {fuzzy_score:.1f}%")
+                
+                # Find nearby words in the same stage that might have been tested
+                # Only show words that were eligible (flagged or no good matches)
+                if "after_context_matching" in pipeline_states:
+                    context_stage_hypotheses = pipeline_states["after_context_matching"]
+                    
+                    # Find the index of our word in the context stage
+                    word_idx = None
+                    for idx, hyp in enumerate(context_stage_hypotheses):
+                        if id(hyp.anchor) == id(context_hyp.anchor):
+                            word_idx = idx
+                            break
+                    
+                    if word_idx is not None:
+                        # Show eligible nearby words (flagged or no good matches)
+                        # Words with good matches shouldn't be tested as partners
+                        eligible_words = []
+                        ineligible_words = []
+                        
+                        for offset in range(1, 6):  # Check nearby positions
+                            for check_idx in [word_idx + offset, word_idx - offset]:
+                                if 0 <= check_idx < len(context_stage_hypotheses):
+                                    other_hyp = context_stage_hypotheses[check_idx]
+                                    other_word = text_utils.decode_html_entities(other_hyp.anchor.content)
+                                    
+                                    if other_word == after_word_text:  # Skip the selected one
+                                        continue
+                                    
+                                    # Check if this word was eligible (should have been tested)
+                                    has_good_match = False
+                                    if other_hyp.candidates:
+                                        for cand in other_hyp.candidates:
+                                            if cand.fuzzy_score >= 85.0 or len(cand.possible_llm_elements_by_fuzzy_match) > 0:
+                                                has_good_match = True
+                                                break
+                                    
+                                    is_eligible = other_hyp.flagged_for_error or not has_good_match
+                                    
+                                    if is_eligible and len(eligible_words) < 3:
+                                        eligible_words.append((offset if check_idx > word_idx else -offset, other_word, other_hyp))
+                                    elif not is_eligible and len(ineligible_words) < 2:
+                                        ineligible_words.append((offset if check_idx > word_idx else -offset, other_word))
+                            
+                            if len(eligible_words) >= 3:
+                                break
+                        
+                        if eligible_words:
+                            console.print(f"\n    [2+] Other eligible words tested (spatially sorted):")
+                            for offset, other_word, other_hyp in eligible_words:
+                                direction = "after" if offset > 0 else "before"
+                                reason = "flagged" if other_hyp.flagged_for_error else "no good match"
+                                console.print(f"        [{abs(offset)} {direction}] '{decoded_hyphen}' + '{other_word}' ({reason}) → [dim]tested[/dim]")
+                        
+                        if ineligible_words:
+                            console.print(f"\n    [dim]Nearby words NOT tested (already have good matches):[/dim]")
+                            for offset, other_word in ineligible_words:
+                                direction = "after" if offset > 0 else "before"
+                                console.print(f"        [{abs(offset)} {direction}] '{other_word}' → [dim]skipped (has good match)[/dim]")
+                        
+                        console.print(f"\n    [dim]Search strategy:[/dim]")
+                        console.print(f"        • Only tests words with no candidates OR bad context scores")
+                        console.print(f"        • Pass 1: Spatially-close eligible words (reading order distance)")
+                        console.print(f"        • Pass 2: All remaining eligible words for exact vocabulary matches")
+                        console.print(f"        • Priority: Exact matches (100%) > Fuzzy matches (≥80%)")
+                        console.print(f"        • Context validation: ≥70% required")
         else:
-            console.print(f"  [dim]→ Not merged (no suitable partner found or not a hyphen)[/dim]")
+            # Show what was tested
+            console.print(f"\n  [bold]Not merged[/bold]")
+            console.print(f"  [bold]Combination Testing Process:[/bold]")
+            
+            if context_hyp and context_hyp.anchor.after_word:
+                after_word_text = text_utils.decode_html_entities(context_hyp.anchor.after_word.content)
+                console.print(f"    [1] [bold]PRIORITIZED[/bold] '{decoded_hyphen}' + '{after_word_text}'")
+                
+                # Try to show why it failed
+                base1 = decoded_hyphen.rstrip("-–—") if is_literal_hyphen else decoded_hyphen
+                attempted_merge = base1 + after_word_text
+                attempted_with_hyphen = base1 + "-" + after_word_text if is_literal_hyphen else None
+                
+                console.print(f"        Combined: '{attempted_merge}'" + (f" or '{attempted_with_hyphen}'" if attempted_with_hyphen else ""))
+                console.print(f"        → [red]✗ FAILED[/red]")
+                console.print(f"        Reason: [dim]No fuzzy match ≥80% found in LLM vocabulary, or context validation <70%[/dim]")
+                
+                # Show nearby words that were also tested
+                if "after_context_matching" in pipeline_states:
+                    context_stage_hypotheses = pipeline_states["after_context_matching"]
+                    word_idx = None
+                    for idx, hyp in enumerate(context_stage_hypotheses):
+                        if id(hyp.anchor) == id(context_hyp.anchor):
+                            word_idx = idx
+                            break
+                    
+                    if word_idx is not None:
+                        # Show eligible nearby words (flagged or no good matches)
+                        eligible_words = []
+                        ineligible_words = []
+                        
+                        for offset in range(1, 6):  # Check nearby positions
+                            for check_idx in [word_idx + offset, word_idx - offset]:
+                                if 0 <= check_idx < len(context_stage_hypotheses):
+                                    other_hyp = context_stage_hypotheses[check_idx]
+                                    other_word = text_utils.decode_html_entities(other_hyp.anchor.content)
+                                    
+                                    if other_word == after_word_text:  # Skip the prioritized one
+                                        continue
+                                    
+                                    # Check if this word was eligible (should have been tested)
+                                    has_good_match = False
+                                    if other_hyp.candidates:
+                                        for cand in other_hyp.candidates:
+                                            if cand.fuzzy_score >= 85.0 or len(cand.possible_llm_elements_by_fuzzy_match) > 0:
+                                                has_good_match = True
+                                                break
+                                    
+                                    is_eligible = other_hyp.flagged_for_error or not has_good_match
+                                    actual_offset = check_idx - word_idx
+                                    
+                                    if is_eligible and len(eligible_words) < 3:
+                                        eligible_words.append((actual_offset, other_word, other_hyp))
+                                    elif not is_eligible and len(ineligible_words) < 2:
+                                        ineligible_words.append((actual_offset, other_word))
+                            
+                            if len(eligible_words) >= 3:
+                                break
+                        
+                        if eligible_words:
+                            console.print(f"\n    [2+] Other eligible words tested:")
+                            for offset, other_word, other_hyp in eligible_words:
+                                direction = "after" if offset > 0 else "before"
+                                reason = "flagged" if other_hyp.flagged_for_error else "no good match"
+                                console.print(f"        [{abs(offset)} {direction}] '{decoded_hyphen}' + '{other_word}' ({reason}) → [dim]✗ No match[/dim]")
+                        
+                        if ineligible_words:
+                            console.print(f"\n    [dim]Nearby words NOT tested (already have good matches):[/dim]")
+                            for offset, other_word in ineligible_words:
+                                direction = "after" if offset > 0 else "before"
+                                console.print(f"        [{abs(offset)} {direction}] '{other_word}' → [dim]skipped (has good match)[/dim]")
+            
+            console.print(f"\n    [dim]Search strategy:[/dim]")
+            console.print(f"        • Only tests words with no candidates OR bad context scores")
+            console.print(f"        • Tested spatially-close eligible words (reading order distance)")
+            console.print(f"        • Also tested all eligible words for exact vocabulary matches (handles reordering)")
+            console.print(f"        → [dim]No suitable partner found[/dim]")
+            console.print(f"  [dim]Reason: Individual match is better, or no valid combination with ≥80% fuzzy + ≥70% context[/dim]")
+            if hyphen_hyp.flagged_for_error:
+                console.print(f"  [yellow]→ Still flagged for error (may need long-distance matching or paragraph reordering)[/yellow]")
     
     console.print(f"\n  [bold]↓[/bold]")
     console.print(f"  [dim]Processing...[/dim]")
@@ -418,18 +846,55 @@ def visualize_word_pipeline_flowchart(
             console.print(f"  → LLM: [green]'{final_hyp.chosen_LLM_token.word}'[/green] (index: {llm_idx})")
             
             if final_hyp.chosen:
-                console.print(f"  Candidate: '{final_hyp.chosen.clean_form}'")
+                console.print(f"  Candidate form: '{final_hyp.chosen.clean_form}' (fuzzy: {final_hyp.chosen.fuzzy_score:.1f}%)")
             
-            # Show links
-            left_link = "✓" if final_hyp.left_matched else "✗"
-            right_link = "✓" if final_hyp.right_matched else "✗"
-            console.print(f"  Links: Left={left_link}, Right={right_link}")
+            # Show links with details
+            console.print(f"\n  [bold]Bidirectional Links:[/bold]")
+            if final_hyp.left_matched:
+                left_word = text_utils.decode_html_entities(final_hyp.left_matched.anchor.content)
+                left_llm = final_hyp.left_matched.chosen_LLM_token.word if final_hyp.left_matched.chosen_LLM_token else "N/A"
+                console.print(f"    Left: [green]✓[/green] '{left_word}' → LLM: '{left_llm}'")
+                # Verify bidirectional
+                if final_hyp.left_matched.right_matched == final_hyp:
+                    console.print(f"        [dim]✓ Reciprocal link confirmed[/dim]")
+                else:
+                    console.print(f"        [red]✗ Missing reciprocal link![/red]")
+            else:
+                expected_left = final_hyp.chosen_LLM_token.w_before.word if final_hyp.chosen_LLM_token.w_before else None
+                if expected_left:
+                    console.print(f"    Left: [red]✗[/red] Expected LLM: '{expected_left}' (not linked)")
+                else:
+                    console.print(f"    Left: [dim]N/A (at start)[/dim]")
+            
+            if final_hyp.right_matched:
+                right_word = text_utils.decode_html_entities(final_hyp.right_matched.anchor.content)
+                right_llm = final_hyp.right_matched.chosen_LLM_token.word if final_hyp.right_matched.chosen_LLM_token else "N/A"
+                console.print(f"    Right: [green]✓[/green] '{right_word}' → LLM: '{right_llm}'")
+                # Verify bidirectional
+                if final_hyp.right_matched.left_matched == final_hyp:
+                    console.print(f"        [dim]✓ Reciprocal link confirmed[/dim]")
+                else:
+                    console.print(f"        [red]✗ Missing reciprocal link![/red]")
+            else:
+                expected_right = final_hyp.chosen_LLM_token.w_after.word if final_hyp.chosen_LLM_token.w_after else None
+                if expected_right:
+                    console.print(f"    Right: [red]✗[/red] Expected LLM: '{expected_right}' (not linked)")
+                else:
+                    console.print(f"    Right: [dim]N/A (at end)[/dim]")
         else:
             console.print(f"  [bold red]✗ NOT MATCHED[/bold red]")
+            console.print(f"  [bold]Status:[/bold] ", end="")
             if final_hyp.flagged_for_error:
-                console.print(f"  Status: [red]ERROR[/red]")
+                console.print(f"[red]ERROR[/red]")
+                # Show why it failed
+                if final_hyp.candidates:
+                    console.print(f"  [dim]Has {len(final_hyp.candidates)} candidate(s) but none selected[/dim]")
+                else:
+                    console.print(f"  [dim]No candidates available[/dim]")
             else:
-                console.print(f"  Status: [yellow]PENDING[/yellow]")
+                console.print(f"[yellow]PENDING[/yellow]")
+                if final_hyp.candidates:
+                    console.print(f"  [dim]Has {len(final_hyp.candidates)} candidate(s) - awaiting better context or proximity matching[/dim]")
 
 
 def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], llm_elements: List[LLMToken], max_display: int = 100, show_table: bool = True):
@@ -477,6 +942,7 @@ def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], ll
     # Track conflicts (using id() for set membership)
     conflicts = []
     matched_llm_token_ids = set()
+    pending_details_list = []  # Store details for PENDING words with chosen_LLM_token
     
     # If showing table, use max_display (None = all). If not showing table, iterate all for summary.
     if show_table:
@@ -524,14 +990,27 @@ def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], ll
                 else:
                     conflict_str = "[dim]No[/dim]"
             
-            # Check if required neighbors are linked
-            missing_left = (hypothesis.chosen_LLM_token.w_before is not None and 
-                          hypothesis.left_matched is None)
-            missing_right = (hypothesis.chosen_LLM_token.w_after is not None and 
-                           hypothesis.right_matched is None)
+            # Check if required neighbors are linked AND have the correct LLM tokens
+            missing_left = False
+            if hypothesis.chosen_LLM_token.w_before is not None:
+                if hypothesis.left_matched is None:
+                    missing_left = True
+                elif (hypothesis.left_matched.chosen_LLM_token is None or
+                      hypothesis.left_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_before):
+                    # Has link but neighbor doesn't have the correct LLM token
+                    missing_left = True
+            
+            missing_right = False
+            if hypothesis.chosen_LLM_token.w_after is not None:
+                if hypothesis.right_matched is None:
+                    missing_right = True
+                elif (hypothesis.right_matched.chosen_LLM_token is None or
+                      hypothesis.right_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_after):
+                    # Has link but neighbor doesn't have the correct LLM token
+                    missing_right = True
             
             if missing_left or missing_right:
-                # Has chosen_LLM_token but missing required neighbors - mark as PENDING
+                # Has chosen_LLM_token but missing required neighbors or neighbors have wrong LLM tokens - mark as PENDING
                 status = "[yellow]⚠ PENDING[/yellow]"
             else:
                 status = "[bold green]✓ MATCHED[/bold green]"
@@ -539,6 +1018,8 @@ def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], ll
             llm_token_str = "[dim]N/A[/dim]"
             llm_index_str = "[dim]N/A[/dim]"
             conflict_str = "[dim]N/A[/dim]"
+            missing_left = False
+            missing_right = False
             if hypothesis.flagged_for_error:
                 status = "[bold red]✗ ERROR[/bold red]"
             elif hypothesis.candidates:
@@ -558,6 +1039,51 @@ def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], ll
                 status,
                 conflict_str
             )
+        
+        # Store PENDING details for debugging output (words with chosen_LLM_token that are still PENDING)
+        if hypothesis.chosen_LLM_token and (missing_left or missing_right):
+            # Find spatial neighbors via ALTO structure
+            spatial_left_alto = None
+            spatial_right_alto = None
+            if hypothesis.anchor.before_word:
+                spatial_left_alto = text_utils.decode_html_entities(hypothesis.anchor.before_word.content)
+            if hypothesis.anchor.after_word:
+                spatial_right_alto = text_utils.decode_html_entities(hypothesis.anchor.after_word.content)
+            
+            pending_details = {
+                'hyp_idx': hyp_idx,
+                'alto_word': alto_words_str,
+                'llm_token': hypothesis.chosen_LLM_token.word,
+                'missing_left': missing_left,
+                'missing_right': missing_right,
+                'expected_left_token': hypothesis.chosen_LLM_token.w_before,
+                'expected_left': hypothesis.chosen_LLM_token.w_before.word if hypothesis.chosen_LLM_token.w_before else None,
+                'expected_right_token': hypothesis.chosen_LLM_token.w_after,
+                'expected_right': hypothesis.chosen_LLM_token.w_after.word if hypothesis.chosen_LLM_token.w_after else None,
+                'actual_left_token': None,
+                'actual_left': None,
+                'actual_right_token': None,
+                'actual_right': None,
+                'left_matched_word': None,
+                'right_matched_word': None,
+                'spatial_left_alto': spatial_left_alto,
+                'spatial_right_alto': spatial_right_alto
+            }
+            
+            if hypothesis.left_matched:
+                pending_details['left_matched_word'] = text_utils.decode_html_entities(hypothesis.left_matched.anchor.content)
+                if hypothesis.left_matched.chosen_LLM_token:
+                    pending_details['actual_left_token'] = hypothesis.left_matched.chosen_LLM_token
+                    pending_details['actual_left'] = hypothesis.left_matched.chosen_LLM_token.word
+            
+            if hypothesis.right_matched:
+                pending_details['right_matched_word'] = text_utils.decode_html_entities(hypothesis.right_matched.anchor.content)
+                if hypothesis.right_matched.chosen_LLM_token:
+                    pending_details['actual_right_token'] = hypothesis.right_matched.chosen_LLM_token
+                    pending_details['actual_right'] = hypothesis.right_matched.chosen_LLM_token.word
+            
+            # Store in a list for later display
+            pending_details_list.append(pending_details)
     
     if show_table:
         console.print(table)
@@ -578,6 +1104,101 @@ def visualize_llm_token_mapping_table(hypothesis_list: List[TokenHypotheses], ll
                 console.print(f"    - Hyp[{hypothesis_list.index(hyp)}]: '{alto_str}'")
     else:
         console.print(f"\n[bold green]✓ No conflicts detected - all LLM tokens map to unique hypotheses[/bold green]")
+    
+    # Show detailed debugging for PENDING words with chosen_LLM_token
+    if pending_details_list:
+        console.print(f"\n[bold yellow]⚠ PENDING WORDS ANALYSIS (with chosen_LLM_token):[/bold yellow]")
+        console.print(f"  These words have a chosen LLM token but neighbors don't match correctly.")
+        console.print(f"  [dim]Note: Cross-boundary matching should have attempted to link these by searching for expected neighbors across layout boundaries. Check console output above for '[Cross-Boundary Matching]' messages.[/dim]\n")
+        
+        for details in pending_details_list[:20]:  # Show first 20
+            console.print(f"  [bold]Hyp[{details['hyp_idx']}]:[/bold] '{details['alto_word']}' → LLM: '{details['llm_token']}'")
+            
+            if details['missing_left']:
+                console.print(f"    [red]Left neighbor:[/red]")
+                if details['expected_left']:
+                    console.print(f"      Expected LLM token: [green]'{details['expected_left']}'[/green]")
+                else:
+                    console.print(f"      Expected: [dim]N/A (at start)[/dim]")
+                
+                if details['left_matched_word']:
+                    console.print(f"      Linked to ALTO: [yellow]'{details['left_matched_word']}'[/yellow]")
+                    if details['actual_left_token']:
+                        console.print(f"      Which has LLM token: [yellow]'{details['actual_left']}'[/yellow]")
+                        # Check if token objects match (not just word strings)
+                        if details['expected_left_token']:
+                            if details['actual_left_token'] != details['expected_left_token']:
+                                if details['expected_left'] == details['actual_left']:
+                                    # Words match but different token instances = duplicate words in text
+                                    console.print(f"      [yellow]⚠ WORD MATCHES but wrong instance:[/yellow] '{details['actual_left']}'")
+                                    console.print(f"         The neighbor matched to a different instance of the same word in the clean text.")
+                                    console.print(f"         This indicates duplicate words or incorrect sequence matching.")
+                                else:
+                                    # Different words entirely
+                                    console.print(f"      [red]✗ MISMATCH: Expected '{details['expected_left']}' but got '{details['actual_left']}'[/red]")
+                            else:
+                                console.print(f"      [green]✓ Token objects match correctly![/green]")
+                    else:
+                        console.print(f"      Which has LLM token: [red]NONE (PENDING)[/red]")
+                else:
+                    console.print(f"      [red]✗ No link established[/red]")
+                    # Show spatial neighbor info to help debug
+                    if details['spatial_left_alto']:
+                        console.print(f"      Spatial ALTO neighbor: [dim]'{details['spatial_left_alto']}'[/dim]")
+                        # Try to find this neighbor in hypothesis list
+                        spatial_neighbor_hyp = None
+                        for hyp in hypothesis_list:
+                            if text_utils.decode_html_entities(hyp.anchor.content) == details['spatial_left_alto']:
+                                spatial_neighbor_hyp = hyp
+                                break
+                        if spatial_neighbor_hyp:
+                            neighbor_idx = hypothesis_list.index(spatial_neighbor_hyp)
+                            if spatial_neighbor_hyp.chosen_LLM_token:
+                                console.print(f"        → Found as Hyp[{neighbor_idx}] with LLM: '{spatial_neighbor_hyp.chosen_LLM_token.word}'")
+                                if spatial_neighbor_hyp.chosen_LLM_token.word == details['expected_left']:
+                                    console.print(f"        [yellow]⚠ Word matches but link not established - likely token object mismatch[/yellow]")
+                                else:
+                                    console.print(f"        [yellow]⚠ Has different LLM token than expected[/yellow]")
+                            else:
+                                console.print(f"        → Found as Hyp[{neighbor_idx}] but [red]PENDING (no chosen_LLM_token)[/red]")
+                        else:
+                            console.print(f"        → [red]Not found in hypothesis list[/red]")
+                    else:
+                        console.print(f"      [dim]No spatial ALTO neighbor defined (anchor.before_word is None)[/dim]")
+            
+            if details['missing_right']:
+                console.print(f"    [red]Right neighbor:[/red]")
+                if details['expected_right']:
+                    console.print(f"      Expected LLM token: [green]'{details['expected_right']}'[/green]")
+                else:
+                    console.print(f"      Expected: [dim]N/A (at end)[/dim]")
+                
+                if details['right_matched_word']:
+                    console.print(f"      Linked to ALTO: [yellow]'{details['right_matched_word']}'[/yellow]")
+                    if details['actual_right_token']:
+                        console.print(f"      Which has LLM token: [yellow]'{details['actual_right']}'[/yellow]")
+                        # Check if token objects match (not just word strings)
+                        if details['expected_right_token']:
+                            if details['actual_right_token'] != details['expected_right_token']:
+                                if details['expected_right'] == details['actual_right']:
+                                    # Words match but different token instances = duplicate words in text
+                                    console.print(f"      [yellow]⚠ WORD MATCHES but wrong instance:[/yellow] '{details['actual_right']}'")
+                                    console.print(f"         The neighbor matched to a different instance of the same word in the clean text.")
+                                    console.print(f"         This indicates duplicate words or incorrect sequence matching.")
+                                else:
+                                    # Different words entirely
+                                    console.print(f"      [red]✗ MISMATCH: Expected '{details['expected_right']}' but got '{details['actual_right']}'[/red]")
+                            else:
+                                console.print(f"      [green]✓ Token objects match correctly![/green]")
+                    else:
+                        console.print(f"      Which has LLM token: [red]NONE (PENDING)[/red]")
+                else:
+                    console.print(f"      [red]✗ No link established[/red]")
+            
+            console.print()  # Blank line between entries
+        
+        if len(pending_details_list) > 20:
+            console.print(f"    ... and {len(pending_details_list) - 20} more PENDING words\n")
     
     # Show unmatched items
     unmatched_llm = [llm for llm in llm_elements if id(llm) not in matched_llm_token_ids]
@@ -856,11 +1477,22 @@ def export_llm_token_mapping_to_pdf(
                 else:
                     conflict_str = "No"
             
-            # Check status
-            missing_left = (hypothesis.chosen_LLM_token.w_before is not None and 
-                          hypothesis.left_matched is None)
-            missing_right = (hypothesis.chosen_LLM_token.w_after is not None and 
-                           hypothesis.right_matched is None)
+            # Check status - verify neighbors are linked AND have correct LLM tokens
+            missing_left = False
+            if hypothesis.chosen_LLM_token.w_before is not None:
+                if hypothesis.left_matched is None:
+                    missing_left = True
+                elif (hypothesis.left_matched.chosen_LLM_token is None or
+                      hypothesis.left_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_before):
+                    missing_left = True
+            
+            missing_right = False
+            if hypothesis.chosen_LLM_token.w_after is not None:
+                if hypothesis.right_matched is None:
+                    missing_right = True
+                elif (hypothesis.right_matched.chosen_LLM_token is None or
+                      hypothesis.right_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_after):
+                    missing_right = True
             
             if missing_left or missing_right:
                 status = "⚠ PENDING"

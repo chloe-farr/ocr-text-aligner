@@ -1,15 +1,14 @@
 """
-Paragraph reordering module for text boundary mapping.
+Cross-boundary neighbor matching module for text boundary mapping.
 
-This module handles PENDING words that have LLM candidates but poor neighbor matches
-due to paragraph reordering. It tests possible paragraph reorderings to match the
-LLM text order.
+This module handles PENDING words that have chosen_LLM_token but missing neighbors
+due to layout blocks being in opposite order. It uses a combinatorial approach to
+test unmatched words against each other to find cross-boundary connections.
 
-Non-intrusive: only affects words marked as PENDING.
+Similar to hyphen linking - tests combinations to find pairs that should be neighbors.
 """
 
-from typing import List, Optional, Dict, Tuple, TYPE_CHECKING
-from rapidfuzz import fuzz
+from typing import List, Optional, Dict, Tuple, Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from map_up_text import LLMToken, TokenHypotheses
@@ -23,250 +22,338 @@ import text_utils
 import map_up_text
 
 # Configuration
-POOR_NEIGHBOR_THRESHOLD = 85.0  # Below this is considered poor
-MAX_REORDERING_DISTANCE = 50  # Maximum words to consider for reordering
+MAX_COMBINATORIAL_SEARCH_DISTANCE = 200  # Maximum indices to search for cross-boundary matches
 
 
-def identify_pending_with_poor_neighbors(
+def is_pending_word(hyp: TokenHypotheses) -> bool:
+    """
+    Check if a word is PENDING.
+    
+    A word is PENDING if it has a chosen_LLM_token but is missing required
+    left_matched or right_matched links, or if the linked neighbors don't have
+    the correct LLM tokens.
+    
+    Args:
+        hyp: TokenHypotheses to check
+        
+    Returns:
+        True if the word is PENDING, False otherwise
+    """
+    # Must have a chosen LLM token to be PENDING (words without chosen_LLM_token are ERROR or NO CAND)
+    if hyp.chosen_LLM_token is None:
+        return False
+    
+    # Check if left neighbor is missing or incorrect
+    missing_left = False
+    if hyp.chosen_LLM_token.w_before is not None:
+        if hyp.left_matched is None:
+            missing_left = True
+        elif (hyp.left_matched.chosen_LLM_token is None or
+              hyp.left_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_before):
+            missing_left = True
+    
+    # Check if right neighbor is missing or incorrect
+    missing_right = False
+    if hyp.chosen_LLM_token.w_after is not None:
+        if hyp.right_matched is None:
+            missing_right = True
+        elif (hyp.right_matched.chosen_LLM_token is None or
+              hyp.right_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_after):
+            missing_right = True
+    
+    # PENDING if either neighbor is missing or incorrect
+    return missing_left or missing_right
+
+
+def find_words_with_missing_neighbors(
+    hypothesis_list: List[TokenHypotheses]
+) -> List[Tuple[TokenHypotheses, int, Optional[LLMToken], str]]:
+    """
+    Find PENDING words with chosen_LLM_token but missing expected neighbors.
+    
+    Only processes words that are flagged as PENDING (have chosen_LLM_token but
+    missing or incorrect neighbor links).
+    
+    Returns list of (hypothesis, index, expected_neighbor_token, direction) tuples
+    where direction is 'left' or 'right'.
+    
+    Args:
+        hypothesis_list: List of all hypotheses
+        
+    Returns:
+        List of (hyp, idx, expected_token, 'left'|'right') tuples for PENDING words only
+    """
+    unmatched_neighbors = []
+    
+    for idx, hyp in enumerate(hypothesis_list):
+        # Only process PENDING words
+        if not is_pending_word(hyp):
+            continue
+            
+        # Check left neighbor
+        if hyp.chosen_LLM_token.w_before is not None:
+            missing_left = False
+            if hyp.left_matched is None:
+                missing_left = True
+            elif (hyp.left_matched.chosen_LLM_token is None or
+                  hyp.left_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_before):
+                missing_left = True
+                
+            if missing_left:
+                unmatched_neighbors.append((hyp, idx, hyp.chosen_LLM_token.w_before, 'left'))
+        
+        # Check right neighbor
+        if hyp.chosen_LLM_token.w_after is not None:
+            missing_right = False
+            if hyp.right_matched is None:
+                missing_right = True
+            elif (hyp.right_matched.chosen_LLM_token is None or
+                  hyp.right_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_after):
+                missing_right = True
+                
+            if missing_right:
+                unmatched_neighbors.append((hyp, idx, hyp.chosen_LLM_token.w_after, 'right'))
+    
+    return unmatched_neighbors
+
+
+def find_cross_boundary_neighbor_matches(
+    hypothesis_list: List[TokenHypotheses],
+    max_search_distance: int = MAX_COMBINATORIAL_SEARCH_DISTANCE
+) -> List[Tuple[TokenHypotheses, TokenHypotheses, str]]:
+    """
+    Test combinatorials between PENDING words to find cross-boundary neighbor pairs.
+    
+    Only tests PENDING words against other PENDING words, focusing on triplets:
+    - Words missing a LEFT neighbor paired with words missing a RIGHT neighbor
+    - Checks if they should be neighbors (bidirectional expectation)
+    
+    Args:
+        hypothesis_list: List of all hypotheses
+        max_search_distance: Maximum index distance to search (default: 200)
+        
+    Returns:
+        List of (word_A, word_B, direction) tuples where:
+        - word_A and word_B are both PENDING
+        - word_A expects word_B as neighbor
+        - direction is 'left' or 'right' (from word_A's perspective)
+    """
+    import text_utils
+    
+    # Find all PENDING words
+    pending_words: List[Tuple[TokenHypotheses, int]] = []
+    for idx, hyp in enumerate(hypothesis_list):
+        if is_pending_word(hyp):
+            pending_words.append((hyp, idx))
+    
+    if len(pending_words) < 2:
+        return []
+    
+    # Separate PENDING words into those missing left neighbor and those missing right neighbor
+    missing_left: List[Tuple[TokenHypotheses, int, LLMToken]] = []
+    missing_right: List[Tuple[TokenHypotheses, int, LLMToken]] = []
+    
+    for hyp, idx in pending_words:
+        # Check if missing left neighbor
+        if hyp.chosen_LLM_token and hyp.chosen_LLM_token.w_before is not None:
+            missing_left_neighbor = False
+            if hyp.left_matched is None:
+                missing_left_neighbor = True
+            elif (hyp.left_matched.chosen_LLM_token is None or
+                  hyp.left_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_before):
+                missing_left_neighbor = True
+            
+            if missing_left_neighbor:
+                missing_left.append((hyp, idx, hyp.chosen_LLM_token.w_before))
+        
+        # Check if missing right neighbor
+        if hyp.chosen_LLM_token and hyp.chosen_LLM_token.w_after is not None:
+            missing_right_neighbor = False
+            if hyp.right_matched is None:
+                missing_right_neighbor = True
+            elif (hyp.right_matched.chosen_LLM_token is None or
+                  hyp.right_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_after):
+                missing_right_neighbor = True
+            
+            if missing_right_neighbor:
+                missing_right.append((hyp, idx, hyp.chosen_LLM_token.w_after))
+    
+    if not missing_left or not missing_right:
+        return []
+    
+    # Debug: Show what we're looking for
+    print(f"\n[Cross-Boundary Matching] Testing combinatorials between PENDING words:")
+    print(f"  - {len(missing_left)} PENDING words missing LEFT neighbor")
+    print(f"  - {len(missing_right)} PENDING words missing RIGHT neighbor")
+    print(f"  - Testing {len(missing_left)} × {len(missing_right)} = {len(missing_left) * len(missing_right)} combinations")
+    
+    cross_boundary_matches = []
+    matches_found = 0
+    
+    # Test combinatorials: each word missing left neighbor against each word missing right neighbor
+    for hyp_left_missing, idx_left, expected_left_token in missing_left:
+        for hyp_right_missing, idx_right, expected_right_token in missing_right:
+            # Skip if it's the same word
+            if hyp_left_missing == hyp_right_missing:
+                continue
+            
+            # Check distance first - respect max_search_distance limit
+            distance = abs(idx_right - idx_left)
+            if distance > max_search_distance:
+                continue
+            
+            # Check if they're already linked
+            if hyp_left_missing.left_matched == hyp_right_missing:
+                continue
+            if hyp_right_missing.right_matched == hyp_left_missing:
+                continue
+            
+            # Check if this is a bidirectional match:
+            # - hyp_left_missing expects hyp_right_missing on its LEFT
+            # - hyp_right_missing expects hyp_left_missing on its RIGHT
+            left_expects_right = False
+            right_expects_left = False
+            
+            # Check if left_missing word expects right_missing word on its left
+            if (hyp_left_missing.chosen_LLM_token and 
+                hyp_left_missing.chosen_LLM_token.w_before is not None):
+                if (expected_left_token == hyp_right_missing.chosen_LLM_token or
+                    expected_left_token.word_normalized == hyp_right_missing.chosen_LLM_token.word_normalized):
+                    left_expects_right = True
+            
+            # Check if right_missing word expects left_missing word on its right
+            if (hyp_right_missing.chosen_LLM_token and
+                hyp_right_missing.chosen_LLM_token.w_after is not None):
+                if (expected_right_token == hyp_left_missing.chosen_LLM_token or
+                    expected_right_token.word_normalized == hyp_left_missing.chosen_LLM_token.word_normalized):
+                    right_expects_left = True
+            
+            # Only link if bidirectional expectation (both words expect each other)
+            if left_expects_right and right_expects_left:
+                # Only link if they're far apart (cross-boundary indicator) or exact token match
+                # Note: "far apart" means > 3 positions, indicating cross-boundary
+                # We already checked distance <= max_search_distance above
+                is_exact_token_match = (
+                    expected_left_token == hyp_right_missing.chosen_LLM_token and
+                    expected_right_token == hyp_left_missing.chosen_LLM_token
+                )
+                
+                # Match if exact token match OR if distance > 3 (cross-boundary indicator)
+                if is_exact_token_match or distance > 3:
+                    cross_boundary_matches.append((hyp_left_missing, hyp_right_missing, 'left'))
+                    matches_found += 1
+                    
+                    # Debug: Show match
+                    if matches_found <= 10:  # Only show first 10
+                        word_left = text_utils.decode_html_entities(hyp_left_missing.anchor.content)
+                        word_right = text_utils.decode_html_entities(hyp_right_missing.anchor.content)
+                        llm_left = hyp_left_missing.chosen_LLM_token.word if hyp_left_missing.chosen_LLM_token else "N/A"
+                        llm_right = hyp_right_missing.chosen_LLM_token.word if hyp_right_missing.chosen_LLM_token else "N/A"
+                        reason = "exact_token" if is_exact_token_match else f"distance_{distance}"
+                        print(f"    [MATCH {matches_found}] Hyp[{idx_left}] '{word_left}' ({llm_left}) ←→ Hyp[{idx_right}] '{word_right}' ({llm_right}) [bidirectional, {reason}]")
+    
+    if matches_found > 10:
+        print(f"    ... and {matches_found - 10} more matches")
+    print(f"  Total bidirectional matches found: {matches_found}")
+    
+    return cross_boundary_matches
+
+
+def detect_layout_block_reordering_needed(
+    hypothesis_list: List[TokenHypotheses]
+) -> List[Tuple[TokenHypotheses, TokenHypotheses, str]]:
+    """
+    Detect when layout blocks need reordering by finding cross-boundary neighbor pairs.
+    
+    Uses combinatorial approach: tests unmatched words against each other to find
+    pairs that should be neighbors but are separated by layout boundaries.
+    
+    Args:
+        hypothesis_list: List of all hypotheses
+        
+    Returns:
+        List of (word_A, word_B, direction) tuples indicating cross-boundary connections
+    """
+    cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
+    
+    # Group matches by layout boundary areas
+    # For now, just return all matches - the caller can decide how to handle them
+    return cross_boundary_matches
+
+
+def link_cross_boundary_neighbors(
     hypothesis_list: List[TokenHypotheses]
 ) -> List[TokenHypotheses]:
     """
-    Find PENDING words with poor neighbor context scores.
+    Link cross-boundary neighbors found through combinatorial matching.
+    
+    This creates links between words that should be neighbors but are separated
+    by layout boundaries. These links can then be used to detect reordering needs.
     
     Args:
         hypothesis_list: List of all hypotheses
-    
-    Returns:
-        List of hypotheses needing reordering
-    """
-    pending_words = []
-    for hyp in hypothesis_list:
-        # Must be PENDING (has candidates but no chosen token)
-        if hyp.chosen_LLM_token is not None:
-            continue
-        if not hyp.candidates:
-            continue
         
-        # Check if neighbors have poor context scores
-        has_poor_neighbor = False
-        for candidate in hyp.candidates:
-            for llm_elem, before_score, after_score in candidate.possible_llm_elements_by_context:
-                if (before_score < POOR_NEIGHBOR_THRESHOLD or
-                    after_score < POOR_NEIGHBOR_THRESHOLD):
-                    has_poor_neighbor = True
-                    break
-            if has_poor_neighbor:
-                break
-        
-        if has_poor_neighbor:
-            pending_words.append(hyp)
-    
-    return pending_words
-
-
-def _is_paragraph_boundary(
-    prev_hyp: TokenHypotheses,
-    curr_hyp: TokenHypotheses
-) -> bool:
-    """Check if there's a paragraph boundary between two hypotheses."""
-    # Check for indentation (hpos significantly different)
-    if prev_hyp.anchor.hpos > 0 and curr_hyp.anchor.hpos > 0:
-        hpos_diff = abs(curr_hyp.anchor.hpos - prev_hyp.anchor.hpos)
-        if hpos_diff > 100:
-            return True
-    # Check for capitalization after period
-    prev_content = text_utils.decode_html_entities(prev_hyp.anchor.content)
-    curr_content = text_utils.decode_html_entities(curr_hyp.anchor.content)
-    if prev_content.rstrip().endswith('.') and curr_content and curr_content[0].isupper():
-        return True
-    # Check for large vertical gap
-    vpos_diff = abs(curr_hyp.anchor.vpos - prev_hyp.anchor.vpos)
-    if vpos_diff > 100:
-        return True
-    return False
-
-
-def detect_paragraph_boundaries(
-    hypothesis_list: List[TokenHypotheses],
-    page
-) -> List[Tuple[int, int]]:
-    """
-    Identify paragraph starts/ends based on layout patterns.
-    
-    Args:
-        hypothesis_list: List of all hypotheses
-        page: Page object for spatial information
-    
     Returns:
-        List of (start_idx, end_idx) tuples for each paragraph
+        Updated hypothesis_list with cross-boundary links established
     """
-    if not hypothesis_list:
-        return []
-    paragraphs = []
-    current_start = 0
-    for i in range(1, len(hypothesis_list)):
-        if _is_paragraph_boundary(hypothesis_list[i - 1], hypothesis_list[i]):
-            paragraphs.append((current_start, i - 1))
-            current_start = i
-    if current_start < len(hypothesis_list):
-        paragraphs.append((current_start, len(hypothesis_list) - 1))
-    return paragraphs
-
-
-def find_intervening_paragraphs(
-    hypothesis_idx: int,
-    paragraph_boundaries: List[Tuple[int, int]]
-) -> List[int]:
-    """
-    Find paragraphs between hypothesis and its expected neighbor.
+    cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
     
-    Args:
-        hypothesis_idx: Index of hypothesis
-        paragraph_boundaries: List of paragraph ranges
+    if cross_boundary_matches:
+        import text_utils
+        print(f"\n[Cross-Boundary Matching] Linking {len(cross_boundary_matches)} cross-boundary neighbor pairs:")
+        for hyp_A, hyp_B, direction in cross_boundary_matches[:10]:  # Show first 10
+            word_A = text_utils.decode_html_entities(hyp_A.anchor.content)
+            word_B = text_utils.decode_html_entities(hyp_B.anchor.content)
+            llm_A = hyp_A.chosen_LLM_token.word if hyp_A.chosen_LLM_token else "N/A"
+            llm_B = hyp_B.chosen_LLM_token.word if hyp_B.chosen_LLM_token else "N/A"
+            idx_A = hypothesis_list.index(hyp_A)
+            idx_B = hypothesis_list.index(hyp_B)
+            print(f"  Linking: Hyp[{idx_A}] '{word_A}' ({llm_A}) ←→ Hyp[{idx_B}] '{word_B}' ({llm_B}) [{direction}]")
+        if len(cross_boundary_matches) > 10:
+            print(f"  ... and {len(cross_boundary_matches) - 10} more")
+    else:
+        print("\n[Cross-Boundary Matching] No cross-boundary matches found")
     
-    Returns:
-        List of paragraph indices that could be reordered
-    """
-    # Find which paragraph contains this hypothesis
-    current_para_idx = None
-    for para_idx, (start, end) in enumerate(paragraph_boundaries):
-        if start <= hypothesis_idx <= end:
-            current_para_idx = para_idx
-            break
+    for hyp_A, hyp_B, direction in cross_boundary_matches:
+        if direction == 'left':
+            # hyp_A expects hyp_B on its left
+            # Verify the match before linking
+            if (hyp_A.chosen_LLM_token and hyp_A.chosen_LLM_token.w_before and
+                hyp_B.chosen_LLM_token and
+                (hyp_A.chosen_LLM_token.w_before == hyp_B.chosen_LLM_token or
+                 hyp_A.chosen_LLM_token.w_before.word_normalized == hyp_B.chosen_LLM_token.word_normalized)):
+                # Set bidirectional link
+                map_up_text._set_bidirectional_link(hyp_A, hyp_B, is_left_to_right=True)
+                # Update logical neighbors (anchor_left/anchor_right) to reflect cross-boundary connection
+                hyp_A.anchor_left = hyp_B.anchor  # hyp_A's logical left neighbor is hyp_B
+                hyp_B.anchor_right = hyp_A.anchor  # hyp_B's logical right neighbor is hyp_A
+        elif direction == 'right':
+            # hyp_A expects hyp_B on its right
+            # Verify the match before linking
+            if (hyp_A.chosen_LLM_token and hyp_A.chosen_LLM_token.w_after and
+                hyp_B.chosen_LLM_token and
+                (hyp_A.chosen_LLM_token.w_after == hyp_B.chosen_LLM_token or
+                 hyp_A.chosen_LLM_token.w_after.word_normalized == hyp_B.chosen_LLM_token.word_normalized)):
+                # Set bidirectional link
+                map_up_text._set_bidirectional_link(hyp_A, hyp_B, is_left_to_right=False)
+                # Update logical neighbors (anchor_left/anchor_right) to reflect cross-boundary connection
+                hyp_A.anchor_right = hyp_B.anchor  # hyp_A's logical right neighbor is hyp_B
+                hyp_B.anchor_left = hyp_A.anchor  # hyp_B's logical left neighbor is hyp_A
     
-    if current_para_idx is None:
-        return []
+    # Verify links were established
+    links_verified = 0
+    for hyp_A, hyp_B, direction in cross_boundary_matches:
+        if direction == 'left':
+            if hyp_A.left_matched == hyp_B and hyp_B.right_matched == hyp_A:
+                links_verified += 1
+        elif direction == 'right':
+            if hyp_A.right_matched == hyp_B and hyp_B.left_matched == hyp_A:
+                links_verified += 1
     
-    # Return adjacent paragraphs (limit to prevent explosion)
-    intervening = []
-    for para_idx in range(max(0, current_para_idx - 2),
-                         min(len(paragraph_boundaries), current_para_idx + 3)):
-        if para_idx != current_para_idx:
-            intervening.append(para_idx)
+    if links_verified > 0:
+        import text_utils
+        print(f"  ✓ Verified {links_verified}/{len(cross_boundary_matches)} links established successfully")
     
-    return intervening
-
-
-def test_triplet_with_reordering(
-    hyp1_idx: int,
-    hyp2_idx: int,
-    paragraph_indices: List[int],
-    hypothesis_list: List[TokenHypotheses],
-    llm_elements: List[LLMToken],
-    paragraph_boundaries: List[Tuple[int, int]]
-) -> Optional[Tuple[float, List[int]]]:
-    """
-    Test if reordering paragraphs improves triplet context scores.
-    
-    Args:
-        hyp1_idx: Index of first hypothesis
-        hyp2_idx: Index of second hypothesis
-        paragraph_indices: Paragraphs to test reordering
-        hypothesis_list: List of all hypotheses
-        llm_elements: List of LLM tokens
-        paragraph_boundaries: Current paragraph boundaries
-    
-    Returns:
-        (improved_score, reordered_paragraph_indices) or None
-    """
-    if hyp1_idx >= len(hypothesis_list) or hyp2_idx >= len(hypothesis_list):
-        return None
-    
-    hyp1 = hypothesis_list[hyp1_idx]
-    hyp2 = hypothesis_list[hyp2_idx]
-    
-    # Get best LLM candidate for hyp1
-    best_llm = None
-    best_score = 0.0
-    for candidate in hyp1.candidates:
-        for llm_elem, before_score, after_score in candidate.possible_llm_elements_by_context:
-            avg_score = (before_score + after_score) / 2.0
-            if avg_score > best_score:
-                best_score = avg_score
-                best_llm = llm_elem
-    
-    if not best_llm:
-        return None
-    
-    # Calculate current context score
-    current_before, current_after = map_up_text.calculate_context_scores(
-        hyp1.anchor.before_word,
-        hyp2.anchor.after_word,
-        best_llm,
-        None
-    )
-    current_score = (current_before + current_after) / 2.0
-    
-    # Test reordering (simplified: just check if moving paragraphs improves)
-    # For now, return None if improvement is not clear
-    # Full implementation would test actual reordering
-    
-    return None  # Placeholder - full implementation needed
-
-
-def evaluate_paragraph_reordering(
-    hypothesis_list: List[TokenHypotheses],
-    paragraph_boundaries: List[Tuple[int, int]],
-    llm_elements: List[LLMToken]
-) -> List[Tuple[int, int]]:
-    """
-    Evaluate and select best paragraph reorderings.
-    
-    Args:
-        hypothesis_list: List of all hypotheses
-        paragraph_boundaries: Current paragraph boundaries
-        llm_elements: List of LLM tokens
-    
-    Returns:
-        List of reordering operations (paragraph_idx, new_position)
-    """
-    reordering_ops = []
-    pending_words = identify_pending_with_poor_neighbors(hypothesis_list)
-    
-    for hyp in pending_words:
-        hyp_idx = hypothesis_list.index(hyp)
-        if hyp_idx == -1:
-            continue
-        
-        # Find intervening paragraphs
-        intervening = find_intervening_paragraphs(hyp_idx, paragraph_boundaries)
-        if not intervening:
-            continue
-        
-        # For each candidate LLM token, test if reordering helps
-        for candidate in hyp.candidates:
-            for llm_elem, before_score, after_score in candidate.possible_llm_elements_by_context:
-                # Check if one neighbor is strong and other is weak
-                if (before_score >= POOR_NEIGHBOR_THRESHOLD and
-                    after_score < POOR_NEIGHBOR_THRESHOLD):
-                    # Right neighbor is poor - might need to move paragraphs after
-                    # Simplified: mark for potential reordering
-                    pass
-                elif (after_score >= POOR_NEIGHBOR_THRESHOLD and
-                      before_score < POOR_NEIGHBOR_THRESHOLD):
-                    # Left neighbor is poor - might need to move paragraphs before
-                    # Simplified: mark for potential reordering
-                    pass
-    
-    return reordering_ops
-
-
-def apply_paragraph_reordering(
-    hypothesis_list: List[TokenHypotheses],
-    reordering_operations: List[Tuple[int, int]]
-) -> List[TokenHypotheses]:
-    """
-    Apply paragraph reordering operations to hypothesis_list.
-    
-    Args:
-        hypothesis_list: List of all hypotheses
-        reordering_operations: List of (paragraph_idx, new_position) tuples
-    
-    Returns:
-        Reordered hypothesis_list
-    """
-    # For now, return unchanged (full implementation would reorder)
-    # This is a placeholder - actual reordering logic would be complex
     return hypothesis_list
 
 
@@ -276,34 +363,23 @@ def reorder_paragraphs(
     page
 ) -> List[TokenHypotheses]:
     """
-    Main entry point: reorder paragraphs to improve PENDING word matches.
+    Main entry point: detect and handle cross-boundary neighbor issues.
     
-    Non-intrusive: only affects words marked as PENDING.
+    Uses combinatorial approach to find unmatched words that should be neighbors.
+    Tests combinations of words with missing neighbors against all other words to find
+    cross-boundary matches (similar to hyphen linking).
     
     Args:
         hypothesis_list: List of all hypotheses
-        llm_elements: List of LLM tokens
-        page: Page object for spatial information
-    
+        llm_elements: List of LLM tokens (unused for now)
+        page: Page object (unused for now)
+        
     Returns:
-        Updated hypothesis_list
+        Updated hypothesis_list with cross-boundary links established
     """
-    # Detect paragraph boundaries
-    paragraph_boundaries = detect_paragraph_boundaries(hypothesis_list, page)
+    print("\n[Cross-Boundary Matching] Starting cross-boundary neighbor reconciliation...")
     
-    if not paragraph_boundaries:
-        return hypothesis_list
-    
-    # Evaluate reordering opportunities
-    reordering_ops = evaluate_paragraph_reordering(
-        hypothesis_list, paragraph_boundaries, llm_elements
-    )
-    
-    if not reordering_ops:
-        return hypothesis_list
-    
-    # Apply reordering
-    hypothesis_list = apply_paragraph_reordering(hypothesis_list, reordering_ops)
+    # Find and link cross-boundary neighbors using combinatorial matching
+    hypothesis_list = link_cross_boundary_neighbors(hypothesis_list)
     
     return hypothesis_list
-
