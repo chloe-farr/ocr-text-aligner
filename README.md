@@ -81,6 +81,14 @@ The current implementation assumes:
    ```bash
    python3 map_up_text.py --track-word "dams"
    ```
+   - `--clean-text` - str: Path to clean text file to use for the pipeline
+   ```bash
+   python3 map_up_text.py --clean-text "inputs/1972_10_12_p1/1972_10_12_p1_Maclear_Gaglardi_cleantext.txt"
+   ```
+   - `--xml-file` - str: Path to ALTO XML file to use for the pipeline
+   ```bash
+   python3 map_up_text.py --xml-file "inputs/1972_10_12_p1/1972_10_12_p1_Tesseract_XML_minus-separatists-kissinger.xml"
+   ```
   
   
    **Combine flags to display all above**

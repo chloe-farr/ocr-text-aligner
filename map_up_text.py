@@ -16,6 +16,7 @@ import proximity_scoring
 import text_utils
 import os
 import argparse
+import sys
 
 # Split on spaces, commas, exclamation marks, and common OCR error characters (*, ~, etc.)
 ADVANCED_SPLIT_RE = re.compile(r"[ ,!*~]+")
@@ -69,6 +70,10 @@ class TokenHypotheses:
     left_matched: Optional["TokenHypotheses"] = None
     right_matched: Optional["TokenHypotheses"] = None
     best_candidates_by_context: Optional[List[Tuple[TokenCandidate, float, float]]] = None
+    # Logical neighbors (what they should be based on clean text sequence)
+    # Initialized from ALTO spatial neighbors, but can be modified during paragraph reordering
+    anchor_left: Optional[XMLOBJ.StringWord] = None   # Logical left neighbor anchor
+    anchor_right: Optional[XMLOBJ.StringWord] = None  # Logical right neighbor anchor
 
     @property
     def chosen(self) -> Optional[TokenCandidate]:
@@ -170,7 +175,12 @@ def _create_split_hypotheses(
             content=word, 
             wc=anchor.wc
         )
-        split_hypothesis = TokenHypotheses(anchor=split_anchor)
+        # Initialize logical neighbors from anchor's spatial neighbors
+        split_hypothesis = TokenHypotheses(
+            anchor=split_anchor,
+            anchor_left=split_anchor.before_word if i == 0 else None,  # First split word gets original's left neighbor
+            anchor_right=split_anchor.after_word if i == len(split_words) - 1 else None  # Last split word gets original's right neighbor
+        )
         
         # Update position for next word (current position + width + gap)
         current_hpos += word_width
@@ -194,6 +204,119 @@ def _create_split_hypotheses(
         split_hypotheses_objects.append(split_hypothesis)
     
     return split_hypotheses_objects
+
+
+def _has_internal_hyphen(word: XMLOBJ.StringWord) -> bool:
+    """
+    Check if a word has an internal hyphen (not just trailing or leading).
+    
+    Args:
+        word: ALTO StringWord to check
+        
+    Returns:
+        True if word contains hyphen in the middle (e.g., "assignment-his"), False otherwise
+    """
+    decoded = text_utils.decode_html_entities(word.content)
+    stripped = decoded.strip()
+    
+    # Check if any hyphen variant exists and is not just at the edges
+    for hyphen in text_utils.HY_PHENS:
+        if hyphen in stripped:
+            # Check if hyphen is at the very start
+            if stripped.startswith(hyphen):
+                continue  # Leading hyphen, not internal
+            # Check if hyphen is at the very end (trailing hyphen for word wrap)
+            if stripped.endswith(hyphen):
+                continue  # Trailing hyphen, not internal
+            # Hyphen exists and is not at edges - it's internal
+            return True
+    return False
+
+
+def _detect_hyphenated_triplet_pattern(
+    alto_word: XMLOBJ.StringWord,
+    llm_elements: List[LLMToken]
+) -> Optional[Tuple[str, str, str, LLMToken, LLMToken, LLMToken]]:
+    """
+    Detect if an ALTO word with internal hyphen should be split into a triplet
+    matching clean text pattern: word1 - word2
+    
+    Args:
+        alto_word: ALTO word with internal hyphen (e.g., "assignment-his")
+        llm_elements: List of all LLM tokens from clean text
+        
+    Returns:
+        Tuple of (word1, hyphen_char, word2, llm_word1, llm_hyphen, llm_word2) if detected,
+        None otherwise
+    """
+    decoded = text_utils.decode_html_entities(alto_word.content)
+    
+    # Split on hyphen variants to get parts
+    # Try each hyphen type to find the actual separator
+    for hyphen_char in text_utils.HY_PHENS:
+        if hyphen_char in decoded:
+            parts = decoded.split(hyphen_char, 1)  # Split only on first occurrence
+            if len(parts) == 2:
+                word1_alto = parts[0].strip()
+                word2_alto = parts[1].strip()
+                
+                if not word1_alto or not word2_alto:
+                    continue  # Invalid split, try next hyphen
+                
+                # Normalize parts for matching
+                word1_normalized = text_utils.normalize_for_matching(word1_alto)
+                word2_normalized = text_utils.normalize_for_matching(word2_alto)
+                
+                # Search LLM elements for the triplet pattern: word1, hyphen, word2
+                for i in range(len(llm_elements) - 2):
+                    llm_word1 = llm_elements[i]
+                    llm_hyphen = llm_elements[i + 1]
+                    llm_word2 = llm_elements[i + 2]
+                    
+                    # Check if word1 matches
+                    word1_match = False
+                    if llm_word1.word_normalized == word1_normalized:
+                        word1_match = True
+                    else:
+                        # Try fuzzy match
+                        word1_fuzzy = fuzz.ratio(word1_normalized, llm_word1.word_normalized)
+                        if word1_fuzzy >= 85.0:
+                            word1_match = True
+                    
+                    if not word1_match:
+                        continue
+                    
+                    # Check if middle token is a hyphen
+                    hyphen_match = False
+                    hyphen_text = text_utils.decode_html_entities(llm_hyphen.word)
+                    # Normalize hyphen - it should match the hyphen character or variants
+                    hyphen_normalized = text_utils.normalize_for_matching(hyphen_text)
+                    
+                    # Check if it's a hyphen character (normalized might be empty, so check original)
+                    if hyphen_text.strip() in text_utils.HY_PHENS or hyphen_text.strip() == hyphen_char:
+                        hyphen_match = True
+                    elif not hyphen_normalized and hyphen_text.strip() in text_utils.HY_PHENS:
+                        # Hyphen normalizes to empty string
+                        hyphen_match = True
+                    
+                    if not hyphen_match:
+                        continue
+                    
+                    # Check if word2 matches
+                    word2_match = False
+                    if llm_word2.word_normalized == word2_normalized:
+                        word2_match = True
+                    else:
+                        # Try fuzzy match
+                        word2_fuzzy = fuzz.ratio(word2_normalized, llm_word2.word_normalized)
+                        if word2_fuzzy >= 85.0:
+                            word2_match = True
+                    
+                    if word2_match:
+                        # Found the triplet pattern!
+                        return (word1_alto, hyphen_char, word2_alto, llm_word1, llm_hyphen, llm_word2)
+    
+    return None
 
 
 def _setup_split_triplets(
@@ -405,7 +528,11 @@ def _create_combined_hypothesis(
     # Create combined TokenHypotheses
     # Use hyp1's anchor as base, but combine both words
     combined_anchor = hyp1.anchor
-    combined_hypothesis = TokenHypotheses(anchor=combined_anchor)
+    combined_hypothesis = TokenHypotheses(
+        anchor=combined_anchor,
+        anchor_left=hyp1.anchor.before_word,  # Combined word gets hyp1's left neighbor
+        anchor_right=hyp2.anchor.after_word   # Combined word gets hyp2's right neighbor
+    )
     
     # Create candidate with both ALTO words
     combined_candidate = TokenCandidate(
@@ -702,7 +829,9 @@ def should_combine_words(
     individual_w2_score: float,
     combined_score: float,
     individual_threshold: float = 85.0,
-    improvement_threshold: float = 5.0
+    improvement_threshold: float = 5.0,
+    w1_length: int = None,
+    w2_length: int = None
 ) -> bool:
     """
     Determine if two words should be combined based on score comparison.
@@ -713,11 +842,27 @@ def should_combine_words(
         combined_score: Score for combined words
         individual_threshold: Threshold below which individual matches are poor (default: 85.0)
         improvement_threshold: Minimum improvement required for combination (default: 5.0)
+        w1_length: Length of first word (optional, used to penalize combining short words)
+        w2_length: Length of second word (optional, used to penalize combining short words)
     
     Returns:
         True if words should be combined, False otherwise
     """
     best_individual_score = max(individual_w1_score, individual_w2_score)
+    worst_individual_score = min(individual_w1_score, individual_w2_score)
+    
+    # Penalize combining short words that have reasonable individual matches
+    # Short words (≤2 chars) with decent matches (≥75%) should not be combined
+    if w1_length is not None and w1_length <= 2:
+        if individual_w1_score >= 75.0:
+            # Short word has reasonable match - don't combine unless combined is MUCH better
+            if combined_score < individual_w1_score + 15.0:  # Need 15% improvement, not just 5%
+                return False
+    if w2_length is not None and w2_length <= 2:
+        if individual_w2_score >= 75.0:
+            # Short word has reasonable match - don't combine unless combined is MUCH better
+            if combined_score < individual_w2_score + 15.0:  # Need 15% improvement, not just 5%
+                return False
     
     if best_individual_score < individual_threshold:
         # Individual words don't match well, combining is reasonable
@@ -988,79 +1133,142 @@ def find_best_candidates_for_all_hypothesis_objects(hypothesis_list: List[TokenH
             hypothesis_object.chosen_LLM_token.matched = True
     return hypothesis_list
 
+def _set_bidirectional_link(left_hyp: TokenHypotheses, right_hyp: TokenHypotheses, is_left_to_right: bool) -> None:
+    """
+    Set a bidirectional link between two hypotheses, cleaning up any existing conflicting links.
+    
+    Args:
+        left_hyp: The hypothesis on the left (or the one setting left_matched)
+        right_hyp: The hypothesis on the right (or the one setting right_matched)
+        is_left_to_right: True if setting left_hyp.left_matched = right_hyp,
+                         False if setting left_hyp.right_matched = right_hyp
+    """
+    if is_left_to_right:
+        # Setting left_hyp.left_matched = right_hyp (and right_hyp.right_matched = left_hyp)
+        # Clean up left_hyp's old left link
+        if left_hyp.left_matched is not None:
+            old_left = left_hyp.left_matched
+            if old_left.right_matched == left_hyp:
+                old_left.right_matched = None
+        
+        # Clean up right_hyp's old right link
+        if right_hyp.right_matched is not None:
+            old_right = right_hyp.right_matched
+            if old_right.left_matched == right_hyp:
+                old_right.left_matched = None
+        
+        # Set the new bidirectional link
+        left_hyp.left_matched = right_hyp
+        right_hyp.right_matched = left_hyp
+    else:
+        # Setting left_hyp.right_matched = right_hyp (and right_hyp.left_matched = left_hyp)
+        # Clean up left_hyp's old right link
+        if left_hyp.right_matched is not None:
+            old_right = left_hyp.right_matched
+            if old_right.left_matched == left_hyp:
+                old_right.left_matched = None
+        
+        # Clean up right_hyp's old left link
+        if right_hyp.left_matched is not None:
+            old_left = right_hyp.left_matched
+            if old_left.right_matched == right_hyp:
+                old_left.right_matched = None
+        
+        # Set the new bidirectional link
+        left_hyp.right_matched = right_hyp
+        right_hyp.left_matched = left_hyp
+
+
 def link_hypothesis_objects_by_context(hypothesis_list: List[TokenHypotheses]) -> List[TokenHypotheses]:
     """
-    Link hypothesis objects by context based on the chosen_llm_token.w_after and chosen_llm_token.w_before.
-    Also links PENDING words (without chosen_LLM_token) if they have candidates matching the expected LLM token.
+    Link hypothesis objects by context based on ALTO spatial order and LLM token sequence.
+    
+    CRITICAL: Only links spatially adjacent words (using ALTO before_word/after_word).
+    This ensures we don't skip over PENDING words and respects document order.
+    
+    For each matched word:
+    1. Check its ALTO before_word (spatial left neighbor)
+    2. If that neighbor has the matching LLM token, link them
+    3. Check its ALTO after_word (spatial right neighbor)  
+    4. If that neighbor has the matching LLM token, link them
+    
+    Also links PENDING words if they have candidates matching the expected LLM token.
     Returns: List[TokenHypotheses] with updated left_matched and right_matched set.
+    
+    Ensures bidirectional consistency: if X.left_matched = Y, then Y.right_matched = X (and vice versa).
     """
+    # Create a lookup: anchor -> hypothesis for fast spatial neighbor lookup
+    anchor_to_hypothesis: Dict[int, TokenHypotheses] = {}
+    for hyp in hypothesis_list:
+        anchor_to_hypothesis[id(hyp.anchor)] = hyp
+    
     for hypothesis_object in hypothesis_list:
         if hypothesis_object.chosen_LLM_token is None:
             continue
         
-        # Find the hypothesis to the LEFT (whose chosen_LLM_token matches our w_before)
-        # If our chosen_LLM_token.w_before points to another LLM token, find the hypothesis with that token
+        # Find the hypothesis to the LEFT (spatially adjacent via ALTO before_word)
+        # Only check the immediate spatial neighbor, not all hypotheses
         if hypothesis_object.chosen_LLM_token.w_before is not None:
-            for other_hypothesis_object in hypothesis_list:
-                # Check if other has chosen_LLM_token matching our w_before
-                if (other_hypothesis_object.chosen_LLM_token is not None and
-                    other_hypothesis_object.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_before):
-                    hypothesis_object.left_matched = other_hypothesis_object
-                    other_hypothesis_object.right_matched = hypothesis_object
-                    break
-                # Also check if other has the LLM token in candidates (for PENDING words)
-                elif other_hypothesis_object.candidates:
-                    for candidate in other_hypothesis_object.candidates:
-                        # Check fuzzy matches
-                        for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
-                            if llm_token == hypothesis_object.chosen_LLM_token.w_before:
-                                hypothesis_object.left_matched = other_hypothesis_object
-                                other_hypothesis_object.right_matched = hypothesis_object
+            # Check the ALTO spatial left neighbor
+            if hypothesis_object.anchor.before_word is not None:
+                before_word_id = id(hypothesis_object.anchor.before_word)
+                if before_word_id in anchor_to_hypothesis:
+                    spatial_left_neighbor = anchor_to_hypothesis[before_word_id]
+                    
+                    # Check if spatial neighbor has matching LLM token
+                    if (spatial_left_neighbor.chosen_LLM_token is not None and
+                        spatial_left_neighbor.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_before):
+                        # Perfect match - link them
+                        _set_bidirectional_link(hypothesis_object, spatial_left_neighbor, is_left_to_right=True)
+                    # Also check if PENDING neighbor has the LLM token in candidates
+                    elif spatial_left_neighbor.candidates:
+                        for candidate in spatial_left_neighbor.candidates:
+                            # Check fuzzy matches
+                            for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
+                                if llm_token == hypothesis_object.chosen_LLM_token.w_before:
+                                    _set_bidirectional_link(hypothesis_object, spatial_left_neighbor, is_left_to_right=True)
+                                    break
+                            if hypothesis_object.left_matched:
                                 break
-                        if hypothesis_object.left_matched:
-                            break
-                        # Check context matches
-                        for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
-                            if llm_elem == hypothesis_object.chosen_LLM_token.w_before:
-                                hypothesis_object.left_matched = other_hypothesis_object
-                                other_hypothesis_object.right_matched = hypothesis_object
+                            # Check context matches
+                            for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
+                                if llm_elem == hypothesis_object.chosen_LLM_token.w_before:
+                                    _set_bidirectional_link(hypothesis_object, spatial_left_neighbor, is_left_to_right=True)
+                                    break
+                            if hypothesis_object.left_matched:
                                 break
-                        if hypothesis_object.left_matched:
-                            break
-                if hypothesis_object.left_matched:
-                    break
         
-        # Find the hypothesis to the RIGHT (whose chosen_LLM_token matches our w_after)
-        # If our chosen_LLM_token.w_after points to another LLM token, find the hypothesis with that token
+        # Find the hypothesis to the RIGHT (spatially adjacent via ALTO after_word)
+        # Only check the immediate spatial neighbor, not all hypotheses
         if hypothesis_object.chosen_LLM_token.w_after is not None:
-            for other_hypothesis_object in hypothesis_list:
-                # Check if other has chosen_LLM_token matching our w_after
-                if (other_hypothesis_object.chosen_LLM_token is not None and
-                    other_hypothesis_object.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_after):
-                    hypothesis_object.right_matched = other_hypothesis_object
-                    other_hypothesis_object.left_matched = hypothesis_object
-                    break
-                # Also check if other has the LLM token in candidates (for PENDING words)
-                elif other_hypothesis_object.candidates:
-                    for candidate in other_hypothesis_object.candidates:
-                        # Check fuzzy matches
-                        for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
-                            if llm_token == hypothesis_object.chosen_LLM_token.w_after:
-                                hypothesis_object.right_matched = other_hypothesis_object
-                                other_hypothesis_object.left_matched = hypothesis_object
+            # Check the ALTO spatial right neighbor
+            if hypothesis_object.anchor.after_word is not None:
+                after_word_id = id(hypothesis_object.anchor.after_word)
+                if after_word_id in anchor_to_hypothesis:
+                    spatial_right_neighbor = anchor_to_hypothesis[after_word_id]
+                    
+                    # Check if spatial neighbor has matching LLM token
+                    if (spatial_right_neighbor.chosen_LLM_token is not None and
+                        spatial_right_neighbor.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_after):
+                        # Perfect match - link them
+                        _set_bidirectional_link(hypothesis_object, spatial_right_neighbor, is_left_to_right=False)
+                    # Also check if PENDING neighbor has the LLM token in candidates
+                    elif spatial_right_neighbor.candidates:
+                        for candidate in spatial_right_neighbor.candidates:
+                            # Check fuzzy matches
+                            for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
+                                if llm_token == hypothesis_object.chosen_LLM_token.w_after:
+                                    _set_bidirectional_link(hypothesis_object, spatial_right_neighbor, is_left_to_right=False)
+                                    break
+                            if hypothesis_object.right_matched:
                                 break
-                        if hypothesis_object.right_matched:
-                            break
-                        # Check context matches
-                        for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
-                            if llm_elem == hypothesis_object.chosen_LLM_token.w_after:
-                                hypothesis_object.right_matched = other_hypothesis_object
-                                other_hypothesis_object.left_matched = hypothesis_object
+                            # Check context matches
+                            for llm_elem, _, _ in candidate.possible_llm_elements_by_context:
+                                if llm_elem == hypothesis_object.chosen_LLM_token.w_after:
+                                    _set_bidirectional_link(hypothesis_object, spatial_right_neighbor, is_left_to_right=False)
+                                    break
+                            if hypothesis_object.right_matched:
                                 break
-                        if hypothesis_object.right_matched:
-                            break
-                if hypothesis_object.right_matched:
-                    break
     
     return hypothesis_list
 
@@ -1150,8 +1358,13 @@ def assign_llm_candidates_to_all_token_hypotheses_by_context(
                 )
 
             # If the words match, and both before or after fuzzy match scores are above threshold, add the llm element to the possible_llm_elements_by_context list
+            # But only if this LLM token isn't already in the list (deduplicate by token ID)
             if before_fuzzy_match_score > context_score_threshold or after_fuzzy_match_score > context_score_threshold:
-                token_candidate.possible_llm_elements_by_context.append((element, float(before_fuzzy_match_score), float(after_fuzzy_match_score)))
+                # Check if this LLM token is already in the list (same token instance)
+                element_id = id(element)
+                already_added = any(id(existing_elem) == element_id for existing_elem, _, _ in token_candidate.possible_llm_elements_by_context)
+                if not already_added:
+                    token_candidate.possible_llm_elements_by_context.append((element, float(before_fuzzy_match_score), float(after_fuzzy_match_score)))
 
     return token_hypothesis
 
@@ -1255,6 +1468,29 @@ def _evaluate_word_combination(
     selected_after_score = 0.0
     
     for llm_token in matching_llm_tokens:
+        # CRITICAL: For non-hyphen merges, verify that the LLM token's w_before matches hyp1's expected match
+        # This prevents incorrect merges like "T'm" + "delighted,"" → "delighted,"" when "delighted,"" should have "I'm" before it
+        if not is_literal_hyphen:
+            # Check if hyp1 has a chosen_LLM_token or candidates that suggest what should come before the merged word
+            hyp1_expected_before = None
+            if hyp1.chosen_LLM_token:
+                hyp1_expected_before = hyp1.chosen_LLM_token
+            elif hyp1.candidates:
+                # Check if hyp1 has candidates that suggest a specific LLM token
+                for cand in hyp1.candidates:
+                    if cand.possible_llm_elements_by_fuzzy_match:
+                        hyp1_expected_before = cand.possible_llm_elements_by_fuzzy_match[0]
+                        break
+                    elif cand.possible_llm_elements_by_context:
+                        hyp1_expected_before = cand.possible_llm_elements_by_context[0][0]
+                        break
+            
+            # If we have an expected before token, verify the LLM token's w_before matches it
+            if hyp1_expected_before and llm_token.w_before:
+                if llm_token.w_before != hyp1_expected_before:
+                    # The merged word's before doesn't match what hyp1 should be - this is an incorrect merge
+                    continue
+        
         # Don't skip tokens at boundaries - they might still be valid matches
         # Calculate context scores for all tokens to find the best match
         before_score, after_score = calculate_context_scores(
@@ -1274,6 +1510,19 @@ def _evaluate_word_combination(
         return None
     
     # Require minimum context scores
+    # For non-literal hyphen merges, require stronger neighbor validation to prevent incorrect merges
+    # Non-literal hyphens (like "af" + "the" → "after") need both neighbors to match well
+    if not is_literal_hyphen:
+        # For non-literal merges, require at least one neighbor to match very well (≥85%) 
+        # and the average to be reasonable (≥75%)
+        # This prevents incorrect merges when neighbors don't match
+        neighbor_avg = (selected_before_score + selected_after_score) / 2.0
+        max_neighbor = max(selected_before_score, selected_after_score)
+        if max_neighbor < 85.0 or neighbor_avg < 75.0:
+            # Neighbors don't match well enough - this is likely an incorrect merge
+            return None
+    
+    # Standard context validation (applies to all merges)
     if not validate_context_scores(selected_before_score, selected_after_score, candidate_context_score, threshold=context_validation_threshold):
         return None
     
@@ -1283,12 +1532,18 @@ def _evaluate_word_combination(
     
     combined_score = best_fuzzy_score if best_fuzzy_match else 100.0
     
+    # Get word lengths to prevent combining short words with good matches
+    w1_len = len(base1 if is_literal_hyphen else decoded_w1)
+    w2_len = len(decoded_w2)
+    
     should_combine = should_combine_words(
         individual_w1_score,
         individual_w2_score,
         combined_score,
         individual_threshold=individual_score_threshold,
-        improvement_threshold=combination_improvement_threshold
+        improvement_threshold=combination_improvement_threshold,
+        w1_length=w1_len,
+        w2_length=w2_len
     )
     
     if should_combine:
@@ -1451,6 +1706,202 @@ def _search_spatially_close_partners(
     return None
 
 
+def split_hyphenated_triplets(
+    hypothesis_list: List[TokenHypotheses],
+    llm_elements: List[LLMToken],
+    fuzzy_cutoff: float = 85.0
+) -> List[TokenHypotheses]:
+    """
+    Split ALTO words with internal hyphens that match clean text triplet pattern.
+    
+    Handles cases where ALTO has "assignment-his" but clean text has "assignment" "-" "his".
+    Creates three separate hypotheses for word1, hyphen, and word2.
+    
+    Args:
+        hypothesis_list: List of TokenHypotheses objects
+        llm_elements: List of LLM tokens from clean text
+        fuzzy_cutoff: Cutoff for fuzzy matching (default: 85.0)
+    
+    Returns:
+        List of TokenHypotheses with triplet splits applied
+    """
+    new_hypothesis_list: List[TokenHypotheses] = []
+    clean_vocab = set(e.word_normalized for e in llm_elements)
+    
+    # Create lookup for hyphen tokens in clean text
+    hyphen_llm_tokens = []
+    for llm_token in llm_elements:
+        hyphen_text = text_utils.decode_html_entities(llm_token.word)
+        if hyphen_text.strip() in text_utils.HY_PHENS:
+            hyphen_llm_tokens.append(llm_token)
+    
+    for hyp in hypothesis_list:
+        # Skip if already processed or combined
+        is_already_combined = False
+        for cand in hyp.candidates:
+            if len(cand.alto_words) > 1:
+                is_already_combined = True
+                break
+        if is_already_combined:
+            new_hypothesis_list.append(hyp)
+            continue
+        
+        # Check if word has internal hyphen
+        if not _has_internal_hyphen(hyp.anchor):
+            new_hypothesis_list.append(hyp)
+            continue
+        
+        # Try to detect triplet pattern
+        triplet_result = _detect_hyphenated_triplet_pattern(hyp.anchor, llm_elements)
+        
+        if triplet_result is None:
+            # No triplet pattern found, keep original
+            new_hypothesis_list.append(hyp)
+            continue
+        
+        # Found triplet pattern! Split into 3 parts
+        word1_alto, hyphen_char, word2_alto, llm_word1, llm_hyphen, llm_word2 = triplet_result
+        
+        # Create split parts: [word1, hyphen, word2]
+        split_parts = [word1_alto, hyphen_char, word2_alto]
+        
+        # Calculate widths - hyphen should be narrow
+        total_chars = len(word1_alto) + len(word2_alto) + 1  # +1 for hyphen
+        gap_size = max(2, int(hyp.anchor.width * 0.01))
+        total_gap_space = gap_size * 2  # Two gaps between 3 parts
+        available_width = max(1, hyp.anchor.width - total_gap_space)
+        
+        # Allocate widths: word1 and word2 proportional, hyphen gets minimal width
+        word1_width = int((len(word1_alto) / total_chars) * available_width) if total_chars > 0 else available_width // 3
+        word2_width = int((len(word2_alto) / total_chars) * available_width) if total_chars > 0 else available_width // 3
+        hyphen_width = max(5, available_width - word1_width - word2_width)  # Hyphen gets at least 5px
+        
+        # Create three split hypotheses
+        current_hpos = hyp.anchor.hpos
+        
+        # Create all three anchors first, then create TokenHypotheses objects
+        # Part 1: First word anchor
+        word1_anchor = XMLOBJ.StringWord(
+            id=hyp.anchor.id,
+            width=word1_width,
+            height=hyp.anchor.height,
+            hpos=current_hpos,
+            vpos=hyp.anchor.vpos,
+            content=word1_alto,
+            wc=hyp.anchor.wc,
+            before_word=hyp.anchor.before_word,
+            after_word=None  # Will be set to hyphen anchor
+        )
+        current_hpos += word1_width + gap_size
+        
+        # Part 2: Hyphen anchor
+        hyphen_anchor = XMLOBJ.StringWord(
+            id=hyp.anchor.id,
+            width=hyphen_width,
+            height=hyp.anchor.height,
+            hpos=current_hpos,
+            vpos=hyp.anchor.vpos,
+            content=hyphen_char,
+            wc=hyp.anchor.wc,
+            before_word=word1_anchor,
+            after_word=None  # Will be set to word2 anchor
+        )
+        word1_anchor.after_word = hyphen_anchor
+        current_hpos += hyphen_width + gap_size
+        
+        # Part 3: Second word anchor
+        word2_anchor = XMLOBJ.StringWord(
+            id=hyp.anchor.id,
+            width=word2_width,
+            height=hyp.anchor.height,
+            hpos=current_hpos,
+            vpos=hyp.anchor.vpos,
+            content=word2_alto,
+            wc=hyp.anchor.wc,
+            before_word=hyphen_anchor,
+            after_word=hyp.anchor.after_word
+        )
+        hyphen_anchor.after_word = word2_anchor
+        
+        # Now create TokenHypotheses objects with all anchors already created
+        word1_normalized = text_utils.normalize_for_matching(word1_alto)
+        word1_hyp = TokenHypotheses(
+            anchor=word1_anchor,
+            anchor_left=hyp.anchor.before_word,  # First word gets original's left neighbor
+            anchor_right=hyphen_anchor  # First word's right is the hyphen
+        )
+        
+        # Create candidate for word1
+        word1_candidate = None
+        if word1_normalized in clean_vocab:
+            word1_candidate = TokenCandidate(clean_form=word1_normalized, kind="word", alto_words=[word1_anchor], fuzzy_score=100.0)
+        else:
+            token_candidates = fuzzy_match_rapid(word1_normalized, clean_vocab, cutoff=fuzzy_cutoff, limit=None)
+            if token_candidates:
+                word1_candidate = TokenCandidate(clean_form=token_candidates[0][0], kind="word", alto_words=[word1_anchor], fuzzy_score=token_candidates[0][1])
+        
+        if word1_candidate:
+            # Add the matched LLM token to the candidate's fuzzy match list
+            if llm_word1:
+                word1_candidate.possible_llm_elements_by_fuzzy_match.append(llm_word1)
+            word1_hyp.candidates.append(word1_candidate)
+            word1_hyp.chosen_index = 0
+        
+        # Assign the matched LLM token
+        if llm_word1:
+            word1_hyp.chosen_LLM_token = llm_word1
+        
+        hyphen_hyp = TokenHypotheses(
+            anchor=hyphen_anchor,
+            anchor_left=word1_anchor,  # Hyphen's left is word1
+            anchor_right=word2_anchor  # Hyphen's right is word2
+        )
+        # Hyphen matches directly to hyphen token
+        hyphen_normalized = text_utils.normalize_for_matching(hyphen_char)
+        hyphen_candidate = TokenCandidate(clean_form=hyphen_normalized, kind="word", alto_words=[hyphen_anchor], fuzzy_score=100.0)
+        # Add the matched LLM token to the candidate's fuzzy match list
+        if llm_hyphen:
+            hyphen_candidate.possible_llm_elements_by_fuzzy_match.append(llm_hyphen)
+        hyphen_hyp.candidates.append(hyphen_candidate)
+        if llm_hyphen:
+            hyphen_hyp.chosen_LLM_token = llm_hyphen
+            hyphen_hyp.chosen_index = 0
+        
+        word2_normalized = text_utils.normalize_for_matching(word2_alto)
+        word2_hyp = TokenHypotheses(
+            anchor=word2_anchor,
+            anchor_left=hyphen_anchor,  # Second word's left is the hyphen
+            anchor_right=hyp.anchor.after_word  # Second word gets original's right neighbor
+        )
+        
+        # Create candidate for word2
+        word2_candidate = None
+        if word2_normalized in clean_vocab:
+            word2_candidate = TokenCandidate(clean_form=word2_normalized, kind="word", alto_words=[word2_anchor], fuzzy_score=100.0)
+        else:
+            token_candidates = fuzzy_match_rapid(word2_normalized, clean_vocab, cutoff=fuzzy_cutoff, limit=None)
+            if token_candidates:
+                word2_candidate = TokenCandidate(clean_form=token_candidates[0][0], kind="word", alto_words=[word2_anchor], fuzzy_score=token_candidates[0][1])
+        
+        if word2_candidate:
+            # Add the matched LLM token to the candidate's fuzzy match list
+            if llm_word2:
+                word2_candidate.possible_llm_elements_by_fuzzy_match.append(llm_word2)
+            word2_hyp.candidates.append(word2_candidate)
+            word2_hyp.chosen_index = 0
+        
+        # Assign the matched LLM token
+        if llm_word2:
+            word2_hyp.chosen_LLM_token = llm_word2
+        
+        # Add all three to the list
+        new_hypothesis_list.append(word1_hyp)
+        new_hypothesis_list.append(hyphen_hyp)
+        new_hypothesis_list.append(word2_hyp)
+    
+    return new_hypothesis_list
+
+
 def link_hyphen_pairs(
     hypothesis_list: List[TokenHypotheses], 
     llm_elements: List[LLMToken], 
@@ -1555,24 +2006,146 @@ def link_hyphen_pairs(
             new_hypothesis_list.append(hyp1)
             continue
         
-        # Skip if this hypothesis already has candidates with good matches
-        # BUT: For literal hyphen words flagged for error (especially due to 0 context matches),
-        # we should still process them for hyphen linking, as the lack of context indicates they need combining
-        # Only process words that truly have no matches at all (need combining with adjacent words)
-        # Check if it has candidates with good fuzzy scores or fuzzy matches
-        has_good_match = False
-        if len(hyp1.candidates) > 0:
-            for cand in hyp1.candidates:
-                if cand.fuzzy_score >= fuzzy_cutoff_individual or len(cand.possible_llm_elements_by_fuzzy_match) > 0:
-                    has_good_match = True
-                    break
+        # CRITICAL PRE-CHECK: Before trying to merge, check if SHORT words can be matched based solely on neighbors
+        # This MUST run before checking has_good_match, because short words with weak fuzzy matches
+        # (like "-be" matching "be" with low score) should still be checked for neighbor-based matches
+        # Example: ALTO "added" + "-be" + "was" → LLM "added he was"
+        # "-be" might have a weak fuzzy match to "be", but should match "he" based on neighbors
+        # This prevents incorrect merges when short words should match individually based on context
+        # Example: ALTO "added" + "-be" + "was" → LLM "added he was"
+        # "-be" should match "he" based on neighbors, not be merged with something
+        # BUT: Only apply this to short words (≤3 chars) that are NOT literal hyphens
+        # Literal hyphens (ending with "-") are likely real hyphenations and should be allowed to merge
+        found_neighbor_match = False
+        normalized_w1 = text_utils.normalize_for_matching(decoded_w1)
+        # Strip leading hyphens for length calculation (leading hyphens are OCR artifacts)
+        # This makes "-be" count as 2 chars, not 3, so it gets more lenient neighbor matching
+        w1_length = len(normalized_w1.lstrip("-–—"))
+        is_short_word = w1_length <= 3
         
-        # For literal hyphen words flagged for error, still process for hyphen linking
-        # The flag indicates context mismatch, which suggests the word needs to be combined
-        if has_good_match and not (is_literal_hyphen and hyp1.flagged_for_error):
-            # Has good candidates, shouldn't be processed by hyphen linking
-            # Keep as is (might have been incorrectly flagged or will match in later stages)
-            new_hypothesis_list.append(hyp1)
+        # Only do this pre-check for short words that are NOT literal hyphens
+        # Literal hyphens should be allowed to merge even if neighbors match well
+        if is_short_word and not is_literal_hyphen and (hyp1.anchor.before_word is not None or hyp1.anchor.after_word is not None):
+            # Get neighbors
+            left_neighbor_hyp = None
+            right_neighbor_hyp = None
+            
+            if hyp1.anchor.before_word:
+                for h in hypothesis_list:
+                    if h.anchor == hyp1.anchor.before_word:
+                        left_neighbor_hyp = h
+                        break
+                    for candidate in h.candidates:
+                        if hyp1.anchor.before_word in candidate.alto_words:
+                            left_neighbor_hyp = h
+                            break
+                    if left_neighbor_hyp:
+                        break
+            
+            if hyp1.anchor.after_word:
+                for h in hypothesis_list:
+                    if h.anchor == hyp1.anchor.after_word:
+                        right_neighbor_hyp = h
+                        break
+                    for candidate in h.candidates:
+                        if hyp1.anchor.after_word in candidate.alto_words:
+                            right_neighbor_hyp = h
+                            break
+                    if right_neighbor_hyp:
+                        break
+            
+            # Get neighbor texts - use chosen_LLM_token if available, otherwise use best candidate, 
+            # or fall back to ALTO content (surface form) if not matched yet
+            left_neighbor_text = None
+            right_neighbor_text = None
+            
+            if left_neighbor_hyp:
+                if left_neighbor_hyp.chosen_LLM_token:
+                    left_neighbor_text = text_utils.normalize_for_matching(left_neighbor_hyp.chosen_LLM_token.word)
+                elif left_neighbor_hyp.candidates:
+                    # Use best candidate if no chosen_LLM_token yet
+                    best_candidate = max(left_neighbor_hyp.candidates, key=lambda c: c.fuzzy_score, default=None)
+                    if best_candidate and best_candidate.possible_llm_elements_by_fuzzy_match:
+                        left_neighbor_text = text_utils.normalize_for_matching(best_candidate.possible_llm_elements_by_fuzzy_match[0].word)
+                else:
+                    # Fall back to ALTO content (surface form) if not matched yet
+                    # This helps with literal hyphens that haven't been matched yet
+                    left_alto_decoded = text_utils.decode_html_entities(left_neighbor_hyp.anchor.content)
+                    left_neighbor_text = text_utils.normalize_for_matching(left_alto_decoded)
+            
+            if right_neighbor_hyp:
+                if right_neighbor_hyp.chosen_LLM_token:
+                    right_neighbor_text = text_utils.normalize_for_matching(right_neighbor_hyp.chosen_LLM_token.word)
+                elif right_neighbor_hyp.candidates:
+                    # Use best candidate if no chosen_LLM_token yet
+                    best_candidate = max(right_neighbor_hyp.candidates, key=lambda c: c.fuzzy_score, default=None)
+                    if best_candidate and best_candidate.possible_llm_elements_by_fuzzy_match:
+                        right_neighbor_text = text_utils.normalize_for_matching(best_candidate.possible_llm_elements_by_fuzzy_match[0].word)
+                else:
+                    # Fall back to ALTO content (surface form) if not matched yet
+                    right_alto_decoded = text_utils.decode_html_entities(right_neighbor_hyp.anchor.content)
+                    right_neighbor_text = text_utils.normalize_for_matching(right_alto_decoded)
+            
+            # Check if we have at least one neighbor with text
+            if left_neighbor_text or right_neighbor_text:
+                # Get unmatched LLM tokens
+                matched_token_ids = {id(h.chosen_LLM_token) for h in hypothesis_list if h.chosen_LLM_token}
+                unmatched_tokens = [token for token in llm_elements if id(token) not in matched_token_ids]
+                
+                if unmatched_tokens:
+                    # Check if any unmatched LLM token matches based on neighbors
+                    for llm_token in unmatched_tokens:
+                        left_score = 0.0
+                        right_score = 0.0
+                        
+                        if llm_token.w_before and left_neighbor_text:
+                            left_score = fuzz.ratio(left_neighbor_text, text_utils.normalize_for_matching(llm_token.w_before.word))
+                        elif not llm_token.w_before and not left_neighbor_text:
+                            left_score = 100.0
+                        
+                        if llm_token.w_after and right_neighbor_text:
+                            right_score = fuzz.ratio(right_neighbor_text, text_utils.normalize_for_matching(llm_token.w_after.word))
+                        elif not llm_token.w_after and not right_neighbor_text:
+                            right_score = 100.0
+                        
+                        # For short words, be more lenient - accept if:
+                        # - Both neighbors ≥90% (very strong)
+                        # - One neighbor ≥90% and other ≥80% (strong with reasonable support)
+                        # - For very short words (≤2 chars), even one neighbor ≥90% is enough
+                        neighbor_match_ok = False
+                        if w1_length <= 2:
+                            # Very short words (1-2 chars): one strong neighbor (≥90%) is enough
+                            neighbor_match_ok = (max(left_score, right_score) >= 90.0)
+                        else:
+                            # 3-char words: need both ≥90% OR one ≥90% and other ≥80%
+                            neighbor_match_ok = (
+                                (left_score >= 90.0 and right_score >= 90.0) or
+                                (max(left_score, right_score) >= 90.0 and min(left_score, right_score) >= 80.0)
+                            )
+                        
+                        if neighbor_match_ok:
+                            # Found a strong neighbor-based match - create candidate and skip merging
+                            # Create a candidate for this match
+                            candidate = TokenCandidate(
+                                clean_form=text_utils.normalize_for_matching(llm_token.word),
+                                kind="word",
+                                alto_words=[hyp1.anchor],
+                                fuzzy_score=50.0  # Low fuzzy score since we're matching by neighbors, not word similarity
+                            )
+                            candidate.possible_llm_elements_by_fuzzy_match = [llm_token]
+                            # Add context match with high scores
+                            candidate.possible_llm_elements_by_context = [(llm_token, left_score, right_score)]
+                            hyp1.candidates.append(candidate)
+                            found_neighbor_match = True
+                            # Don't assign chosen_LLM_token yet - let context matching handle it
+                            # But skip merging since we found a neighbor-based match
+                            break
+        
+        # If we found a neighbor-based match, skip merging for this word
+        if found_neighbor_match:
+            # Found neighbor-based match - don't try merging
+            # Mark as processed so it gets added to the list at the end
+            skip_indices.add(i)
             continue
         
         # Check if individual word has a good fuzzy match before trying to combine
@@ -1670,23 +2243,79 @@ def link_hyphen_pairs(
             # Pass 2: Check all remaining words for exact vocabulary matches
             # This handles cases where paragraph reordering makes words far apart spatially
             # but they should still be combined (e.g., "sor-" + "ties" = "sorties")
-            # Always check pass 2 if we only have a fuzzy match from after_word (want to find exact matches)
-            if best_match_score < 100.0 or (after_word_result is not None and not after_word_is_exact):
-                pass2_result = _search_all_words_for_exact_match(
-                    hyp1, i, all_other_indices, hypothesis_list, processed_indices,
-                    search_indices_pass1, is_literal_hyphen, base1, decoded_w1,
-                    clean_vocab, llm_word_lookup
-                )
-                if pass2_result is not None:
-                    # Prefer exact match from pass 2 over fuzzy match from after_word
-                    pass2_match, pass2_score, pass2_partner, pass2_llm, pass2_context = pass2_result
-                    if pass2_score == 100.0 and best_match_score < 100.0:
-                        # Pass 2 found exact match, current is fuzzy - use pass 2
-                        best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
-                    elif pass2_score == 100.0 and best_match_score == 100.0:
-                        # Both exact - prefer better context
-                        if pass2_context > best_context_score:
+            # ALWAYS check pass 2 for literal hyphens to find exact matches, even if Pass 1 found a fuzzy match
+            # For non-literal hyphens, only check if we don't have an exact match yet
+            has_exact_match = (pass1_result and best_match_score == 100.0) or (after_word_result is not None and after_word_is_exact)
+            should_run_pass2 = is_literal_hyphen or not has_exact_match
+            
+            if should_run_pass2:
+                # For Pass 2, we want to check ALL words that weren't successfully matched in Pass 1
+                # This includes words that were filtered out due to distance restrictions
+                # Use the same evaluation logic as Pass 1, but without distance restrictions
+                pass2_best_match = None
+                pass2_best_score = 0.0
+                pass2_best_partner = None
+                pass2_best_llm = None
+                pass2_best_context = -1.0
+                
+                # Track which indices were actually evaluated in Pass 1 (not just in the search list)
+                # We'll skip those to avoid redundant evaluation, but check everything else
+                evaluated_in_pass1 = set()
+                if pass1_result:
+                    # If Pass 1 found a result, it means it evaluated at least some words
+                    # We'll be conservative and only skip words that are in other_indices
+                    # (prioritized words like after_word are already handled)
+                    evaluated_in_pass1 = set(other_indices)
+                
+                # Check all words in all_other_indices that weren't evaluated in Pass 1
+                for j in all_other_indices:
+                    if j in processed_indices or j in evaluated_in_pass1:
+                        continue  # Skip already processed or already evaluated in Pass 1
+                    
+                    hyp2 = hypothesis_list[j]
+                    decoded_w2 = text_utils.decode_html_entities(hyp2.anchor.content)
+                    normalized_w2 = text_utils.normalize_for_matching(decoded_w2)
+                    individual_w2_match = check_individual_word_match(normalized_w2, clean_vocab, cutoff=fuzzy_cutoff_individual)
+                    
+                    # Use the same evaluation logic as Pass 1
+                    result = _evaluate_word_combination(
+                        hyp1, hyp2, is_literal_hyphen, base1, decoded_w1, decoded_w2,
+                        clean_vocab, llm_word_lookup,
+                        hyp1.anchor.before_word, hyp2.anchor.after_word,
+                        individual_w1_match, individual_w2_match,
+                        fuzzy_cutoff_combined, context_validation_threshold,
+                        individual_score_threshold, combination_improvement_threshold
+                    )
+                    
+                    if result:
+                        merged_normalized, combined_score, selected_llm, candidate_context_score = result
+                        # Prefer better matches (higher score or better context for same score)
+                        if (combined_score > pass2_best_score or 
+                            (combined_score == pass2_best_score and candidate_context_score > pass2_best_context)):
+                            pass2_best_match = merged_normalized
+                            pass2_best_score = combined_score
+                            pass2_best_partner = j
+                            pass2_best_llm = selected_llm
+                            pass2_best_context = candidate_context_score
+                
+                # If Pass 2 found a match, compare it with Pass 1 results
+                if pass2_best_match and pass2_best_partner is not None:
+                    pass2_result = (pass2_best_match, pass2_best_score, pass2_best_partner, pass2_best_llm, pass2_best_context)
+                    # Prefer exact match from pass 2 over fuzzy match from Pass 1 or after_word
+                    if pass2_best_score == 100.0:
+                        if not pass1_result or best_match_score < 100.0:
+                            # Pass 2 found exact match, current is fuzzy or no match - always use exact
                             best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
+                        elif best_match_score == 100.0:
+                            # Both exact - prefer better context
+                            if pass2_best_context > best_context_score:
+                                best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
+                    elif pass2_best_score > best_match_score:
+                        # Pass 2 found a better fuzzy match than Pass 1
+                        best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
+                    elif pass2_best_score == best_match_score and pass2_best_context > best_context_score:
+                        # Same score but better context
+                        best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = pass2_result
         
         # If match found, store the combination (don't add to list yet - preserve order)
         if best_match and best_partner_idx is not None:
@@ -1879,7 +2508,6 @@ def create_LLM_element_list(llm_clean_text: str) -> List[LLMToken]:
     """
     Creates a list of LLM tokens from the clean text.
     set values for word, word_normalized, w_before and w_after for each LLM token.
-    TODO: handle getting page number and article name from the clean text.
     """
     tokens = llm_clean_text.split()
     llm_elements: List[LLMToken] = []
@@ -1923,7 +2551,12 @@ def create_hypothesis_list(
     """
     hypothesis_list: List[TokenHypotheses] = []
     for alto_word in alto_words:
-        token_hypothesis_object = TokenHypotheses(anchor=alto_word)
+        # Initialize logical neighbors from ALTO spatial neighbors
+        token_hypothesis_object = TokenHypotheses(
+            anchor=alto_word,
+            anchor_left=alto_word.before_word,  # Initialize from ALTO spatial neighbor
+            anchor_right=alto_word.after_word   # Initialize from ALTO spatial neighbor
+        )
         # Decode HTML entities in ALTO word content before fuzzy matching
         decoded_content = text_utils.decode_html_entities(alto_word.content)
         # Normalize the content for matching (removes punctuation, lowercases)
@@ -2017,7 +2650,11 @@ def run_one_iteration(
     Run one iteration of the pipeline: hyphen linking, word merges, reference updates, context matching.
     Returns the updated hypothesis list.
     """
-    # Link hyphen pairs
+    # First, split hyphenated triplets (ALTO "assignment-his" → clean "assignment" "-" "his")
+    # This must happen BEFORE hyphen linking to avoid conflicts
+    hypothesis_list = split_hyphenated_triplets(hypothesis_list, llm_elements)
+    
+    # Link hyphen pairs (for word-wrap hyphens and other combinations)
     hypothesis_list = link_hyphen_pairs(hypothesis_list, llm_elements, page)
     
     # Create lookup for context matching
@@ -2161,34 +2798,25 @@ if __name__ == "__main__":
                        help='Display OCR accuracy analysis at the beginning')
     parser.add_argument('--track-word', type=str, default=None,
                        help='Word to track through the pipeline flowchart (e.g., "dams", "anti-", "jets*but")')
+    parser.add_argument('--clean-text', type=str, default=None,
+                       help='Path to clean text file to use for the pipeline')
+    parser.add_argument('--save-viz-files', action='store_true',
+                       help='Save visualization files (default: False)')
+    parser.add_argument('--xml-file', type=str, default=None,
+                       help='Path to ALTO XML file to use for the pipeline (default: None)')
     args = parser.parse_args()
-    
-    clean_text = """
-    Witness: Hanoi Heart Raid ’No Error’
-    
-    HANOI (AP) I witnessed the attack which destroyed the French diplomatic residence, seriously injuring the delegation head, Pierre Susini, and burying four of his Vietnamese staff in debris.
-
-    We were filming one mile away when at least three jets swooped repeatedly over the heart of the capital Wednesday. It was lunch hour. I counted at least a dozen sorties by jets and watched as one, defying heavy anti-aircraft fire, dived very low, dropping two bombs.
-
-    There was no possibility of pilot error. They were attacking very low over the centre of the capital. The area hit is the diplomatic quarter and there are no Vietnamese ministries or factories anywhere near.
-
-    I witnessed and filmed dead taken from rubble of the French residence, which was shorn in half. French Consul Christian Calvy told me the attack came without warning. He called it too horrible for words. He said he could not even imagine French and world reaction. There were at least three bombings. There are five unknown dead in the central area, and probably seven.
-
-    I saw the French delegation head at St. Paul's Hospital in Hanoi. He had extreme facial burns and was still unconscious. A doctor said it was difficult to say if the diplomat would survive, but the doctor believed he could.
-
-    One French diplomat theorized that the bombs were a forced drop from a damaged jet, but this diplomat added he was inside the residence at the time of the attack and did not see the plane. I did, and the low-hitting jet was not damaged.
-
-    Several planes made several sorties. I saw at least three jets. The Canadian military attache here, a Maj. Dupuis, says he saw five or six over the city centre.
-
-    Susini had been greeting the Albanian ambassador outside the residence when the bombs dropped. The Albanian escaped with lesser injuries.
-
-    Another French diplomat said: "This happens in Vietnam every day and the world pays no attention. Now it will."
-
-    A British attache said, "The United States has gone too far."
-
-
-    @ Michael Maclear is a Canadian correspondent based in London for Canada's CTV television network. He now is in Hanoi on assignment—his third trip to North Vietnam. He filed the following report Wednesday to CTV and The Associated Press.
-    """
+    if args.xml_file:
+        xml_filename = args.xml_file
+    else:
+        print("No XML file provided")
+        sys.exit(1)
+    save_vis_files = args.save_viz_files
+    if args.clean_text:
+        with open(f"{args.clean_text}", "r", encoding="utf-8") as f:
+            clean_text = f.read()
+    else:
+        print("No clean text file provided")
+        sys.exit(1)
 
     tokens = clean_text.split()  # raw tokens from clean text
 
@@ -2200,9 +2828,7 @@ if __name__ == "__main__":
     # Convert to set for function calls that expect set[str]
     clean_vocab = set(clean_vocab_counter.keys())
 
-    #From XML file, load the first page - 
-    # Expected format: input/{testpagename}/{testpagename}.xml
-    xml_filename = "inputs/1972_10_12_p1/1972_10_12_p1_Tesseract_XML_Maclear.xml"
+    #from xml, load first page
     page = XMLOBJ.load_first_page(xml_filename)
     
     # Extract test page name from path (e.g., "input/1972_10_12_p1/1972_10_12_p1.xml" -> "1972_10_12_p1")
@@ -2231,6 +2857,15 @@ if __name__ == "__main__":
     
     # Analyze OCR accuracy at the VERY BEGINNING (before any processing)
     analyze_ocr_accuracy(hypothesis_list, show=args.show_ocr_accuracy)
+    
+    # Create visualization of original OCR text before cleaning
+    import visualize_matching as viz
+    viz.visualize_original_ocr_text(
+        hypothesis_list, 
+        page, 
+        xml_filename, 
+        output_dir=os.path.join("outputs", testpagename)
+    )
     
     # Now run the candidate pipeline (Round 1)
     hypothesis_list = run_candidate_pipeline(hypothesis_list, llm_elements)
@@ -2290,19 +2925,17 @@ if __name__ == "__main__":
     pipeline_states["after_hyphen_linking"] = hypothesis_list
 
     """
-    Third round of matching:
-    Additional processes to handle edge cases:
-    - Paragraph reordering: Reorder paragraphs to match LLM text order for PENDING words
-    - Weak fuzzy matching: Match words with no LLM candidates using bounding box size
+    Cross-boundary matching:
+    Link neighbors across layout boundaries for PENDING words.
+    Runs after hyphen linking so that hyphenated words are already resolved.
     """
-    # Paragraph reordering (non-intrusive - only affects PENDING words)
+    # Cross-boundary matching: Link neighbors across layout boundaries for PENDING words
     import paragraph_reordering
     hypothesis_list = paragraph_reordering.reorder_paragraphs(
         hypothesis_list, llm_elements, page
     )
     
-    # Re-run context matching after reordering (for all words to pick up newly resolved neighbors)
-    # First, ensure linking is up to date
+    # Re-run context matching after cross-boundary linking (for all words to pick up newly resolved neighbors)
     hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
     
     # Re-run fuzzy matching to ensure all candidates have fuzzy matches
@@ -2327,7 +2960,12 @@ if __name__ == "__main__":
     hypothesis_list = narrow_hypothesis_token_candidates_by_context(hypothesis_list)
     hypothesis_list = find_best_candidates_for_all_hypothesis_objects(hypothesis_list, llm_elements)
     hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
-    
+
+    """
+    Third round of matching:
+    Additional processes to handle edge cases:
+    - Weak fuzzy matching: Match words with no LLM candidates using bounding box size
+    """
     # Capture state after word merges (from iterative pipeline)
     pipeline_states["after_word_merges"] = hypothesis_list
     
@@ -2384,6 +3022,171 @@ if __name__ == "__main__":
                     break
     
     # Re-link after final matching
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+    
+    # FINAL HARD MATCHING PASS: Match PENDING words based solely on neighbors and position/size
+    # This is the very last pass - matches words that have no candidates using hard neighbor/position matching
+    pending_hyps = [hyp for hyp in hypothesis_list if hyp.chosen_LLM_token is None and not hyp.flagged_for_error and not hyp.candidates]
+    if pending_hyps:
+        unmatched_tokens = weak_fuzzy_matching.find_unmatched_llm_tokens(llm_elements, hypothesis_list)
+        for pending_hyp in pending_hyps:
+            # Get neighbors
+            left_neighbor_hyp = None
+            right_neighbor_hyp = None
+            
+            if pending_hyp.anchor.before_word:
+                for h in hypothesis_list:
+                    if h.anchor == pending_hyp.anchor.before_word:
+                        left_neighbor_hyp = h
+                        break
+                    for candidate in h.candidates:
+                        if pending_hyp.anchor.before_word in candidate.alto_words:
+                            left_neighbor_hyp = h
+                            break
+                    if left_neighbor_hyp:
+                        break
+            
+            if pending_hyp.anchor.after_word:
+                for h in hypothesis_list:
+                    if h.anchor == pending_hyp.anchor.after_word:
+                        right_neighbor_hyp = h
+                        break
+                    for candidate in h.candidates:
+                        if pending_hyp.anchor.after_word in candidate.alto_words:
+                            right_neighbor_hyp = h
+                            break
+                    if right_neighbor_hyp:
+                        break
+            
+            # Need at least one neighbor with a match
+            if not left_neighbor_hyp and not right_neighbor_hyp:
+                continue
+            if left_neighbor_hyp and not left_neighbor_hyp.chosen_LLM_token:
+                left_neighbor_hyp = None
+            if right_neighbor_hyp and not right_neighbor_hyp.chosen_LLM_token:
+                right_neighbor_hyp = None
+            if not left_neighbor_hyp and not right_neighbor_hyp:
+                continue
+            
+            # HARD MATCHING: Based solely on neighbors, proximity, and word length/size
+            # IGNORE fuzzy match of the word itself - rely on context and physical properties
+            import text_utils
+            
+            # Get neighbor texts for matching
+            # For hard matching, we compare against the LLM token's actual neighbors (w_before/w_after.word)
+            # These are the clean text words, so we should use chosen_LLM_token.word (the matched clean form)
+            # However, if the neighbor was hyphenated and merged, we need to ensure we're comparing correctly
+            left_neighbor_text = None
+            right_neighbor_text = None
+            if left_neighbor_hyp:
+                if left_neighbor_hyp.chosen_LLM_token:
+                    # Use the matched LLM token word (this is the clean form that matches llm_token.w_before.word)
+                    # This handles merged/hyphenated words correctly - "resi- + dence" → "residence"
+                    left_neighbor_text = text_utils.normalize_for_matching(left_neighbor_hyp.chosen_LLM_token.word)
+                else:
+                    # Fall back to ALTO content if not matched yet
+                    left_alto_decoded = text_utils.decode_html_entities(left_neighbor_hyp.anchor.content)
+                    left_neighbor_text = text_utils.normalize_for_matching(left_alto_decoded)
+            if right_neighbor_hyp:
+                if right_neighbor_hyp.chosen_LLM_token:
+                    # Use the matched LLM token word (clean form)
+                    right_neighbor_text = text_utils.normalize_for_matching(right_neighbor_hyp.chosen_LLM_token.word)
+                else:
+                    # Fall back to ALTO content if not matched yet
+                    right_alto_decoded = text_utils.decode_html_entities(right_neighbor_hyp.anchor.content)
+                    right_neighbor_text = text_utils.normalize_for_matching(right_alto_decoded)
+            
+            # Get ALTO word properties for size matching
+            alto_width = pending_hyp.anchor.width
+            alto_height = pending_hyp.anchor.height
+            alto_length = len(text_utils.decode_html_entities(pending_hyp.anchor.content))
+            
+            # Find candidates based ONLY on neighbor strength (ignore word fuzzy match)
+            candidates = []
+            for llm_token in unmatched_tokens:
+                left_score = 0.0
+                right_score = 0.0
+                
+                # Check neighbor matches
+                # Compare normalized forms - if neighbor has chosen_LLM_token, use that (clean form)
+                # If not, use ALTO content (surface form) but be more lenient since surface forms may differ
+                if llm_token.w_before and left_neighbor_text:
+                    llm_before_normalized = text_utils.normalize_for_matching(llm_token.w_before.word)
+                    # If neighbor has chosen_LLM_token, we're comparing clean forms (should match well)
+                    # If neighbor doesn't have chosen_LLM_token, we're comparing ALTO surface form to clean form (may differ)
+                    # Use fuzzy matching to handle both cases
+                    left_score = fuzz.ratio(left_neighbor_text, llm_before_normalized)
+                elif not llm_token.w_before and not left_neighbor_text:
+                    left_score = 100.0
+                
+                if llm_token.w_after and right_neighbor_text:
+                    llm_after_normalized = text_utils.normalize_for_matching(llm_token.w_after.word)
+                    # Same logic as above
+                    right_score = fuzz.ratio(right_neighbor_text, llm_after_normalized)
+                elif not llm_token.w_after and not right_neighbor_text:
+                    right_score = 100.0
+                
+                # Require strong neighbor matches - this is the primary criterion
+                # For hard matching, be more lenient: require both neighbors ≥85% OR one ≥90% and the other ≥80%
+                # This handles cases where one neighbor was hyphenated and merged (surface form vs clean form)
+                neighbor_match_ok = False
+                if (left_score >= weak_fuzzy_matching.NEIGHBOR_STRENGTH_THRESHOLD and 
+                    right_score >= weak_fuzzy_matching.NEIGHBOR_STRENGTH_THRESHOLD):
+                    # Both neighbors match very well (≥90%)
+                    neighbor_match_ok = True
+                elif (left_score >= 85.0 and right_score >= 85.0):
+                    # Both neighbors match well (≥85%)
+                    neighbor_match_ok = True
+                elif ((left_score >= weak_fuzzy_matching.NEIGHBOR_STRENGTH_THRESHOLD and right_score >= 80.0) or
+                      (right_score >= weak_fuzzy_matching.NEIGHBOR_STRENGTH_THRESHOLD and left_score >= 80.0)):
+                    # One neighbor matches very well (≥90%) and the other matches reasonably (≥80%)
+                    neighbor_match_ok = True
+                
+                if neighbor_match_ok:
+                    # Calculate word length similarity (approximate size matching)
+                    llm_word_length = len(llm_token.word)
+                    length_diff = abs(alto_length - llm_word_length)
+                    max_length = max(alto_length, llm_word_length, 1)
+                    length_similarity = 100.0 * (1.0 - (length_diff / max_length))
+                    
+                    # Use a dummy word fuzzy score (not used in scoring, but required by _score_candidate_by_fit)
+                    # Set to 50.0 as a neutral value since we're ignoring it
+                    dummy_word_fuzzy = 50.0
+                    candidates.append((llm_token, left_score, right_score, dummy_word_fuzzy, length_similarity))
+            
+            if not candidates:
+                continue
+            
+            # Score candidates by fit (proximity/position/size) - this uses bounding box matching
+            best_candidate = None
+            best_score = 0.0
+            for llm_token, left_score, right_score, dummy_word_fuzzy, length_similarity in candidates:
+                # Calculate fit score using position/size (ignoring word fuzzy)
+                score_result = weak_fuzzy_matching._score_candidate_by_fit(
+                    pending_hyp, llm_token, left_score, right_score, dummy_word_fuzzy, hypothesis_list, page
+                )
+                if score_result:
+                    total_score, fit_score = score_result
+                    # Combine with length similarity for final score
+                    # Weight: 60% fit_score (position/size), 40% length_similarity, with neighbor strength as base
+                    combined_score = (fit_score * 0.6) + (length_similarity * 0.4)
+                    # Scale by neighbor strength (average of left and right)
+                    neighbor_avg = (left_score + right_score) / 2.0
+                    final_score = combined_score * (neighbor_avg / 100.0)
+                    
+                    if final_score > best_score:
+                        best_score = final_score
+                        best_candidate = (llm_token, left_score, right_score, dummy_word_fuzzy, final_score, fit_score)
+            
+            # Match if we have a good candidate
+            # Lower threshold (65%) since we're relying on neighbors and size, not word similarity
+            if best_candidate and best_score >= 65.0:
+                llm_token, left_score, right_score, dummy_word_fuzzy, final_score, fit_score = best_candidate
+                weak_fuzzy_matching._create_match_for_hypothesis(
+                    pending_hyp, llm_token, final_score, left_neighbor_hyp, right_neighbor_hyp
+                )
+    
+    # Re-link after hard matching
     hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
     
     # Capture final state
@@ -2501,7 +3304,13 @@ if __name__ == "__main__":
     
     # Create visualization of cleaned text positions (with versioning)
     # This will save to outputs/{testpagename}/visual-recreation_{testpagename}_{v#}.png
-    viz.visualize_cleaned_text_positions(hypothesis_list, page, testpagename, output_dir=output_dir)
+    viz.visualize_cleaned_text_positions(
+        hypothesis_list, 
+        page, 
+        testpagename, 
+        output_dir=output_dir,
+        original_alto_content_by_id=original_alto_content_by_id
+    )
     
     # Show LLM token mapping table (full table or summary only based on --show-table flag)
     viz.visualize_llm_token_mapping_table(
