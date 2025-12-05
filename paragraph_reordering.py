@@ -117,146 +117,237 @@ def find_words_with_missing_neighbors(
     return unmatched_neighbors
 
 
-def find_cross_boundary_neighbor_matches(
+def _build_swap_graph(
     hypothesis_list: List[TokenHypotheses],
     max_search_distance: int = MAX_COMBINATORIAL_SEARCH_DISTANCE
-) -> List[Tuple[TokenHypotheses, TokenHypotheses, str]]:
+) -> Dict[int, List[Tuple[TokenHypotheses, int, str]]]:
     """
-    Test combinatorials between PENDING words to find cross-boundary neighbor pairs.
+    Build a graph of potential swaps between PENDING words.
     
-    Only tests PENDING words against other PENDING words, focusing on triplets:
-    - Words missing a LEFT neighbor paired with words missing a RIGHT neighbor
-    - Checks if they should be neighbors (bidirectional expectation)
+    Each node (PENDING word) has edges to other PENDING words that it expects as neighbors.
+    This graph is used to find chains of swaps that would resolve multiple PENDING words.
     
     Args:
         hypothesis_list: List of all hypotheses
         max_search_distance: Maximum index distance to search (default: 200)
         
     Returns:
-        List of (word_A, word_B, direction) tuples where:
-        - word_A and word_B are both PENDING
-        - word_A expects word_B as neighbor
-        - direction is 'left' or 'right' (from word_A's perspective)
+        Dictionary mapping id(PENDING word) to list of (target_word, target_idx, direction) tuples
+        where direction is 'left' or 'right' (from the source word's perspective)
     """
     import text_utils
     
-    # Find all PENDING words
+    # Find all PENDING words with their indices
     pending_words: List[Tuple[TokenHypotheses, int]] = []
     for idx, hyp in enumerate(hypothesis_list):
         if is_pending_word(hyp):
             pending_words.append((hyp, idx))
     
     if len(pending_words) < 2:
-        return []
+        return {}
     
-    # Separate PENDING words into those missing left neighbor and those missing right neighbor
-    missing_left: List[Tuple[TokenHypotheses, int, LLMToken]] = []
-    missing_right: List[Tuple[TokenHypotheses, int, LLMToken]] = []
+    # Build graph: for each PENDING word, find other PENDING words it expects as neighbors
+    # Use id(hyp) as key since TokenHypotheses objects are not hashable
+    swap_graph: Dict[int, List[Tuple[TokenHypotheses, int, str]]] = {}
     
-    for hyp, idx in pending_words:
-        # Check if missing left neighbor
-        if hyp.chosen_LLM_token and hyp.chosen_LLM_token.w_before is not None:
-            missing_left_neighbor = False
-            if hyp.left_matched is None:
-                missing_left_neighbor = True
-            elif (hyp.left_matched.chosen_LLM_token is None or
-                  hyp.left_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_before):
-                missing_left_neighbor = True
-            
-            if missing_left_neighbor:
-                missing_left.append((hyp, idx, hyp.chosen_LLM_token.w_before))
+    for hyp_A, idx_A in pending_words:
+        swap_graph[id(hyp_A)] = []
         
-        # Check if missing right neighbor
-        if hyp.chosen_LLM_token and hyp.chosen_LLM_token.w_after is not None:
-            missing_right_neighbor = False
-            if hyp.right_matched is None:
-                missing_right_neighbor = True
-            elif (hyp.right_matched.chosen_LLM_token is None or
-                  hyp.right_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_after):
-                missing_right_neighbor = True
-            
-            if missing_right_neighbor:
-                missing_right.append((hyp, idx, hyp.chosen_LLM_token.w_after))
-    
-    if not missing_left or not missing_right:
-        return []
-    
-    # Debug: Show what we're looking for
-    print(f"\n[Cross-Boundary Matching] Testing combinatorials between PENDING words:")
-    print(f"  - {len(missing_left)} PENDING words missing LEFT neighbor")
-    print(f"  - {len(missing_right)} PENDING words missing RIGHT neighbor")
-    print(f"  - Testing {len(missing_left)} × {len(missing_right)} = {len(missing_left) * len(missing_right)} combinations")
-    
-    cross_boundary_matches = []
-    matches_found = 0
-    
-    # Test combinatorials: each word missing left neighbor against each word missing right neighbor
-    for hyp_left_missing, idx_left, expected_left_token in missing_left:
-        for hyp_right_missing, idx_right, expected_right_token in missing_right:
-            # Skip if it's the same word
-            if hyp_left_missing == hyp_right_missing:
+        # Check what neighbors hyp_A expects
+        expected_left = hyp_A.chosen_LLM_token.w_before if hyp_A.chosen_LLM_token else None
+        expected_right = hyp_A.chosen_LLM_token.w_after if hyp_A.chosen_LLM_token else None
+        
+        # Search other PENDING words to see if any match what hyp_A expects
+        for hyp_B, idx_B in pending_words:
+            if hyp_A == hyp_B:
                 continue
             
-            # Check distance first - respect max_search_distance limit
-            distance = abs(idx_right - idx_left)
+            # Check distance
+            distance = abs(idx_B - idx_A)
             if distance > max_search_distance:
                 continue
             
-            # Check if they're already linked
-            if hyp_left_missing.left_matched == hyp_right_missing:
-                continue
-            if hyp_right_missing.right_matched == hyp_left_missing:
+            # Check if hyp_B has the LLM token that hyp_A expects
+            if hyp_B.chosen_LLM_token is None:
                 continue
             
-            # Check if this is a bidirectional match:
-            # - hyp_left_missing expects hyp_right_missing on its LEFT
-            # - hyp_right_missing expects hyp_left_missing on its RIGHT
-            left_expects_right = False
-            right_expects_left = False
+            # Check if hyp_A expects hyp_B on its left
+            if expected_left is not None:
+                if (expected_left == hyp_B.chosen_LLM_token or
+                    expected_left.word_normalized == hyp_B.chosen_LLM_token.word_normalized):
+                    # Also check if hyp_B expects hyp_A on its right (bidirectional)
+                    if (hyp_B.chosen_LLM_token.w_after is not None and
+                        (hyp_B.chosen_LLM_token.w_after == hyp_A.chosen_LLM_token or
+                         hyp_B.chosen_LLM_token.w_after.word_normalized == hyp_A.chosen_LLM_token.word_normalized)):
+                        swap_graph[id(hyp_A)].append((hyp_B, idx_B, 'left'))
             
-            # Check if left_missing word expects right_missing word on its left
-            if (hyp_left_missing.chosen_LLM_token and 
-                hyp_left_missing.chosen_LLM_token.w_before is not None):
-                if (expected_left_token == hyp_right_missing.chosen_LLM_token or
-                    expected_left_token.word_normalized == hyp_right_missing.chosen_LLM_token.word_normalized):
-                    left_expects_right = True
+            # Check if hyp_A expects hyp_B on its right
+            if expected_right is not None:
+                if (expected_right == hyp_B.chosen_LLM_token or
+                    expected_right.word_normalized == hyp_B.chosen_LLM_token.word_normalized):
+                    # Also check if hyp_B expects hyp_A on its left (bidirectional)
+                    if (hyp_B.chosen_LLM_token.w_before is not None and
+                        (hyp_B.chosen_LLM_token.w_before == hyp_A.chosen_LLM_token or
+                         hyp_B.chosen_LLM_token.w_before.word_normalized == hyp_A.chosen_LLM_token.word_normalized)):
+                        swap_graph[id(hyp_A)].append((hyp_B, idx_B, 'right'))
+    
+    return swap_graph
+
+
+def _find_swap_chains(
+    swap_graph: Dict[int, List[Tuple[TokenHypotheses, int, str]]],
+    hypothesis_list: List[TokenHypotheses]
+) -> List[List[Tuple[TokenHypotheses, TokenHypotheses, str]]]:
+    """
+    Find chains of swaps that would resolve multiple PENDING words.
+    
+    A chain is a sequence of swaps where:
+    - Swap 1: word A <-> word B (resolves A and B)
+    - Swap 2: word B <-> word C (resolves B and C, but B was already resolved by swap 1)
+    - etc.
+    
+    We look for cycles and paths in the swap graph that maximize the number of PENDING words resolved.
+    
+    Args:
+        swap_graph: Graph of potential swaps (keyed by id(hyp))
+        hypothesis_list: List of all hypotheses (for indexing)
+        
+    Returns:
+        List of swap chains, where each chain is a list of (word_A, word_B, direction) tuples
+    """
+    import text_utils
+    
+    # Create reverse lookup: id -> TokenHypotheses for graph traversal
+    id_to_hyp: Dict[int, TokenHypotheses] = {}
+    for hyp in hypothesis_list:
+        if is_pending_word(hyp):
+            id_to_hyp[id(hyp)] = hyp
+    
+    # Find all bidirectional pairs (simple swaps)
+    swap_pairs: List[Tuple[TokenHypotheses, TokenHypotheses, str]] = []
+    processed_pairs = set()
+    
+    for hyp_A_id, edges in swap_graph.items():
+        hyp_A = id_to_hyp[hyp_A_id]
+        for hyp_B, idx_B, direction in edges:
+            # Check if this is a bidirectional pair (both words expect each other)
+            pair_key = (hyp_A_id, id(hyp_B))
+            if pair_key in processed_pairs:
+                continue
             
-            # Check if right_missing word expects left_missing word on its right
-            if (hyp_right_missing.chosen_LLM_token and
-                hyp_right_missing.chosen_LLM_token.w_after is not None):
-                if (expected_right_token == hyp_left_missing.chosen_LLM_token or
-                    expected_right_token.word_normalized == hyp_left_missing.chosen_LLM_token.word_normalized):
-                    right_expects_left = True
-            
-            # Only link if bidirectional expectation (both words expect each other)
-            if left_expects_right and right_expects_left:
-                # Only link if they're far apart (cross-boundary indicator) or exact token match
-                # Note: "far apart" means > 3 positions, indicating cross-boundary
-                # We already checked distance <= max_search_distance above
-                is_exact_token_match = (
-                    expected_left_token == hyp_right_missing.chosen_LLM_token and
-                    expected_right_token == hyp_left_missing.chosen_LLM_token
-                )
+            # Check if hyp_B also has hyp_A in its edges
+            hyp_B_id = id(hyp_B)
+            if hyp_B_id in swap_graph:
+                for hyp_B_target, idx_A, reverse_direction in swap_graph[hyp_B_id]:
+                    if id(hyp_B_target) == hyp_A_id:
+                        # Found bidirectional pair
+                        swap_pairs.append((hyp_A, hyp_B, direction))
+                        processed_pairs.add(pair_key)
+                        processed_pairs.add((hyp_B_id, hyp_A_id))
+                        break
+    
+    # Group swaps into chains
+    # A chain is a sequence where swaps share words (A<->B, B<->C, C<->D)
+    chains: List[List[Tuple[TokenHypotheses, TokenHypotheses, str]]] = []
+    used_words = set()
+    
+    # Start with swaps that resolve the most PENDING words
+    # Sort by distance (prefer swaps that are far apart, indicating cross-boundary)
+    def get_swap_score(swap: Tuple[TokenHypotheses, TokenHypotheses, str]) -> int:
+        hyp_A, hyp_B, _ = swap
+        idx_A = hypothesis_list.index(hyp_A)
+        idx_B = hypothesis_list.index(hyp_B)
+        return abs(idx_B - idx_A)  # Prefer larger distances (cross-boundary)
+    
+    swap_pairs.sort(key=get_swap_score, reverse=True)
+    
+    # Build chains greedily: start with best swaps, then find connected swaps
+    for swap in swap_pairs:
+        hyp_A, hyp_B, direction = swap
+        if id(hyp_A) in used_words or id(hyp_B) in used_words:
+            # Already part of a chain, skip
+            continue
+        
+        # Start a new chain with this swap
+        chain = [swap]
+        used_words.add(id(hyp_A))
+        used_words.add(id(hyp_B))
+        
+        # Try to extend the chain by finding swaps that share words with current chain
+        # Look for swaps where one word is already in the chain
+        extended = True
+        while extended:
+            extended = False
+            for other_swap in swap_pairs:
+                other_A, other_B, other_dir = other_swap
+                if id(other_A) in used_words and id(other_B) in used_words:
+                    continue  # Both already used
                 
-                # Match if exact token match OR if distance > 3 (cross-boundary indicator)
-                if is_exact_token_match or distance > 3:
-                    cross_boundary_matches.append((hyp_left_missing, hyp_right_missing, 'left'))
-                    matches_found += 1
-                    
-                    # Debug: Show match
-                    if matches_found <= 10:  # Only show first 10
-                        word_left = text_utils.decode_html_entities(hyp_left_missing.anchor.content)
-                        word_right = text_utils.decode_html_entities(hyp_right_missing.anchor.content)
-                        llm_left = hyp_left_missing.chosen_LLM_token.word if hyp_left_missing.chosen_LLM_token else "N/A"
-                        llm_right = hyp_right_missing.chosen_LLM_token.word if hyp_right_missing.chosen_LLM_token else "N/A"
-                        reason = "exact_token" if is_exact_token_match else f"distance_{distance}"
-                        print(f"    [MATCH {matches_found}] Hyp[{idx_left}] '{word_left}' ({llm_left}) ←→ Hyp[{idx_right}] '{word_right}' ({llm_right}) [bidirectional, {reason}]")
+                # Check if this swap shares a word with the chain
+                chain_words = {id(hyp) for swap_item in chain for hyp in (swap_item[0], swap_item[1])}
+                if id(other_A) in chain_words or id(other_B) in chain_words:
+                    # This swap extends the chain
+                    chain.append(other_swap)
+                    used_words.add(id(other_A))
+                    used_words.add(id(other_B))
+                    extended = True
+                    break
+        
+        if chain:
+            chains.append(chain)
     
-    if matches_found > 10:
-        print(f"    ... and {matches_found - 10} more matches")
-    print(f"  Total bidirectional matches found: {matches_found}")
+    return chains
+
+
+def find_cross_boundary_neighbor_matches(
+    hypothesis_list: List[TokenHypotheses],
+    max_search_distance: int = MAX_COMBINATORIAL_SEARCH_DISTANCE
+) -> List[Tuple[TokenHypotheses, TokenHypotheses, str]]:
+    """
+    Find cross-boundary neighbor matches using chain detection.
     
-    return cross_boundary_matches
+    Builds a graph of potential swaps and finds chains where multiple swaps
+    would resolve multiple PENDING words. Returns all swaps from all chains.
+    
+    Args:
+        hypothesis_list: List of all hypotheses
+        max_search_distance: Maximum index distance to search (default: 200)
+        
+    Returns:
+        List of (word_A, word_B, direction) tuples from all detected chains
+    """
+    import text_utils
+    
+    # Build swap graph
+    swap_graph = _build_swap_graph(hypothesis_list, max_search_distance)
+    
+    if not swap_graph:
+        return []
+    
+    # Find chains of swaps
+    chains = _find_swap_chains(swap_graph, hypothesis_list)
+    
+    # Flatten chains into list of swaps
+    all_swaps: List[Tuple[TokenHypotheses, TokenHypotheses, str]] = []
+    for chain in chains:
+        all_swaps.extend(chain)
+    
+    # Debug output
+    print(f"\n[Cross-Boundary Matching] Found {len(chains)} swap chain(s) with {len(all_swaps)} total swaps:")
+    for i, chain in enumerate(chains[:5]):  # Show first 5 chains
+        print(f"  Chain {i+1}: {len(chain)} swap(s)")
+        for j, (hyp_A, hyp_B, direction) in enumerate(chain[:3]):  # Show first 3 swaps per chain
+            word_A = text_utils.decode_html_entities(hyp_A.anchor.content)
+            word_B = text_utils.decode_html_entities(hyp_B.anchor.content)
+            idx_A = hypothesis_list.index(hyp_A)
+            idx_B = hypothesis_list.index(hyp_B)
+            print(f"    Swap {j+1}: Hyp[{idx_A}] '{word_A}' ←→ Hyp[{idx_B}] '{word_B}' [{direction}]")
+        if len(chain) > 3:
+            print(f"    ... and {len(chain) - 3} more swaps in this chain")
+    if len(chains) > 5:
+        print(f"  ... and {len(chains) - 5} more chains")
+    
+    return all_swaps
 
 
 def detect_layout_block_reordering_needed(
@@ -282,7 +373,8 @@ def detect_layout_block_reordering_needed(
 
 
 def link_cross_boundary_neighbors(
-    hypothesis_list: List[TokenHypotheses]
+    hypothesis_list: List[TokenHypotheses],
+    cross_boundary_matches: Optional[List[Tuple[TokenHypotheses, TokenHypotheses, str]]] = None
 ) -> List[TokenHypotheses]:
     """
     Link cross-boundary neighbors found through combinatorial matching.
@@ -292,11 +384,13 @@ def link_cross_boundary_neighbors(
     
     Args:
         hypothesis_list: List of all hypotheses
+        cross_boundary_matches: Optional pre-computed matches (will find if None)
         
     Returns:
         Updated hypothesis_list with cross-boundary links established
     """
-    cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
+    if cross_boundary_matches is None:
+        cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
     
     if cross_boundary_matches:
         import text_utils
@@ -360,26 +454,54 @@ def link_cross_boundary_neighbors(
 def reorder_paragraphs(
     hypothesis_list: List[TokenHypotheses],
     llm_elements: List[LLMToken],
-    page
+    page,
+    max_iterations: int = 10
 ) -> List[TokenHypotheses]:
     """
-    Main entry point: detect and handle cross-boundary neighbor issues.
+    Main entry point: detect and handle cross-boundary neighbor issues using chain detection.
     
-    Uses combinatorial approach to find unmatched words that should be neighbors.
-    Tests combinations of words with missing neighbors against all other words to find
-    cross-boundary matches (similar to hyphen linking).
+    Uses combinatorial approach to find chains of swaps where swapping one pair enables
+    other pairs to match. Iteratively applies swaps until no more improvements.
     
     Args:
         hypothesis_list: List of all hypotheses
         llm_elements: List of LLM tokens (unused for now)
         page: Page object (unused for now)
+        max_iterations: Maximum number of iterations (default: 10)
         
     Returns:
         Updated hypothesis_list with cross-boundary links established
     """
     print("\n[Cross-Boundary Matching] Starting cross-boundary neighbor reconciliation...")
     
-    # Find and link cross-boundary neighbors using combinatorial matching
-    hypothesis_list = link_cross_boundary_neighbors(hypothesis_list)
+    # Iteratively find and apply swaps until no more improvements
+    prev_pending_count = sum(1 for h in hypothesis_list if is_pending_word(h))
+    
+    for iteration in range(max_iterations):
+        # Find cross-boundary matches (chains of swaps)
+        cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
+        
+        if not cross_boundary_matches:
+            if iteration == 0:
+                print(f"[Cross-Boundary Matching] No swaps found")
+            else:
+                print(f"[Cross-Boundary Matching] No more swaps found after {iteration} iterations")
+            break
+        
+        # Apply all swaps from chains (pass pre-computed matches to avoid redundant search)
+        hypothesis_list = link_cross_boundary_neighbors(hypothesis_list, cross_boundary_matches)
+        
+        # Re-link after swaps to update neighbor relationships
+        hypothesis_list = map_up_text.link_hypothesis_objects_by_context(hypothesis_list)
+        
+        # Check if we made progress
+        current_pending_count = sum(1 for h in hypothesis_list if is_pending_word(h))
+        
+        if current_pending_count == prev_pending_count:
+            print(f"[Cross-Boundary Matching] Converged after {iteration + 1} iterations (no change in PENDING count)")
+            break
+        
+        print(f"[Cross-Boundary Matching] Iteration {iteration + 1}: PENDING words: {prev_pending_count} → {current_pending_count} ({current_pending_count - prev_pending_count:+d})")
+        prev_pending_count = current_pending_count
     
     return hypothesis_list
