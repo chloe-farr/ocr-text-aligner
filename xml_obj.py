@@ -5,9 +5,35 @@ from typing import Iterator, Optional, Tuple, List
 import xml.etree.ElementTree as ET
 import re
 
-NS = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+# Support both ALTO v3 and v4 namespaces
+NS_V3 = {"alto": "http://www.loc.gov/standards/alto/ns-v3#"}
+NS_V4 = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+NS = NS_V4  # Default to v4 for backward compatibility
 HY_PHENS = ("-", "-", "—" "--")  # plain hyphen + common variants
 CLEAN_RE = re.compile(r"[^A-Za-z0-9-]+")  # regex to clean non-alphanumeric chars except hyphens
+
+def _detect_alto_version(root: ET.Element) -> dict:
+	"""
+	Detect ALTO version from XML root element.
+	
+	Returns:
+		Namespace dictionary for the detected version
+	"""
+	# Check root namespace
+	root_ns = root.tag.split('}')[0].lstrip('{') if '}' in root.tag else ''
+	
+	# Try to find Page element with different namespaces
+	if root.find(".//{http://www.loc.gov/standards/alto/ns-v3#}Page") is not None:
+		return NS_V3
+	elif root.find(".//{http://www.loc.gov/standards/alto/ns-v4#}Page") is not None:
+		return NS_V4
+	elif 'ns-v3' in root_ns:
+		return NS_V3
+	elif 'ns-v4' in root_ns:
+		return NS_V4
+	else:
+		# Default to v4, but will try both in load functions
+		return NS_V4
 
 def load_pages_from_file(path: str) -> list[Page]:
 	"""
@@ -16,16 +42,34 @@ def load_pages_from_file(path: str) -> list[Page]:
 	"""
 	tree = ET.parse(path)
 	root = tree.getroot()
-	pages = root.findall(".//alto:Page", namespaces=NS)
-	return [Page.from_xml(p) for p in pages]
+	
+	# Try both v3 and v4 namespaces
+	ns = _detect_alto_version(root)
+	pages = root.findall(".//alto:Page", namespaces=ns)
+	if not pages:
+		# Try the other namespace
+		other_ns = NS_V3 if ns == NS_V4 else NS_V4
+		pages = root.findall(".//alto:Page", namespaces=other_ns)
+	
+	return [Page.from_xml(p, ns) for p in pages]
 
 def load_first_page(path: str) -> Page:
 	tree = ET.parse(path)
 	root = tree.getroot()
-	el = root.find(".//alto:Page", namespaces=NS)
+	
+	# Try both v3 and v4 namespaces
+	ns = _detect_alto_version(root)
+	el = root.find(".//alto:Page", namespaces=ns)
+	if el is None:
+		# Try the other namespace
+		other_ns = NS_V3 if ns == NS_V4 else NS_V4
+		el = root.find(".//alto:Page", namespaces=other_ns)
+		if el is not None:
+			ns = other_ns
+	
 	if el is None:
 		raise ValueError("No <Page> element found in ALTO file.")
-	return Page.from_xml(el)
+	return Page.from_xml(el, ns)
 
 
 # ---------- Base classes ----------
@@ -50,14 +94,16 @@ class ContentElement(XMLObj):
 @dataclass
 class StringWord(ContentElement):
 	content: str
-	wc: int  # word confidence
+	wc: float  # word confidence (can be float in ALTO v3)
 	matched: bool = False
 	before_word: Optional[StringWord] = None
 	after_word: Optional[StringWord] = None
 	best_clean_content: str = None
 
 	@classmethod
-	def from_xml(cls, el: ET.Element) -> "StringWord":
+	def from_xml(cls, el: ET.Element, ns: dict = None) -> "StringWord":
+		if ns is None:
+			ns = NS
 		return cls(
 			id=el.attrib.get("ID", ""),
 			width=int(el.attrib.get("WIDTH", 0)),
@@ -65,7 +111,7 @@ class StringWord(ContentElement):
 			hpos=int(el.attrib.get("HPOS", 0)),
 			vpos=int(el.attrib.get("VPOS", 0)),
 			content=el.attrib.get("CONTENT", ""),
-			wc=int(el.attrib.get("WC", 0)),
+			wc=float(el.attrib.get("WC", 0)) if '.' in el.attrib.get("WC", "0") else int(el.attrib.get("WC", 0)),
 		)
 
 	def to_xml(self) -> ET.Element:
@@ -91,10 +137,12 @@ class TextLine(ContentElement):
 	content_elements: List[StringWord] = field(default_factory=list)
 
 	@classmethod
-	def from_xml(cls, el: ET.Element) -> "TextLine":
+	def from_xml(cls, el: ET.Element, ns: dict = None) -> "TextLine":
+		if ns is None:
+			ns = NS
 		strings = [
-			StringWord.from_xml(s_el)
-				for s_el in el.findall("alto:String", namespaces=NS)
+			StringWord.from_xml(s_el, ns)
+				for s_el in el.findall("alto:String", namespaces=ns)
 		]
 		return cls(
 			id=el.attrib.get("ID", ""),
@@ -124,10 +172,12 @@ class TextBlock(ContentElement):
 	content_elements: List[TextLine] = field(default_factory=list)
 
 	@classmethod
-	def from_xml(cls, el: ET.Element) -> "TextBlock":
+	def from_xml(cls, el: ET.Element, ns: dict = None) -> "TextBlock":
+		if ns is None:
+			ns = NS
 		lines = [
-			TextLine.from_xml(tl_el)
-				for tl_el in el.findall("alto:TextLine", namespaces=NS)
+			TextLine.from_xml(tl_el, ns)
+				for tl_el in el.findall("alto:TextLine", namespaces=ns)
 		]
 		return cls(
 			id=el.attrib.get("ID", ""),
@@ -158,11 +208,25 @@ class Page(XMLObj):
 	content_elements: List[TextBlock] = field(default_factory=list)
 
 	@classmethod
-	def from_xml(cls, el: ET.Element) -> "Page":
-		blocks = [
-			TextBlock.from_xml(tb_el)
-				for tb_el in el.findall("alto:TextBlock", namespaces=NS)
-		]
+	def from_xml(cls, el: ET.Element, ns: dict = None) -> "Page":
+		if ns is None:
+			ns = NS
+		
+		# In ALTO v3, TextBlocks can be inside PrintSpace or ComposedBlock
+		# In ALTO v4, TextBlocks are directly under Page
+		# Try to find TextBlocks directly under Page first
+		blocks = []
+		text_blocks = el.findall("alto:TextBlock", namespaces=ns)
+		
+		if not text_blocks:
+			# Try looking inside PrintSpace (ALTO v3)
+			print_space = el.find("alto:PrintSpace", namespaces=ns)
+			if print_space is not None:
+				# TextBlocks can be directly in PrintSpace or inside ComposedBlocks
+				text_blocks = print_space.findall(".//alto:TextBlock", namespaces=ns)
+		
+		blocks = [TextBlock.from_xml(tb_el, ns) for tb_el in text_blocks]
+		
 		return cls(
 			id=el.attrib.get("ID", ""),
 			width=int(el.attrib.get("WIDTH", 0)),
@@ -291,6 +355,167 @@ class Page(XMLObj):
 			next_w = words[i + 1]
 			results.append((prev_w.content, word.content, next_w.content))
 		return results
+	
+	def update_content_from_mapping(self, hypothesis_list: List) -> "Page":
+		"""
+		Create a new Page object with CONTENT values updated based on mapping results.
+		
+		This function takes a list of TokenHypotheses (from map_up_text) and creates
+		a new Page object where each StringWord's content is replaced with the
+		corrected text from the mapping.
+		
+		Args:
+			hypothesis_list: List of TokenHypotheses objects with chosen_LLM_token set
+			
+		Returns:
+			New Page object with corrected content values
+			
+		Note:
+			- Words that were merged: all merged StringWords get the merged corrected text
+			- Words that were split: each split part gets its corresponding corrected text
+			- Words without a match keep their original content
+		"""
+		# Create a mapping from StringWord (by id) to corrected text
+		# Handle both single words and merged words (where multiple StringWords map to one LLM token)
+		stringword_to_corrected = {}
+		for hyp in hypothesis_list:
+			if hyp.chosen_LLM_token is not None:
+				corrected_text = hyp.chosen_LLM_token.word
+				
+				# Get all StringWords that map to this hypothesis
+				# For merged words, the candidate's alto_words contains all merged words
+				if hyp.candidates and hyp.chosen_index is not None:
+					chosen_candidate = hyp.candidates[hyp.chosen_index]
+					# Use all alto_words from the chosen candidate (handles merged words)
+					for alto_word in chosen_candidate.alto_words:
+						stringword_to_corrected[id(alto_word)] = corrected_text
+				else:
+					# Fallback to just the anchor
+					stringword_to_corrected[id(hyp.anchor)] = corrected_text
+		
+		# Create a deep copy of the page structure
+		# We'll rebuild it with updated content
+		new_blocks = []
+		for block in self.content_elements:
+			new_lines = []
+			for line in block.content_elements:
+				new_strings = []
+				for string_word in line.content_elements:
+					# Check if this word has a corrected mapping
+					string_id = id(string_word)
+					if string_id in stringword_to_corrected:
+						# Create new StringWord with corrected content
+						corrected_content = stringword_to_corrected[string_id]
+						new_string = StringWord(
+							id=string_word.id,
+							width=string_word.width,
+							height=string_word.height,
+							hpos=string_word.hpos,
+							vpos=string_word.vpos,
+							content=corrected_content,
+							wc=string_word.wc,
+							matched=string_word.matched,
+							before_word=string_word.before_word,
+							after_word=string_word.after_word,
+							best_clean_content=corrected_content
+						)
+					else:
+						# Keep original content if no mapping found
+						new_string = StringWord(
+							id=string_word.id,
+							width=string_word.width,
+							height=string_word.height,
+							hpos=string_word.hpos,
+							vpos=string_word.vpos,
+							content=string_word.content,
+							wc=string_word.wc,
+							matched=string_word.matched,
+							before_word=string_word.before_word,
+							after_word=string_word.after_word,
+							best_clean_content=string_word.best_clean_content
+						)
+					new_strings.append(new_string)
+				
+				# Create new TextLine with updated strings
+				new_line = TextLine(
+					id=line.id,
+					width=line.width,
+					height=line.height,
+					hpos=line.hpos,
+					vpos=line.vpos,
+					content_elements=new_strings
+				)
+				new_lines.append(new_line)
+			
+			# Create new TextBlock with updated lines
+			new_block = TextBlock(
+				id=block.id,
+				width=block.width,
+				height=block.height,
+				hpos=block.hpos,
+				vpos=block.vpos,
+				content_elements=new_lines
+			)
+			new_blocks.append(new_block)
+		
+		# Create new Page with updated blocks
+		new_page = Page(
+			id=self.id,
+			width=self.width,
+			height=self.height,
+			physical_img_nr=self.physical_img_nr,
+			content_elements=new_blocks
+		)
+		
+		return new_page
+	
+	def save_corrected_xml(self, hypothesis_list: List, output_path: str) -> str:
+		"""
+		Create a corrected XML file with updated content values and save it.
+		
+		Args:
+			hypothesis_list: List of TokenHypotheses objects with chosen_LLM_token set
+			output_path: Path to save the corrected XML file
+			
+		Returns:
+			Path to the saved XML file
+		"""
+		import os
+		import xml.etree.ElementTree as ET
+		
+		# Get corrected page
+		corrected_page = self.update_content_from_mapping(hypothesis_list)
+		
+		# Convert to XML
+		page_el = corrected_page.to_xml()
+		
+		# Create root element with ALTO namespace
+		root = ET.Element("alto", {
+			"xmlns": "http://www.loc.gov/standards/alto/ns-v4#",
+			"xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+			"xsi:schemaLocation": "http://www.loc.gov/standards/alto/ns-v4# http://www.loc.gov/standards/alto/v4/alto-4-3.xsd"
+		})
+		
+		# Create Description and Layout elements (minimal structure)
+		description = ET.SubElement(root, "Description")
+		measurement_unit = ET.SubElement(description, "MeasurementUnit")
+		measurement_unit.text = "pixel"
+		
+		layout = ET.SubElement(root, "Layout")
+		page_el.set("ID", corrected_page.id)
+		page_el.set("WIDTH", str(corrected_page.width))
+		page_el.set("HEIGHT", str(corrected_page.height))
+		page_el.set("PHYSICAL_IMG_NR", str(corrected_page.physical_img_nr))
+		layout.append(page_el)
+		
+		# Create tree and write to file
+		tree = ET.ElementTree(root)
+		ET.indent(tree, space="  ")  # Pretty print (Python 3.9+)
+		
+		os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
+		tree.write(output_path, encoding='utf-8', xml_declaration=True)
+		
+		return output_path
 
 # ---------- Example usage ----------
 
