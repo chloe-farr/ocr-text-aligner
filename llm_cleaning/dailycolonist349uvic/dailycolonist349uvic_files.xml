@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files>
+  <file name="__ia_thumb.jpg" source="original">
+    <mtime>1719425953</mtime>
+    <size>23832</size>
+    <md5>973bc81532eb0508e9571f1e76c478ce</md5>
+    <crc32>e085a815</crc32>
+    <sha1>0c5de2bd6be96cf36653e66845e9b14150e9885b</sha1>
+    <format>JPEG Thumb</format>
+    <rotation>0</rotation>
+  </file>
+  <file name="dailycolonist349uvic.djvu" source="derivative">
+    <format>DjVu</format>
+    <original>dailycolonist349uvic_djvu.xml</original>
+    <mtime>1384277593</mtime>
+    <size>5156483</size>
+    <md5>e1171565bbc440fcc6bdbfdf750c478d</md5>
+    <crc32>81cdfff1</crc32>
+    <sha1>b2bd27fbb2a282f11c358efd8206cccd915013c3</sha1>
+  </file>
+  <file name="dailycolonist349uvic.gif" source="derivative">
+    <format>Animated GIF</format>
+    <original>dailycolonist349uvic_jp2.zip</original>
+    <mtime>1384274000</mtime>
+    <size>127436</size>
+    <md5>119afc1e1f6a3116fb1393bb69fc2706</md5>
+    <crc32>64b57bd9</crc32>
+    <sha1>9547f2500e24cf4529203949d8f28ae247f3c140</sha1>
+  </file>
+  <file name="dailycolonist349uvic.pdf" source="derivative">
+    <format>Text PDF</format>
+    <original>dailycolonist349uvic_page_numbers.json</original>
+    <mtime>1719426057</mtime>
+    <size>4690454</size>
+    <md5>3fa52f656c6280513209f9f515ad0344</md5>
+    <crc32>c799d9a5</crc32>
+    <sha1>a69bf90c86e5c26a0c57d2c55ff3045561a81722</sha1>
+  </file>
+  <file name="dailycolonist349uvic_abbyy.gz" source="derivative">
+    <format>Abbyy GZ</format>
+    <original>dailycolonist349uvic_jp2.zip</original>
+    <mtime>1384277369</mtime>
+    <size>4118444</size>
+    <md5>3eb5a711138f37f5f2d6814cbc42f7c2</md5>
+    <crc32>9825f9cd</crc32>
+    <sha1>28e020a6f999bef900dd293a502b0c6078a767ce</sha1>
+  </file>
+  <file name="dailycolonist349uvic_archive.torrent" source="metadata">
+    <btih>6e7d0971c0762893cc189da329b0c7409070ae93</btih>
+    <mtime>1719426390</mtime>
+    <size>6717</size>
+    <md5>8a93d3330c573f545a18e4f3340b64d1</md5>
+    <crc32>a0cf88ed</crc32>
+    <sha1>bcfec1fcfa991cb37f096ea4426820c24d4e4390</sha1>
+    <format>Archive BitTorrent</format>
+  </file>
+  <file name="dailycolonist349uvic_chocr.html.gz" source="derivative">
+    <ocr_module_version>0.0.21</ocr_module_version>
+    <ocr_converted>abbyy-to-hocr 1.1.37</ocr_converted>
+    <format>chOCR</format>
+    <original>dailycolonist349uvic_abbyy.gz</original>
+    <mtime>1719425515</mtime>
+    <size>3387907</size>
+    <md5>c6ac633a59f474d735861de9f675c785</md5>
+    <crc32>b8737934</crc32>
+    <sha1>5ca07fcc98a359ca609a484e7cdbc8bdd6cd290c</sha1>
+  </file>
+  <file name="dailycolonist349uvic_cloth_detection.log" source="derivative">
+    <format>Cloth Cover Detection Log</format>
+    <original>dailycolonist349uvic_scandata.xml</original>
+    <mtime>1719425582</mtime>
+    <size>545</size>
+    <md5>e6f65bad9d9d47d9e0c9aed5045c3de9</md5>
+    <crc32>ab5cc182</crc32>
+    <sha1>35a566412fc357d4f714b76d163f74161ede7c8e</sha1>
+  </file>
+  <file name="dailycolonist349uvic_djvu.txt" source="derivative">
+    <format>DjVuTXT</format>
+    <original>dailycolonist349uvic_djvu.xml</original>
+    <mtime>1719425948</mtime>
+    <size>294355</size>
+    <md5>3d28781795387157405bc07fb268e7e4</md5>
+    <crc32>0b4a6432</crc32>
+    <sha1>d01fdd04482958a6bb533691e0da63912dc4581b</sha1>
+  </file>
+  <file name="dailycolonist349uvic_djvu.xml" source="derivative">
+    <format>Djvu XML</format>
+    <original>dailycolonist349uvic_hocr.html</original>
+    <mtime>1719425826</mtime>
+    <size>3470793</size>
+    <md5>91ccf8856ffcdfd64aadcd10b8721d36</md5>
+    <crc32>cf09551b</crc32>
+    <sha1>98db825c08f7de6e35a9c20680f78d0e896ee7e9</sha1>
+  </file>
+  <file name="dailycolonist349uvic_files.xml" source="original">
+    <format>Metadata</format>
+    <md5>2263697df914bde4688cc072bb63b184</md5>
+    <summation>md5</summation>
+  </file>
+  <file name="dailycolonist349uvic_hocr.html" source="derivative">
+    <hocr_char_to_word_module_version>1.3.0</hocr_char_to_word_module_version>
+    <hocr_char_to_word_hocr_version>1.1.56</hocr_char_to_word_hocr_version>
+    <ocr_module_version>0.0.21</ocr_module_version>
+    <ocr_converted>abbyy-to-hocr 1.1.37</ocr_converted>
+    <format>hOCR</format>
+    <original>dailycolonist349uvic_chocr.html.gz</original>
+    <mtime>1719425783</mtime>
+    <size>6566393</size>
+    <md5>7b85971b54cb1558b30bd7c104d10357</md5>
+    <crc32>87177c13</crc32>
+    <sha1>82fb6149c7fab00d98a0843d39710339ef7caf58</sha1>
+  </file>
+  <file name="dailycolonist349uvic_hocr_pageindex.json.gz" source="derivative">
+    <hocr_pageindex_module_version>1.1.0</hocr_pageindex_module_version>
+    <hocr_pageindex_hocr_version>1.1.56</hocr_pageindex_hocr_version>
+    <format>OCR Page Index</format>
+    <original>dailycolonist349uvic_hocr.html</original>
+    <mtime>1719425873</mtime>
+    <size>139</size>
+    <md5>0a43c2e4845a7b7846c8769310ba717f</md5>
+    <crc32>da25396e</crc32>
+    <sha1>ab6b77565758d50cd9b74e3a40ce3d3c2a76d887</sha1>
+  </file>
+  <file name="dailycolonist349uvic_hocr_searchtext.txt.gz" source="derivative">
+    <hocr_fts_text_module_version>1.2.0</hocr_fts_text_module_version>
+    <hocr_fts_text_hocr_version>1.1.56</hocr_fts_text_hocr_version>
+    <word_conf_0_10>10391</word_conf_0_10>
+    <word_conf_11_20>10708</word_conf_11_20>
+    <word_conf_21_30>8616</word_conf_21_30>
+    <word_conf_31_40>5880</word_conf_31_40>
+    <word_conf_41_50>3324</word_conf_41_50>
+    <word_conf_51_60>1834</word_conf_51_60>
+    <word_conf_61_70>933</word_conf_61_70>
+    <word_conf_71_80>392</word_conf_71_80>
+    <word_conf_81_90>256</word_conf_81_90>
+    <word_conf_91_100>743</word_conf_91_100>
+    <format>OCR Search Text</format>
+    <original>dailycolonist349uvic_hocr.html</original>
+    <mtime>1719425904</mtime>
+    <size>114892</size>
+    <md5>e45a3952dcf41363f95e0d79c0bf500a</md5>
+    <crc32>d418b931</crc32>
+    <sha1>6de0f98f029acfba38a8339ed699037978dbea6c</sha1>
+  </file>
+  <file name="dailycolonist349uvic_jp2.zip" source="derivative">
+    <format>Single Page Processed JP2 ZIP</format>
+    <original>dailycolonist349uvic_texts_trans.xml</original>
+    <mtime>1384273978</mtime>
+    <size>19538896</size>
+    <md5>ca278cb467c4d8ebc1a8dbe25ec7a04f</md5>
+    <crc32>af757f34</crc32>
+    <sha1>528dd0bb986b7a85d15128620a803cb93176a6f4</sha1>
+    <filecount>8</filecount>
+  </file>
+  <file name="dailycolonist349uvic_meta.sqlite" source="original">
+    <mtime>1625941263</mtime>
+    <size>8192</size>
+    <format>Metadata</format>
+    <md5>973222aaaa880a2aa47cb01fa13b08a7</md5>
+    <crc32>00745bff</crc32>
+    <sha1>a2d861eba7f692af4729a770a9876725739291d8</sha1>
+  </file>
+  <file name="dailycolonist349uvic_meta.xml" source="original">
+    <format>Metadata</format>
+    <mtime>1719426384</mtime>
+    <size>1699</size>
+    <md5>a4f2418e71dfe94c7e98140852d991ec</md5>
+    <crc32>14bc226b</crc32>
+    <sha1>3ba7cb1fd5eceb4de6a9b3315e429b272fd97470</sha1>
+  </file>
+  <file name="dailycolonist349uvic_metasource.xml" source="original">
+    <format>MARC Source</format>
+    <mtime>1383852922</mtime>
+    <size>236</size>
+    <md5>36e6ad19fe42545658e494de6785b25d</md5>
+    <crc32>fa30b5cf</crc32>
+    <sha1>642b57f806e634a89a6b3ccf775b7473b2af28d3</sha1>
+  </file>
+  <file name="dailycolonist349uvic_page_numbers.json" source="derivative">
+    <hocr_pagenumber_module_version>1.0.5</hocr_pagenumber_module_version>
+    <hocr_pagenumber_hocr_version>1.1.54</hocr_pagenumber_hocr_version>
+    <hocr_pagenumber_confidence>0</hocr_pagenumber_confidence>
+    <format>Page Numbers JSON</format>
+    <original>dailycolonist349uvic_hocr.html</original>
+    <mtime>1719425934</mtime>
+    <size>1501</size>
+    <md5>b1074403dfb0e4558ff149114a148f70</md5>
+    <crc32>325109d4</crc32>
+    <sha1>19744c89e4d95003d84c9541881f0d666da245b8</sha1>
+  </file>
+  <file name="dailycolonist349uvic_scandata.xml" source="original">
+    <mtime>1625941255</mtime>
+    <size>2596</size>
+    <md5>acdb3aa47f70162a5998b8ead2f9f3c9</md5>
+    <crc32>3929b500</crc32>
+    <sha1>3dc09a4155f9c6b01f1408cb229cc5299dbc299a</sha1>
+    <format>Scandata</format>
+  </file>
+  <file name="dailycolonist349uvic_texts_trans.xml" source="original">
+    <format>Texts Transclusion Contents</format>
+    <mtime>1384273970</mtime>
+    <size>129</size>
+    <md5>31ef467bb5e23b1f533d2cadc2ec58e3</md5>
+    <crc32>d2e34664</crc32>
+    <sha1>d4a7fb317d118ba929737517ecd8a30425c80d06</sha1>
+  </file>
+  <file name="history/files/dailycolonist349uvic_scandata.xml.~1~" source="derivative">
+    <format>Scandata</format>
+    <original>dailycolonist349uvic_djvu.xml</original>
+    <mtime>1384277595</mtime>
+    <size>2596</size>
+    <md5>05c8da0532cf015d22f7a04cdb338289</md5>
+    <crc32>7f79b02d</crc32>
+    <sha1>ed7314076df0b720fa18536570f8052f1aaf99d1</sha1>
+    <old_version>true</old_version>
+  </file>
+</files>
