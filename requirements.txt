@@ -2,3 +2,4 @@ rapidfuzz
 matplotlib
 rich
 reportlab
+requests
