@@ -55,6 +55,7 @@ class StringWord(ContentElement):
 	before_word: Optional[StringWord] = None
 	after_word: Optional[StringWord] = None
 	best_clean_content: str = None
+	page_id: Optional[str] = None  # set after load; not part of String ID
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "StringWord":
@@ -190,6 +191,11 @@ class Page(XMLObj):
 			for line in block.content_elements
 			for s in line.content_elements
 		]
+
+	def set_string_page_ids(self) -> None:
+		"""Set page_id on every StringWord on this page (for writer grouping)."""
+		for s in self.all_strings():
+			s.page_id = self.id
 
 	
 	def get_text(self, sep: str = " ") -> str:

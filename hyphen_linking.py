@@ -1286,7 +1286,8 @@ def split_hyphenated_triplets(
             content=word1_alto,
             wc=hyp.anchor.wc,
             before_word=hyp.anchor.before_word,
-            after_word=None  # Will be set to hyphen anchor
+            after_word=None,  # Will be set to hyphen anchor
+            page_id=getattr(hyp.anchor, "page_id", None),
         )
         current_hpos += word1_width + gap_size
         
@@ -1300,7 +1301,8 @@ def split_hyphenated_triplets(
             content=hyphen_char,
             wc=hyp.anchor.wc,
             before_word=word1_anchor,
-            after_word=None  # Will be set to word2 anchor
+            after_word=None,  # Will be set to word2 anchor
+            page_id=getattr(hyp.anchor, "page_id", None),
         )
         word1_anchor.after_word = hyphen_anchor
         current_hpos += hyphen_width + gap_size
@@ -1315,7 +1317,8 @@ def split_hyphenated_triplets(
             content=word2_alto,
             wc=hyp.anchor.wc,
             before_word=hyphen_anchor,
-            after_word=hyp.anchor.after_word
+            after_word=hyp.anchor.after_word,
+            page_id=getattr(hyp.anchor, "page_id", None),
         )
         hyphen_anchor.after_word = word2_anchor
         

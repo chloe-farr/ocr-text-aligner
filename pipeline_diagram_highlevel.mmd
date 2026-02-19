@@ -1,0 +1,37 @@
+flowchart LR
+    %% Inputs Section
+    subgraph inputs["INPUTS"]
+        direction TB
+        altoXML[ALTO XML File]
+        cleanText[Clean Text File]
+        rawOCR[Raw OCR<br/>Optional]
+    end
+    
+    %% Optional Preprocessing
+    llmCleaning[Optional:<br/>LLM Cleaning]
+    
+    %% Main Pipeline - Compact
+    init[1. Load<br/>& Parse]
+    match[2. Match<br/>Words]
+    refine[3. Refine<br/>Iteratively]
+    align[4. Align<br/>Paragraphs]
+    finalize[5. Finalize<br/>Matching]
+    
+    %% Outputs Section
+    subgraph outputs["OUTPUTS"]
+        direction TB
+        pdfs[PDF Reports]
+        pngs[PNG Visualizations]
+        terminal[Terminal Output]
+    end
+    
+    %% Flow
+    rawOCR -.->|Optional| llmCleaning
+    llmCleaning -.->|If Used| cleanText
+    
+    inputs --> init
+    init --> match
+    match --> refine
+    refine --> align
+    align --> finalize
+    finalize --> outputs

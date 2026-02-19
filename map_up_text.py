@@ -423,6 +423,8 @@ if __name__ == "__main__":
                        help='Path to clean text file to use for the pipeline')
     parser.add_argument('--xml-file', type=str, default=None,
                        help='Path to ALTO XML file to use for the pipeline (default: None)')
+    parser.add_argument('--output-xml', nargs='?', const='', type=str, default=None,
+                       help='Write aligned ALTO XML to this path; if flag given with no path, use outputs/<pagename>/<pagename>_aligned.xml')
     args = parser.parse_args()
     if args.xml_file:
         xml_filename = args.xml_file
@@ -448,7 +450,8 @@ if __name__ == "__main__":
 
     #from xml, load first page
     page = XMLOBJ.load_first_page(xml_filename)
-    
+    page.set_string_page_ids()
+
     # Extract test page name from path (e.g., "input/1972_10_12_p1/1972_10_12_p1.xml" -> "1972_10_12_p1")
     # Handle both "input/{name}/{name}.xml" and other formats
     xml_path_parts = xml_filename.replace("\\", "/").split("/")
@@ -804,10 +807,16 @@ if __name__ == "__main__":
     output_dir = os.path.join("outputs", testpagename)
     os.makedirs(output_dir, exist_ok=True)
     viz.visualize_cleaned_text_positions(
-        hypothesis_list, 
-        page, 
-        testpagename, 
+        hypothesis_list,
+        page,
+        testpagename,
         output_dir=output_dir,
         original_alto_content_by_id=original_alto_content_by_id
     )
-    
+
+    if args.output_xml is not None:
+        import write_aligned_alto
+        out_path = args.output_xml if args.output_xml else os.path.join(output_dir, f"{testpagename}_aligned.xml")
+        write_aligned_alto.write_aligned_alto(xml_filename, page, hypothesis_list, out_path)
+        print(f"Wrote aligned ALTO XML to {out_path}")
+
