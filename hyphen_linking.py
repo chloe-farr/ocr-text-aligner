@@ -508,15 +508,15 @@ def _evaluate_word_combination(
     decoded_w2: str,
     clean_vocab: set[str],
     llm_word_lookup: Dict[str, List['LLMToken']],
-    hyp1_before_word: XMLOBJ.StringWord,
-    hyp2_after_word: XMLOBJ.StringWord,
+    hyp1_before_word: Optional[XMLOBJ.StringWord],
+    hyp2_after_word: Optional[XMLOBJ.StringWord],
     individual_w1_match: Optional[Tuple[str, float]],
     individual_w2_match: Optional[Tuple[str, float]],
     fuzzy_cutoff_combined: float,
     context_validation_threshold: float,
     individual_score_threshold: float,
     combination_improvement_threshold: float
-) -> Optional[Tuple[str, float, 'LLMToken', float]]:
+) -> Optional[Tuple[str, float, Optional['LLMToken'], float]]:
     """
     Evaluate if two words should be combined and return match details if valid.
     
@@ -662,8 +662,8 @@ def _evaluate_word_combination(
 
 
 def _should_prefer_match(
-    current_match: Optional[Tuple[str, float, int, 'LLMToken', float]],
-    new_match: Tuple[str, float, 'LLMToken', float],
+    current_match: Optional[Tuple[str, float, Optional[int], Optional['LLMToken'], float]],
+    new_match: Tuple[str, float, Optional['LLMToken'], float],
     new_partner_idx: int,
     is_literal_hyphen: bool,
     is_after_word: bool,
@@ -742,8 +742,8 @@ def _search_spatially_close_partners(
     individual_w1_match: Optional[Tuple[str, float]],
     clean_vocab: set[str],
     llm_word_lookup: Dict[str, List['LLMToken']],
-    page: XMLOBJ.Page,
-    column_boundaries: List[float],
+    page: Optional[XMLOBJ.Page],
+    column_boundaries: Optional[Dict[str, List[int]]],
     fuzzy_cutoff_individual: float,
     fuzzy_cutoff_combined: float,
     context_validation_threshold: float,
@@ -751,7 +751,7 @@ def _search_spatially_close_partners(
     combination_improvement_threshold: float,
     after_word_result: Optional[Tuple[str, float, int, 'LLMToken', float]],
     after_word_is_exact: bool
-) -> Optional[Tuple[str, float, int, 'LLMToken', float]]:
+) -> Optional[Tuple[str, float, Optional[int], Optional['LLMToken'], float]]:
     """
     Search for partners in spatially close words (Pass 1).
     Returns best match tuple or None.
@@ -772,7 +772,7 @@ def _search_spatially_close_partners(
         
         # Skip words that are too far away (unless it's the after_word)
         is_after_word = (hyp1.anchor.after_word is not None and hyp2.anchor == hyp1.anchor.after_word)
-        if not is_after_word:
+        if not is_after_word and column_boundaries is not None and page is not None:
             are_adjacent_columns = proximity_scoring.are_words_in_adjacent_columns(hyp1.anchor, hyp2.anchor, column_boundaries)
             if not are_adjacent_columns:
                 reading_dist = proximity_scoring.calculate_reading_order_distance(hyp1.anchor, hyp2.anchor, page, column_boundaries)
@@ -1028,8 +1028,8 @@ def _find_best_partner_match(
     individual_w1_match: Optional[Tuple[str, float]],
     clean_vocab: set[str],
     llm_word_lookup: Dict[str, List['LLMToken']],
-    page: XMLOBJ.Page,
-    column_boundaries: List[float],
+    page: Optional[XMLOBJ.Page],
+    column_boundaries: Optional[Dict[str, List[int]]],
     prioritized_indices: List[int],
     other_indices: List[int],
     after_word_result: Optional[Tuple[str, float, int, 'LLMToken', float]],
@@ -1039,7 +1039,7 @@ def _find_best_partner_match(
     context_validation_threshold: float,
     individual_score_threshold: float,
     combination_improvement_threshold: float
-) -> Optional[Tuple[str, float, int, 'LLMToken', float]]:
+) -> Optional[Tuple[str, float, Optional[int], Optional['LLMToken'], float]]:
     """
     Find the best partner match for hyp1 using two-pass approach.
     
@@ -1406,7 +1406,7 @@ def split_hyphenated_triplets(
 def link_hyphen_pairs(
     hypothesis_list: List['TokenHypotheses'], 
     llm_elements: List['LLMToken'], 
-    page: XMLOBJ.Page = None,
+    page: Optional[XMLOBJ.Page] = None,
     fuzzy_cutoff_individual: float = 85.0,
     fuzzy_cutoff_combined: float = 80.0,
     context_validation_threshold: float = 70.0,
@@ -1504,7 +1504,7 @@ def link_hyphen_pairs(
                     break
         
         other_indices = [j for j in range(i + 1, len(hypothesis_list)) if j not in prioritized_indices]
-        column_boundaries = proximity_scoring.detect_column_boundaries(page)
+        column_boundaries = proximity_scoring.detect_column_boundaries(page) if page is not None else None
         other_indices.sort(key=lambda idx: proximity_scoring.calculate_reading_order_distance(
             hyp1.anchor, hypothesis_list[idx].anchor, page, column_boundaries
         ))
@@ -1537,10 +1537,13 @@ def link_hyphen_pairs(
             best_match, best_match_score, best_partner_idx, best_llm_token, best_context_score = best_match_result
         else:
             best_match = None
+            best_match_score = None
             best_partner_idx = None
+            best_llm_token = None
+            best_context_score = None
         
         # If match found, store the combination (don't add to list yet - preserve order)
-        if best_match and best_partner_idx is not None:
+        if best_match and best_partner_idx is not None and best_match_score is not None and best_llm_token is not None:
             # Check if partner is already part of another combination
             if best_partner_idx in processed_indices:
                 # Partner already combined - skip this combination
