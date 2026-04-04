@@ -1,4 +1,7 @@
 rapidfuzz
 matplotlib
+Pillow
 rich
 reportlab
+requests
+lxml

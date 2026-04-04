@@ -1,0 +1,125 @@
+flowchart LR
+    %% Inputs
+    rawOCR[Raw OCR Text<br/>Optional]
+    altoXML[ALTO XML File]
+    cleanText[Clean Text File]
+    
+    %% Optional LLM Cleaning
+    subgraph llmCleaning["Optional: LLM Text Cleaning"]
+        direction TB
+        chunk[Chunk OCR Text]
+        llmRefine[Iterative LLM Refinement]
+        validate[Validate Output]
+        stitch[Stitch Chunks]
+        llmOut[Clean Text File]
+        
+        chunk --> llmRefine
+        llmRefine --> validate
+        validate -->|Pass| stitch
+        validate -->|Fail| llmRefine
+        stitch --> llmOut
+    end
+    
+    %% Main Pipeline Stages - Horizontal
+    subgraph init["1. Initialization"]
+        direction TB
+        loadXML[Load & Parse ALTO XML]
+        parseText[Parse Clean Text]
+        createHyp[Create Hypothesis List]
+        analyzeOCR[Analyze OCR Accuracy]
+        
+        loadXML --> createHyp
+        parseText --> createHyp
+        createHyp --> analyzeOCR
+    end
+    
+    subgraph round1["2. Initial Matching"]
+        direction TB
+        fuzzyMatch[Fuzzy String Matching]
+        contextMatch[Context-Based Matching]
+        proximityScore[Proximity Scoring]
+        selectCandidates[Select Best Candidates]
+        
+        fuzzyMatch --> contextMatch
+        contextMatch --> proximityScore
+        proximityScore --> selectCandidates
+    end
+    
+    subgraph iteration["3. Iterative Refinement"]
+        direction TB
+        splitHyphens[Split Hyphenated Triplets]
+        linkHyphens[Link Hyphen Pairs]
+        wordMerges[Search Word Merges/Splits]
+        updateContext[Update Context References]
+        recontextMatch[Re-run Context Matching]
+        checkStable{Stable?<br/>Max 5 Iterations}
+        
+        splitHyphens --> linkHyphens
+        linkHyphens --> recontextMatch
+        recontextMatch --> wordMerges
+        wordMerges --> updateContext
+        updateContext --> checkStable
+        checkStable -->|Not Stable| splitHyphens
+    end
+    
+    subgraph reorder["4. Paragraph Alignment"]
+        direction TB
+        crossBoundary[Cross-Boundary Matching]
+        reorderParas[Reorder Paragraphs]
+        finalContext[Final Context Matching]
+        
+        crossBoundary --> reorderParas
+        reorderParas --> finalContext
+    end
+    
+    subgraph final["5. Final Matching"]
+        direction TB
+        weakFuzzy[Weak Fuzzy Matching]
+        finalPass[Final Hard Matching]
+        linkFinal[Final Linking]
+        
+        weakFuzzy --> finalPass
+        finalPass --> linkFinal
+    end
+    
+    %% Outputs - Two balanced columns
+    subgraph outputs["Outputs"]
+        direction TB
+        pdfRow1[PDF: Mapping Table]
+        pdfRow2[PDF: Hypothesis Sequence]
+        pdfRow3[PDF: Text Matching Analysis]
+        pngRow1[PNG: Original OCR Visualization]
+        pngRow2[PNG: Cleaned Text Positions]
+        pngRow3[PNG: Visual Recreation]
+        termRow1[Terminal: Mapping Table]
+        termRow2[Terminal: OCR Accuracy]
+        
+        pdfRow1 --- pngRow1
+        pdfRow2 --- pngRow2
+        pdfRow3 --- pngRow3
+        termRow1 --- termRow2
+    end
+    
+    %% Main flow connections
+    rawOCR -.->|Optional| llmCleaning
+    llmCleaning -.->|If Used| cleanText
+    
+    altoXML --> init
+    cleanText --> init
+    
+    init --> round1
+    round1 --> iteration
+    iteration -->|Max 5 Iterations| reorder
+    reorder --> final
+    final --> outputs
+    
+    %% Output connections
+    linkFinal --> pdfRow1
+    linkFinal --> pdfRow2
+    linkFinal --> pdfRow3
+    linkFinal --> pngRow2
+    linkFinal --> pngRow3
+    linkFinal --> termRow1
+    
+    analyzeOCR --> pngRow1
+    analyzeOCR --> termRow2
