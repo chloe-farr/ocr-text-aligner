@@ -173,8 +173,11 @@ def visualize_cleaned_text_positions(
     Color coding:
     - Green: Words that were corrected from the original XML
     - Red: Words that are errors (flagged_for_error and no chosen_LLM_token)
-    - Dark orange: Words that are pending (has candidates but not matched, or missing neighbors)
+    - Dark orange: Words that are pending (has candidates but not matched, or context links missing / wrong token instance)
     - Black: Matched words that were not corrected
+
+    Exported ALTO/hOCR also carries a numeric ALIGNCONF (ALTO attribute) / alignconf (hOCR title) from
+    alignment_confidence.py for QA without changing this color logic.
     
     Args:
         hypothesis_list: List of TokenHypotheses objects
@@ -267,8 +270,9 @@ def visualize_cleaned_text_positions(
                 # Consider corrected if normalized forms differ
                 is_corrected = (original_normalized != current_normalized)
             
-            # Check if missing neighbors (PENDING)
-            # Check if required neighbors are linked AND have the correct LLM tokens
+            # PENDING: requires context-linked neighbors to match the *exact* expected LLM tokens.
+            # (ALTO spatial before/after is a poor proxy at line/column boundaries — strict linking
+            # misses some repeats but avoids false PENDING on every line start/end.)
             missing_left = False
             if hypothesis.chosen_LLM_token.w_before is not None:
                 if hypothesis.left_matched is None:
@@ -276,7 +280,7 @@ def visualize_cleaned_text_positions(
                 elif (hypothesis.left_matched.chosen_LLM_token is None or
                       hypothesis.left_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_before):
                     missing_left = True
-            
+
             missing_right = False
             if hypothesis.chosen_LLM_token.w_after is not None:
                 if hypothesis.right_matched is None:
@@ -308,7 +312,7 @@ def visualize_cleaned_text_positions(
                 # Red: no candidates (error)
                 text = text_utils.decode_html_entities(anchor.content)
                 text_color = 'red'
-        
+
         # Calculate font size to fit within the bounding box
         height_scale = 0.20
         height_based_size = anchor.height * height_scale

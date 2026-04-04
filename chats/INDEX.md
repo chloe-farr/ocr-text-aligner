@@ -8,6 +8,11 @@ This directory contains exported chat conversations related to the ocr-text-alig
 - [filename.md](filename.md) - Date: YYYY-MM-DD | Summary: Brief description of what was discussed | LLM: Model name if available
 -->
 
+- [15-12-2025_chat__new-llm-text-cleaning-method.md](15-12-2025_chat__new-llm-text-cleaning-method.md)
+    - Date: 2025-12-15
+    - Vibecoded a new methods for cleaning text using LLMs. approach takes an OCR text and iteratively refines it using an LLM until it is perceived as stable by the LLM.
+    - LLM: Not specified in export
+
 -[26-11-2025_chat_debugging_nitpicky_edgecases.md](26-11-2025_chat_debugging_nitpicky_edgecases.md)
     - Date: 2025-11-26
     - Summary: Fixed context matching to properly distinguish between multiple LLM tokens with the same word by calculating context scores for all candidates and selecting the best match. Fixed visualization to mark words as PENDING if they have chosen_LLM_token but are missing required neighbor links. Fixed combined hyphenated words not getting LLM tokens assigned and added final pass to match PENDING words with unmatched LLM tokens in their candidates.

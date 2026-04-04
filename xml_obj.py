@@ -5,24 +5,37 @@ from typing import Iterator, Optional, Tuple, List
 import xml.etree.ElementTree as ET
 import re
 
-NS = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+# ALTO v4 (and v3) namespaces; Tesseract outputs v3
+NS = {"alto": "http://www.loc.gov/standards/alto/ns-v4#", "alto3": "http://www.loc.gov/standards/alto/ns-v3#"}
 HY_PHENS = ("-", "-", "—" "--")  # plain hyphen + common variants
 CLEAN_RE = re.compile(r"[^A-Za-z0-9-]+")  # regex to clean non-alphanumeric chars except hyphens
 
+
+def _ns(el: ET.Element) -> dict:
+	"""Return a namespace dict for find/findall using this element's namespace (supports v3 and v4 ALTO)."""
+	uri = ""
+	if el.tag.startswith("{"):
+		uri = el.tag[1 : el.tag.index("}")]
+	if not uri:
+		uri = "http://www.loc.gov/standards/alto/ns-v4#"
+	return {"al": uri}
+
+
 def load_pages_from_file(path: str) -> list[Page]:
 	"""
-	Parse an XML file and return a Page object.
-	(Assumes the root element is <Page>.)
+	Parse an XML file and return a list of Page objects.
+	Supports ALTO v3 (e.g. Tesseract) and v4.
 	"""
 	tree = ET.parse(path)
 	root = tree.getroot()
-	pages = root.findall(".//alto:Page", namespaces=NS)
+	pages = root.findall(".//alto:Page", namespaces=NS) or root.findall(".//alto3:Page", namespaces=NS)
 	return [Page.from_xml(p) for p in pages]
+
 
 def load_first_page(path: str) -> Page:
 	tree = ET.parse(path)
 	root = tree.getroot()
-	el = root.find(".//alto:Page", namespaces=NS)
+	el = root.find(".//alto:Page", namespaces=NS) or root.find(".//alto3:Page", namespaces=NS)
 	if el is None:
 		raise ValueError("No <Page> element found in ALTO file.")
 	return Page.from_xml(el)
@@ -54,10 +67,17 @@ class StringWord(ContentElement):
 	matched: bool = False
 	before_word: Optional[StringWord] = None
 	after_word: Optional[StringWord] = None
-	best_clean_content: str = None
+	best_clean_content: Optional[str] = None
+	page_id: Optional[str] = None  # set after load; not part of String ID
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "StringWord":
+		raw_wc = el.attrib.get("WC", "0")
+		try:
+			val = float(raw_wc)
+			wc = int(round(val * 100)) if val <= 1.0 else int(val)  # v3: 0–1 float; v4: 0–100 int
+		except (ValueError, TypeError):
+			wc = 0
 		return cls(
 			id=el.attrib.get("ID", ""),
 			width=int(el.attrib.get("WIDTH", 0)),
@@ -65,7 +85,7 @@ class StringWord(ContentElement):
 			hpos=int(el.attrib.get("HPOS", 0)),
 			vpos=int(el.attrib.get("VPOS", 0)),
 			content=el.attrib.get("CONTENT", ""),
-			wc=int(el.attrib.get("WC", 0)),
+			wc=wc,
 		)
 
 	def to_xml(self) -> ET.Element:
@@ -92,9 +112,10 @@ class TextLine(ContentElement):
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "TextLine":
+		ns = _ns(el)
 		strings = [
 			StringWord.from_xml(s_el)
-				for s_el in el.findall("alto:String", namespaces=NS)
+				for s_el in el.findall("al:String", namespaces=ns)
 		]
 		return cls(
 			id=el.attrib.get("ID", ""),
@@ -125,9 +146,10 @@ class TextBlock(ContentElement):
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "TextBlock":
+		ns = _ns(el)
 		lines = [
 			TextLine.from_xml(tl_el)
-				for tl_el in el.findall("alto:TextLine", namespaces=NS)
+				for tl_el in el.findall("al:TextLine", namespaces=ns)
 		]
 		return cls(
 			id=el.attrib.get("ID", ""),
@@ -159,9 +181,11 @@ class Page(XMLObj):
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "Page":
+		ns = _ns(el)
+		# v3 ALTO has Page > PrintSpace > ComposedBlock > TextBlock; v4 can have direct TextBlock. Use .// to get descendants.
 		blocks = [
 			TextBlock.from_xml(tb_el)
-				for tb_el in el.findall("alto:TextBlock", namespaces=NS)
+				for tb_el in el.findall(".//al:TextBlock", namespaces=ns)
 		]
 		return cls(
 			id=el.attrib.get("ID", ""),
@@ -190,6 +214,11 @@ class Page(XMLObj):
 			for line in block.content_elements
 			for s in line.content_elements
 		]
+
+	def set_string_page_ids(self) -> None:
+		"""Set page_id on every StringWord on this page (for writer grouping)."""
+		for s in self.all_strings():
+			s.page_id = self.id
 
 	
 	def get_text(self, sep: str = " ") -> str:
@@ -265,13 +294,13 @@ class Page(XMLObj):
 		"""
 		Gets the previous word of a given word.
 		"""
-		return self.words[self.words.index(word) - 1]
+		return self.all_strings()[self.all_strings().index(word) - 1]
 
 	def get_next_word(self, word: "StringWord") -> "StringWord":
 		"""
 		Gets the next word of a given word.
 		"""
-		return self.words[self.words.index(word) + 1]
+		return self.all_strings()[self.all_strings().index(word) + 1]
 
 	def get_word_triplets(self, word: "StringWord") -> List[Tuple[Optional["StringWord"], "StringWord", Optional["StringWord"]]]:
 		"""

@@ -51,6 +51,7 @@ def is_pending_word(hyp: TokenHypotheses) -> bool:
         elif (hyp.left_matched.chosen_LLM_token is None or
               hyp.left_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_before):
             missing_left = True
+            missing_left = True
     
     # Check if right neighbor is missing or incorrect
     missing_right = False
@@ -59,6 +60,7 @@ def is_pending_word(hyp: TokenHypotheses) -> bool:
             missing_right = True
         elif (hyp.right_matched.chosen_LLM_token is None or
               hyp.right_matched.chosen_LLM_token != hyp.chosen_LLM_token.w_after):
+            missing_right = True
             missing_right = True
     
     # PENDING if either neighbor is missing or incorrect

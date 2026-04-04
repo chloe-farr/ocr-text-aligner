@@ -411,7 +411,7 @@ def link_hypothesis_objects_by_context(hypothesis_list: List['TokenHypotheses'])
                 if before_word_id in anchor_to_hypothesis:
                     spatial_left_neighbor = anchor_to_hypothesis[before_word_id]
                     
-                    # Check if spatial neighbor has matching LLM token
+                    # Check if spatial neighbor has matching LLM token (exact LLMToken instance)
                     if (spatial_left_neighbor.chosen_LLM_token is not None and
                         spatial_left_neighbor.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_before):
                         # Perfect match - link them
@@ -443,7 +443,7 @@ def link_hypothesis_objects_by_context(hypothesis_list: List['TokenHypotheses'])
                 if after_word_id in anchor_to_hypothesis:
                     spatial_right_neighbor = anchor_to_hypothesis[after_word_id]
                     
-                    # Check if spatial neighbor has matching LLM token
+                    # Check if spatial neighbor has matching LLM token (exact LLMToken instance)
                     if (spatial_right_neighbor.chosen_LLM_token is not None and
                         spatial_right_neighbor.chosen_LLM_token == hypothesis_object.chosen_LLM_token.w_after):
                         # Perfect match - link them

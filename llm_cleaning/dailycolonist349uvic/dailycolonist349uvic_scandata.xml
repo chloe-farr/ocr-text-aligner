@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book>
+  <bookData>
+    <bookId>dailycolonist349uvic</bookId>
+    <leafCount>8</leafCount>
+  </bookData>
+  <pageData>
+    <page leafNum="0">
+      <pageType>Title</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5096</origWidth>
+      <origHeight>7592</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5096</w>
+        <h>7592</h>
+      </cropBox>
+      <bookStart>true</bookStart>
+    </page>
+    <page leafNum="1">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5224</origWidth>
+      <origHeight>7672</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5224</w>
+        <h>7672</h>
+      </cropBox>
+    </page>
+    <page leafNum="2">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5096</origWidth>
+      <origHeight>7576</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5096</w>
+        <h>7576</h>
+      </cropBox>
+    </page>
+    <page leafNum="3">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5128</origWidth>
+      <origHeight>7672</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5128</w>
+        <h>7672</h>
+      </cropBox>
+    </page>
+    <page leafNum="4">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5128</origWidth>
+      <origHeight>7576</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5128</w>
+        <h>7576</h>
+      </cropBox>
+    </page>
+    <page leafNum="5">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5112</origWidth>
+      <origHeight>7608</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5112</w>
+        <h>7608</h>
+      </cropBox>
+    </page>
+    <page leafNum="6">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5112</origWidth>
+      <origHeight>7576</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5112</w>
+        <h>7576</h>
+      </cropBox>
+    </page>
+    <page leafNum="7">
+      <pageType>Normal</pageType>
+      <addToAccessFormats>true</addToAccessFormats>
+      <origWidth>5160</origWidth>
+      <origHeight>7624</origHeight>
+      <cropBox>
+        <x>0</x>
+        <y>0</y>
+        <w>5160</w>
+        <h>7624</h>
+      </cropBox>
+    </page>
+  </pageData>
+</book>

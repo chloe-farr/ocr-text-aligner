@@ -15,7 +15,7 @@ else:
     TokenCandidate = None
 
 
-def fuzzy_match_rapid(word: str, vocab: set[str], cutoff: float = 90.0, limit: int = None) -> List[Tuple[str, float]]:
+def fuzzy_match_rapid(word: str, vocab: set[str], cutoff: float = 90.0, limit: Optional[int] = None) -> List[Tuple[str, float]]:
     """
     Use a dedicated fuzzy library to find best word matches
     cutoff is in [0, 100]
@@ -23,7 +23,9 @@ def fuzzy_match_rapid(word: str, vocab: set[str], cutoff: float = 90.0, limit: i
     Returns:
     all strong matches, sorted by score
     """
-    return process.extract(query=word, choices=vocab, scorer=fuzz.ratio, score_cutoff=cutoff, limit=None)
+    # process.extract returns (match, score, index); we return (match, score) only
+    raw = process.extract(query=word, choices=vocab, scorer=fuzz.ratio, score_cutoff=cutoff, limit=limit)
+    return [(m, s) for m, s, _ in raw]
 
 
 def best_fuzzy_match_rapid(word: str, vocab: set[str], cutoff: float = 90.0) -> Union['TokenCandidate', None]:
@@ -51,7 +53,7 @@ def best_fuzzy_match_rapid(word: str, vocab: set[str], cutoff: float = 90.0) -> 
     match, score, index = result
     # Note: This function creates TokenCandidate with string instead of StringWord - may need redesign
     # For now, using empty list as alto_words requires List[XMLOBJ.StringWord]
-    return TokenCandidate(clean_form=match, kind="word", alto_words=[], fuzzy_score=float(score))
+    return TokenCandidate(clean_form=match, kind="word", alto_words=[], fuzzy_score=float(score))  # type: ignore[reportUnknownReturnType]
 
 
 def create_llm_word_lookup(llm_elements: List['LLMToken']) -> Dict[str, List['LLMToken']]:
@@ -125,8 +127,8 @@ def should_combine_words(
     combined_score: float,
     individual_threshold: float = 85.0,
     improvement_threshold: float = 5.0,
-    w1_length: int = None,
-    w2_length: int = None
+    w1_length: Optional[int] = None,
+    w2_length: Optional[int] = None
 ) -> bool:
     """
     Determine if two words should be combined based on score comparison.
