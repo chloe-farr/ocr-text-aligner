@@ -6,7 +6,19 @@ Designed by Chloë Farr.
 Co-scripted by Chloë Farr and Cursor Agent.
 
 Start date of coding: November 21, 2025
-Last updated: November 26, 2025
+Last updated: April 4, 2026
+
+---
+
+## ⚠️ GPU / CUDA vs this repository
+
+**This aligner is CPU-only.** `pip install -r requirements.txt` does not install PyTorch or CUDA.
+
+If you are running the **full** workflow (PDF → layout models → Chandra / vLLM → clean text → **then** this tool), the **vision and LLM servers** may expect a **NVIDIA GPU**. On a laptop or server **without CUDA**, you can still run **`map_up_text.py`**; you must configure the **upstream pipeline** for **CPU**, smaller batches, or a **remote inference** host.
+
+**Read the full guide:** **[FULL_PIPELINE_AND_CUDA.md](FULL_PIPELINE_AND_CUDA.md)** (what runs where, `nvidia-smi`, CPU expectations, Apple Silicon, hyphen-friendly upstream chunking).
+
+---
 
 ## Setup
 
@@ -14,6 +26,8 @@ Last updated: November 26, 2025
 
 - Python 3.8 or higher
 - An ALTO XML file (OCR output format)
+
+**Optional:** For upstream VLM/layout work, see [FULL_PIPELINE_AND_CUDA.md](FULL_PIPELINE_AND_CUDA.md)—not required for alignment only.
 
 ### Installation
 
