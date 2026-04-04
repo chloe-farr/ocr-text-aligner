@@ -137,16 +137,26 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
 
 def cmd_align(args: argparse.Namespace) -> int:
-    """Run alignment: ALTO XML + clean text → aligned ALTO (and visualizations)."""
+    """Run alignment: OCR (ALTO or hOCR) + clean text → aligned OCR output (and visualizations)."""
     cmd = [
         sys.executable, str(PROJECT_ROOT / "map_up_text.py"),
-        "--xml-file", str(args.xml_file),
         "--clean-text", str(args.clean_text),
     ]
+    if getattr(args, "xml_file", None):
+        cmd.extend(["--xml-file", str(args.xml_file)])
+    elif getattr(args, "hocr_file", None):
+        cmd.extend(["--hocr-file", str(args.hocr_file)])
+    else:
+        print("Error: Provide --xml-file or --hocr-file.", file=sys.stderr)
+        return 1
     if getattr(args, "output_xml", None) is not None:
         cmd.append("--output-xml")
         if args.output_xml:
             cmd.append(str(args.output_xml))
+    if getattr(args, "output_hocr", None) is not None:
+        cmd.append("--output-hocr")
+        if args.output_hocr:
+            cmd.append(str(args.output_hocr))
     if getattr(args, "show_ocr_accuracy", False):
         cmd.append("--show-ocr-accuracy")
     r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
@@ -203,17 +213,40 @@ def cmd_all(args: argparse.Namespace) -> int:
     if not plain_path.is_file():
         print("Error: Plain text not found:", plain_path, file=sys.stderr)
         return 1
-    # Collect ALTO files: page-1.xml, page-2.xml, ... (or single file)
-    alto_files = []
+
+    # Collect OCR page files: ALTO (preferred) or hOCR
+    input_format: Optional[str] = None
+    ocr_page_files: list[Path] = []
+
     if alto_dir.is_dir():
         alto_files = sorted(alto_dir.glob("*.xml"), key=lambda p: (len(p.stem), p.stem))
-    if not alto_files:
-        print("Error: No ALTO XML found in", alto_dir, file=sys.stderr)
+        if alto_files:
+            input_format = "alto"
+            ocr_page_files = alto_files
+
+    if input_format is None:
+        hocr_dir = out_dir / "hocr"
+        if hocr_dir.is_dir():
+            hocr_files = sorted(hocr_dir.glob("*.html*"), key=lambda p: (len(p.stem), p.stem))
+            if hocr_files:
+                input_format = "hocr"
+                ocr_page_files = hocr_files
+
+    if input_format is None:
+        # Fallback: look for a single hOCR file in out_dir
+        hocr_files = sorted(out_dir.glob("*hocr*.html*"), key=lambda p: (len(p.name), p.name))
+        if hocr_files:
+            input_format = "hocr"
+            ocr_page_files = hocr_files
+
+    if not ocr_page_files:
+        print("Error: No OCR page files found (expected alto/*.xml or hocr/*.html).", file=sys.stderr)
         return 1
-    num_pages = len(alto_files)
+
+    num_pages = len(ocr_page_files)
     have_per_page_txt = (out_dir / "page-1.txt").is_file() or (out_dir / "page-01.txt").is_file()
     if num_pages > 1 and not have_per_page_txt:
-        print("Error: Multi-page ALTO requires per-page plain text (page-1.txt, page-2.txt, ...).", file=sys.stderr)
+        print("Error: Multi-page OCR requires per-page plain text (page-1.txt, page-2.txt, ...).", file=sys.stderr)
         return 1
     page_by_page = num_pages > 1 or have_per_page_txt
 
@@ -275,35 +308,79 @@ def cmd_all(args: argparse.Namespace) -> int:
             return 1
         clean_paths = [clean_path]
 
-    # Step 3: Align (single page or multi-page then merge)
+    # Step 3: Align (single page or multi-page; ALTO merges, hOCR writes per-page)
     out_xml_path = work_dir / f"{base}_aligned.xml"
-    if len(clean_paths) == 1 and len(alto_files) == 1:
-        args_align = argparse.Namespace(
-            xml_file=str(alto_files[0]),
-            clean_text=str(clean_paths[0]),
-            output_xml=str(out_xml_path),
-            show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False),
-        )
+    out_hocr_path = work_dir / f"{base}_aligned_hocr.html"
+    if len(clean_paths) == 1 and len(ocr_page_files) == 1:
+        if input_format == "alto":
+            args_align = argparse.Namespace(
+                xml_file=str(ocr_page_files[0]),
+                hocr_file=None,
+                clean_text=str(clean_paths[0]),
+                output_xml=str(out_xml_path),
+                output_hocr=None,
+                show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False),
+            )
+        else:
+            args_align = argparse.Namespace(
+                xml_file=None,
+                hocr_file=str(ocr_page_files[0]),
+                clean_text=str(clean_paths[0]),
+                output_xml=None,
+                output_hocr=str(out_hocr_path),
+                show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False),
+            )
         return cmd_align(args_align)
-    # Multi-page: align each page, then merge into one ALTO
+    # Multi-page: align each page, then merge into one ALTO (hOCR: per-page outputs)
     import tempfile
     import write_aligned_alto
     temp_alto_paths = []
     try:
-        for i, (xml_path, clean_path) in enumerate(zip(alto_files, clean_paths)):
-            tmp = tempfile.NamedTemporaryFile(suffix=".xml", delete=False)
-            tmp.close()
-            temp_alto_paths.append(tmp.name)
-            args_align = argparse.Namespace(
-                xml_file=str(xml_path),
-                clean_text=str(clean_path),
-                output_xml=tmp.name,
-                show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False) and i == 0,
-            )
-            if cmd_align(args_align) != 0:
-                return 1
-        write_aligned_alto.merge_alto_files(temp_alto_paths, str(out_xml_path))
-        print(f"Wrote aligned ALTO XML (merged {num_pages} pages) to {out_xml_path}")
+        if input_format == "alto":
+            for i, (xml_path, clean_path) in enumerate(zip(ocr_page_files, clean_paths)):
+                tmp = tempfile.NamedTemporaryFile(suffix=".xml", delete=False)
+                tmp.close()
+                temp_alto_paths.append(tmp.name)
+                args_align = argparse.Namespace(
+                    xml_file=str(xml_path),
+                    hocr_file=None,
+                    clean_text=str(clean_path),
+                    output_xml=tmp.name,
+                    output_hocr=None,
+                    show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False) and i == 0,
+                )
+                if cmd_align(args_align) != 0:
+                    return 1
+            write_aligned_alto.merge_alto_files(temp_alto_paths, str(out_xml_path))
+            print(f"Wrote aligned ALTO XML (merged {num_pages} pages) to {out_xml_path}")
+        else:
+            aligned_dir = work_dir / "aligned_hocr" / base
+            aligned_dir.mkdir(parents=True, exist_ok=True)
+            for i, (hocr_path, clean_path) in enumerate(zip(ocr_page_files, clean_paths), start=1):
+                out_page = aligned_dir / f"page-{i}_aligned_hocr.html"
+                args_align = argparse.Namespace(
+                    xml_file=None,
+                    hocr_file=str(hocr_path),
+                    clean_text=str(clean_path),
+                    output_xml=None,
+                    output_hocr=str(out_page),
+                    show_ocr_accuracy=getattr(args, "show_ocr_accuracy", False) and i == 1,
+                )
+                if cmd_align(args_align) != 0:
+                    return 1
+            print(f"Wrote aligned hOCR HTML pages to {aligned_dir}")
+
+            # IA-friendly publish artifact: combine per-page aligned hOCR into one multi-page *_hocr.html
+            try:
+                import hocr_combine
+
+                combined_out = work_dir / f"{base}_aligned_hocr.html"
+                page_paths = sorted(aligned_dir.glob("page-*_aligned_hocr.html"), key=lambda p: (len(p.stem), p.stem))
+                if page_paths:
+                    hocr_combine.combine_hocr_files(page_paths, combined_out)
+                    print(f"Wrote combined aligned hOCR HTML to {combined_out}")
+            except Exception as e:
+                print(f"Warning: failed to combine hOCR pages into one file: {e}", file=sys.stderr)
     finally:
         for p in temp_alto_paths:
             try:
@@ -352,10 +429,13 @@ def main():
     p_clean.add_argument("--page-mode", action="store_true", dest="page_mode", help="One chunk = entire input (e.g. one page)")
 
     # --- align ---
-    p_align = sub.add_parser("align", help="Align cleantext to ALTO XML; write aligned ALTO")
-    p_align.add_argument("--xml-file", required=True, help="ALTO XML path")
+    p_align = sub.add_parser("align", help="Align cleantext to OCR (ALTO or hOCR); write aligned output")
+    g_align_in = p_align.add_mutually_exclusive_group(required=True)
+    g_align_in.add_argument("--xml-file", help="ALTO XML path")
+    g_align_in.add_argument("--hocr-file", help="hOCR HTML/HTML.GZ path")
     p_align.add_argument("--clean-text", required=True, help="Cleantext path")
     p_align.add_argument("--output-xml", nargs="?", const="", default=None, help="Write aligned ALTO (optional path)")
+    p_align.add_argument("--output-hocr", nargs="?", const="", default=None, help="Write aligned hOCR (optional path)")
     p_align.add_argument("--show-ocr-accuracy", action="store_true")
 
     # --- all ---

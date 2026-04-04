@@ -10,6 +10,7 @@ import re
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional, Tuple, Any
 
+import alignment_confidence
 import text_utils
 
 # ALTO v4 and v3 namespaces (Tesseract outputs v3)
@@ -123,9 +124,12 @@ def _build_line_outputs(
     hypothesis_list: List[Any],
     id_to_hyps: Dict[str, List[Any]],
     ordered_ids: List[str],
-) -> Dict[Tuple[str, str, str], List[Tuple[str, int, int, int, int, int, Optional[str]]]]:
+) -> Dict[Tuple[str, str, str], List[Tuple[str, int, int, int, int, int, Optional[str], int, Optional[int]]]]:
     """
-    Build per-line list of output items: (content, hpos, vpos, width, height, wc, layout_tag).
+    Build per-line list of output items:
+    (content, hpos, vpos, width, height, wc, layout_tag, align_conf, clean_para_id).
+    align_conf: alignment pipeline confidence 0–100 (see alignment_confidence.py).
+    clean_para_id: 0-based paragraph index from clean text blank-line boundaries (llm_tokens.assign_clean_paragraph_ids).
     Key: (page_id, block_id, line_id). Value: list of items in order (indices assigned at write time).
     """
     same_line_first: set = set()
@@ -140,13 +144,13 @@ def _build_line_outputs(
         if first_id_c is not None and not _is_same_line_merge(hyp):
             cross_line_first.add(first_id_c)
 
-    line_outputs: Dict[Tuple[str, str, str], List[Tuple[str, int, int, int, int, int, Optional[str]]]] = {}
+    line_outputs: Dict[Tuple[str, str, str], List[Tuple[str, int, int, int, int, int, Optional[str], int, Optional[int]]]] = {}
     seen_same_line_merge_ids: set = set()
 
     for block in page.content_elements:
         for line in block.content_elements:
             key = (page.id, block.id, line.id)
-            items: List[Tuple[str, int, int, int, int, int, Optional[str]]] = []
+            items: List[Tuple[str, int, int, int, int, int, Optional[str], int, Optional[int]]] = []
             for orig in line.content_elements:
                 oid = orig.id
                 if oid in seen_same_line_merge_ids:
@@ -158,7 +162,9 @@ def _build_line_outputs(
                         a = h.anchor
                         content = h.chosen_LLM_token.word if h.chosen_LLM_token else text_utils.decode_html_entities(orig.content)
                         layout_tag = h.chosen_LLM_token.layout_tag if h.chosen_LLM_token else None
-                        items.append((content, a.hpos, a.vpos, a.width, a.height, a.wc, layout_tag))
+                        ac = alignment_confidence.alignment_confidence(h)
+                        cpid = h.chosen_LLM_token.clean_para_id if h.chosen_LLM_token else None
+                        items.append((content, a.hpos, a.vpos, a.width, a.height, a.wc, layout_tag, ac, cpid))
                 elif len(hyps) == 1:
                     hyp = hyps[0]
                     layout_tag = hyp.chosen_LLM_token.layout_tag if hyp.chosen_LLM_token else None
@@ -167,21 +173,28 @@ def _build_line_outputs(
                             words = hyp.chosen.alto_words
                             hpos, vpos, width, height = _merged_bounds_top_left(words)
                             content = hyp.chosen_LLM_token.word if hyp.chosen_LLM_token else text_utils.decode_html_entities(orig.content)
-                            items.append((content, hpos, vpos, width, height, words[0].wc, layout_tag))
+                            ac = alignment_confidence.alignment_confidence(hyp)
+                            cpid = hyp.chosen_LLM_token.clean_para_id if hyp.chosen_LLM_token else None
+                            items.append((content, hpos, vpos, width, height, words[0].wc, layout_tag, ac, cpid))
                             for w in words[1:]:
                                 seen_same_line_merge_ids.add(w.id)
                         elif not _is_same_line_merge(hyp):
                             # Cross-line merge: first element gets merged word, rest get empty string (strip hyphenation fragment).
                             content = hyp.chosen_LLM_token.word if (hyp.chosen_LLM_token and oid in cross_line_first) else ""
-                            items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, layout_tag))
+                            ac = alignment_confidence.alignment_confidence(hyp)
+                            cpid = hyp.chosen_LLM_token.clean_para_id if hyp.chosen_LLM_token else None
+                            items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, layout_tag, ac, cpid))
                         else:
                             continue
                     else:
                         content = hyp.chosen_LLM_token.word if hyp.chosen_LLM_token else text_utils.decode_html_entities(orig.content)
-                        items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, layout_tag))
+                        ac = alignment_confidence.alignment_confidence(hyp)
+                        cpid = hyp.chosen_LLM_token.clean_para_id if hyp.chosen_LLM_token else None
+                        items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, layout_tag, ac, cpid))
                 else:
                     content = text_utils.decode_html_entities(orig.content)
-                    items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, None))
+                    ac = max(0, min(100, int(round(orig.wc * 0.35))))
+                    items.append((content, orig.hpos, orig.vpos, orig.width, orig.height, orig.wc, None, ac, None))
             line_outputs[key] = items
     return line_outputs
 
@@ -196,6 +209,8 @@ def _make_string_el(
     wc: int,
     ns_tag: str,
     layout_tag: Optional[str] = None,
+    align_conf: int = 0,
+    clean_para_id: Optional[int] = None,
 ) -> ET.Element:
     el = ET.Element(ns_tag)
     el.set("ID", word_id)
@@ -205,6 +220,10 @@ def _make_string_el(
     el.set("HEIGHT", str(height))
     el.set("CONTENT", content)
     el.set("WC", str(wc))
+    # Alignment QA score 0–100 (mapping + neighbor consistency); WC stays Tesseract OCR confidence.
+    el.set("ALIGNCONF", str(max(0, min(100, int(align_conf)))))
+    if clean_para_id is not None:
+        el.set("CLEANPARA", str(int(clean_para_id)))
     if layout_tag is not None:
         el.set("LAYOUT", layout_tag)
     return el
@@ -266,9 +285,15 @@ def write_aligned_alto(
             key = (page_id, block_id, line_id)
             items = line_outputs.get(key, [])
             new_children = []
-            for seq, (content, hpos, vpos, width, height, wc, layout_tag) in enumerate(items, start=1):
+            for seq, (content, hpos, vpos, width, height, wc, layout_tag, align_conf, clean_para_id) in enumerate(
+                items, start=1
+            ):
                 word_id = _word_id_from_parts(block_id, line_id, seq)
-                new_children.append(_make_string_el(word_id, content, hpos, vpos, width, height, wc, ns_tag, layout_tag))
+                new_children.append(
+                    _make_string_el(
+                        word_id, content, hpos, vpos, width, height, wc, ns_tag, layout_tag, align_conf, clean_para_id
+                    )
+                )
             for c in list(line_el):
                 line_el.remove(c)
             for el in new_children:
@@ -332,9 +357,15 @@ def _update_one_page_in_tree(
             key = (page_id, block_id, line_id)
             items = line_outputs.get(key, [])
             new_children = []
-            for seq, (content, hpos, vpos, width, height, wc, layout_tag) in enumerate(items, start=1):
+            for seq, (content, hpos, vpos, width, height, wc, layout_tag, align_conf, clean_para_id) in enumerate(
+                items, start=1
+            ):
                 word_id = _word_id_from_parts(block_id, line_id, seq)
-                new_children.append(_make_string_el(word_id, content, hpos, vpos, width, height, wc, ns_tag, layout_tag))
+                new_children.append(
+                    _make_string_el(
+                        word_id, content, hpos, vpos, width, height, wc, ns_tag, layout_tag, align_conf, clean_para_id
+                    )
+                )
             for c in list(line_el):
                 line_el.remove(c)
             for el in new_children:

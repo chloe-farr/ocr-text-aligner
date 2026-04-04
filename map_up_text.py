@@ -382,17 +382,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Map OCR text to clean LLM text')
     parser.add_argument('--show-ocr-accuracy', action='store_true',
                        help='Display OCR accuracy analysis at the beginning')
+    parser.add_argument('--show-pending', action='store_true',
+                       help='Print analysis for remaining PENDING words (matched but missing/incorrect neighbor links)')
     parser.add_argument('--clean-text', type=str, default=None,
                        help='Path to clean text file to use for the pipeline')
     parser.add_argument('--xml-file', type=str, default=None,
                        help='Path to ALTO XML file to use for the pipeline (default: None)')
+    parser.add_argument('--hocr-file', type=str, default=None,
+                       help='Path to hOCR HTML file to use for the pipeline (default: None)')
     parser.add_argument('--output-xml', nargs='?', const='', type=str, default=None,
                        help='Write aligned ALTO XML to this path; if flag given with no path, use outputs/<pagename>/<pagename>_aligned.xml')
+    parser.add_argument('--output-hocr', nargs='?', const='', type=str, default=None,
+                       help='Write aligned hOCR HTML to this path; if flag given with no path, use outputs/<pagename>/<pagename>_aligned_hocr.html')
     args = parser.parse_args()
+    input_format: Optional[str] = None
+    ocr_filename: Optional[str] = None
     if args.xml_file:
-        xml_filename = args.xml_file
+        input_format = "alto"
+        ocr_filename = args.xml_file
+    elif args.hocr_file:
+        input_format = "hocr"
+        ocr_filename = args.hocr_file
     else:
-        print("No XML file provided")
+        print("No OCR file provided (use --xml-file for ALTO or --hocr-file for hOCR)")
         sys.exit(1)
     if args.clean_text:
         with open(f"{args.clean_text}", "r", encoding="utf-8") as f:
@@ -410,17 +422,21 @@ if __name__ == "__main__":
     clean_vocab = set(clean_vocab_counter.keys())
 
     #from xml, load first page
-    page = XMLOBJ.load_first_page(xml_filename)
+    if input_format == "alto":
+        page = XMLOBJ.load_first_page(str(ocr_filename))
+    else:
+        import hocr_obj
+        page = hocr_obj.load_first_page(str(ocr_filename))
     page.set_string_page_ids()
 
     # Extract test page name from path (e.g., "input/1972_10_12_p1/1972_10_12_p1.xml" -> "1972_10_12_p1")
     # Handle both "input/{name}/{name}.xml" and other formats
-    xml_path_parts = xml_filename.replace("\\", "/").split("/")
-    if len(xml_path_parts) >= 2 and xml_path_parts[0] == "input":
-        testpagename = xml_path_parts[1]
+    ocr_path_parts = str(ocr_filename).replace("\\", "/").split("/")
+    if len(ocr_path_parts) >= 2 and ocr_path_parts[0] == "input":
+        testpagename = ocr_path_parts[1]
     else:
         # Fallback: extract from filename
-        testpagename = os.path.splitext(os.path.basename(xml_filename))[0]
+        testpagename = os.path.splitext(os.path.basename(str(ocr_filename)))[0]
     print("\n\n--------- Page Text ---------\n")
     #get list of StringWord objects from the page
     alto_words = page.all_strings()
@@ -445,7 +461,7 @@ if __name__ == "__main__":
     viz.visualize_original_ocr_text(
         hypothesis_list, 
         page, 
-        xml_filename, 
+        str(ocr_filename),
         output_dir=os.path.join("outputs", testpagename)
     )
     
@@ -718,6 +734,24 @@ if __name__ == "__main__":
     
     # Re-link after hard matching
     hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+
+    """
+    Final cross-boundary reconciliation (last chance):
+    After weak-fuzzy + final matching passes, many additional words may have gained
+    `chosen_LLM_token`s. That can create *new* PENDING words (matched token but
+    missing/incorrect neighbor links) that were not present during the earlier
+    cross-boundary step.
+
+    Running paragraph reordering one final time here ensures the visualization
+    reflects the fully-updated match graph rather than a stale pre-final-pass order.
+    """
+    hypothesis_list = paragraph_reordering.reorder_paragraphs(
+        hypothesis_list, llm_elements, page
+    )
+    # Only re-link here: at this stage we want to reconcile neighbor graph/order
+    # without destabilizing already-chosen token assignments via another full
+    # candidate/context re-selection pass.
+    hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
     
     # Calculate final state for summary
     final_matched = sum(1 for h in hypothesis_list if h.chosen_LLM_token is not None)
@@ -739,6 +773,50 @@ if __name__ == "__main__":
     print(f"  Matched words: {final_matched} ({final_matched - initial_matched:+d})")
     print(f"  Error words: {final_errors} ({final_errors - initial_errors:+d})")
     print(f"  PENDING words: {final_pending} ({final_pending - initial_pending:+d})")
+
+    # Optional: print details about remaining PENDING words (matched token but missing/incorrect neighbor links)
+    if args.show_pending and final_pending > 0:
+        print(f"\nPENDING word details (showing up to 30):")
+        # Build a quick lookup: LLMToken id -> hypothesis indices that chose it
+        llm_to_hyp_indices: Dict[int, List[int]] = {}
+        for idx, h in enumerate(hypothesis_list):
+            if h.chosen_LLM_token is not None:
+                llm_to_hyp_indices.setdefault(id(h.chosen_LLM_token), []).append(idx)
+        shown = 0
+        for idx, hyp in enumerate(hypothesis_list):
+            if not paragraph_reordering.is_pending_word(hyp):
+                continue
+            alto_word = text_utils.decode_html_entities(hyp.anchor.content)
+            token = hyp.chosen_LLM_token
+            if token is None:
+                continue
+
+            expected_left = token.w_before.word if token.w_before else None
+            expected_right = token.w_after.word if token.w_after else None
+            actual_left = hyp.left_matched.chosen_LLM_token.word if (hyp.left_matched and hyp.left_matched.chosen_LLM_token) else None
+            actual_right = hyp.right_matched.chosen_LLM_token.word if (hyp.right_matched and hyp.right_matched.chosen_LLM_token) else None
+
+            expected_left_where = None
+            if token.w_before is not None:
+                locs = llm_to_hyp_indices.get(id(token.w_before), [])
+                expected_left_where = locs[0] if locs else None
+            expected_right_where = None
+            if token.w_after is not None:
+                locs = llm_to_hyp_indices.get(id(token.w_after), [])
+                expected_right_where = locs[0] if locs else None
+
+            print(f"  Hyp[{idx}] ALTO='{alto_word}' → LLM='{token.word}'")
+            if expected_left is not None:
+                print(f"    Left: expected='{expected_left}' (Hyp[{expected_left_where}] if present) actual='{actual_left}'")
+            if expected_right is not None:
+                print(f"    Right: expected='{expected_right}' (Hyp[{expected_right_where}] if present) actual='{actual_right}'")
+
+            shown += 1
+            if shown >= 30:
+                remaining = final_pending - shown
+                if remaining > 0:
+                    print(f"  ... and {remaining} more")
+                break
     
     # List unmatched ALTO words (failed to match)
     unmatched_words = []
@@ -776,8 +854,20 @@ if __name__ == "__main__":
     )
 
     if args.output_xml is not None:
+        if input_format != "alto":
+            print("Error: --output-xml is only supported when input is ALTO (--xml-file).", file=sys.stderr)
+            sys.exit(1)
         import write_aligned_alto
         out_path = args.output_xml if args.output_xml else os.path.join(output_dir, f"{testpagename}_aligned.xml")
-        write_aligned_alto.write_aligned_alto(xml_filename, page, hypothesis_list, out_path)
+        write_aligned_alto.write_aligned_alto(str(ocr_filename), page, hypothesis_list, out_path)
         print(f"Wrote aligned ALTO XML to {out_path}")
+
+    if args.output_hocr is not None:
+        if input_format != "hocr":
+            print("Error: --output-hocr is only supported when input is hOCR (--hocr-file).", file=sys.stderr)
+            sys.exit(1)
+        import write_aligned_hocr
+        out_path = args.output_hocr if args.output_hocr else os.path.join(output_dir, f"{testpagename}_aligned_hocr.html")
+        write_aligned_hocr.write_aligned_hocr(str(ocr_filename), page, hypothesis_list, out_path)
+        print(f"Wrote aligned hOCR HTML to {out_path}")
 

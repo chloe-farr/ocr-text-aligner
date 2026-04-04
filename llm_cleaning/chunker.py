@@ -111,20 +111,22 @@ def split_chunks_for_tables(
                 end = i  # exclusive
                 run_len = end - start
                 if run_len >= table_min_lines:
-                    # emit pre-table if any
+                    # emit pre-table if any (and non-empty)
                     if start > 0:
                         pre_lines = lines[:start]
-                        new_chunks.append(
-                            Chunk(
-                                id=next_id,
-                                text="\n".join(pre_lines),
-                                start_line=chunk.start_line,
-                                end_line=chunk.start_line + start - 1,
-                                overlap_prefix="",
-                                is_table=False,
+                        pre_text = "\n".join(pre_lines).strip()
+                        if pre_text:  # Only create chunk if it has content
+                            new_chunks.append(
+                                Chunk(
+                                    id=next_id,
+                                    text="\n".join(pre_lines),
+                                    start_line=chunk.start_line,
+                                    end_line=chunk.start_line + start - 1,
+                                    overlap_prefix="",
+                                    is_table=False,
+                                )
                             )
-                        )
-                        next_id += 1
+                            next_id += 1
                     # emit table chunk
                     table_lines = lines[start:end]
                     new_chunks.append(
@@ -146,17 +148,19 @@ def split_chunks_for_tables(
             i += 1
         # remaining lines (if any) that are not part of a table run
         if lines:
-            new_chunks.append(
-                Chunk(
-                    id=next_id,
-                    text="\n".join(lines),
-                    start_line=chunk.start_line + (chunk.end_line - len(lines) + 1),
-                    end_line=chunk.end_line,
-                    overlap_prefix=chunk.overlap_prefix,
-                    is_table=False,
+            remaining_text = "\n".join(lines).strip()
+            if remaining_text:  # Only create chunk if it has content
+                new_chunks.append(
+                    Chunk(
+                        id=next_id,
+                        text="\n".join(lines),
+                        start_line=chunk.start_line + (chunk.end_line - len(lines) + 1),
+                        end_line=chunk.end_line,
+                        overlap_prefix=chunk.overlap_prefix,
+                        is_table=False,
+                    )
                 )
-            )
-            next_id += 1
+                next_id += 1
 
     return new_chunks
 
@@ -251,4 +255,20 @@ def make_chunks(
             break
     
     return chunks
+
+
+def make_single_chunk(ocr_text: str) -> List[Chunk]:
+    """Treat the entire text as one chunk (e.g. one page = one chunk for page-by-page processing)."""
+    lines = ocr_text.split("\n")
+    n = len(lines)
+    return [
+        Chunk(
+            id=0,
+            text=ocr_text,
+            start_line=0,
+            end_line=max(0, n - 1),
+            overlap_prefix="",
+            is_table=False,
+        )
+    ]
 
