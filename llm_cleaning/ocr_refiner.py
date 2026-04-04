@@ -5,13 +5,14 @@ Main OCR refinement module with iterative refinement loop and CLI.
 import argparse
 import json
 import logging
+import os
 import re
 import sys
 from typing import Dict, List, Optional, Tuple
 
 import requests
 
-from .chunker import Chunk, make_chunks, split_chunks_for_tables
+from .chunker import Chunk, make_chunks, make_single_chunk, split_chunks_for_tables
 from .prompts import get_system_prompt, get_user_prompt, get_retry_user_prompt_suffix
 from .validators import normalize_counts, validate_all
 
@@ -45,13 +46,14 @@ def call_ollama_chat(
     system_prompt: str,
     user_prompt: str,
     temperature: float = 0.2,
-    timeout: int = 120
+    timeout: int = 120,
+    host: str = "http://localhost:11434"
 ) -> str:
     """
     Call Ollama chat API.
     
     Args:
-        model: Model name (e.g., "qwen2.5:14b")
+        model: Model name (e.g., "qwen2.5:7b")
         system_prompt: System prompt
         user_prompt: User prompt
         temperature: Temperature for generation
@@ -63,7 +65,7 @@ def call_ollama_chat(
     Raises:
         requests.RequestException: If API call fails
     """
-    url = "http://localhost:11434/api/chat"
+    url = f"{host.rstrip('/')}/api/chat"
     
     payload = {
         "model": model,
@@ -142,6 +144,7 @@ def refine_chunk(
     year: Optional[int] = None,
     month: Optional[int] = None,
     location: Optional[str] = None,
+    host: str = "http://localhost:11434",
     is_table: Optional[bool] = None,
     debug: bool = False
 ) -> str:
@@ -198,12 +201,14 @@ def refine_chunk(
         )
         
         # Call Ollama
+        logger.info(f"Calling Ollama ({model}) iteration {iteration + 1}/{max_iters}...")
         try:
             response_text = call_ollama_chat(
                 model=model,
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
-                temperature=temperature
+                temperature=temperature,
+                host=host
             )
         except requests.exceptions.RequestException as e:
             logger.error(f"API call failed on iteration {iteration + 1}: {e}")
@@ -219,7 +224,8 @@ def refine_chunk(
             continue
         
         if debug:
-            logger.info(f"Decision: {decision}\nRefined text: {refined_text}\n")
+            logger.info(f"Decision: {decision}")
+            logger.info(f"Refined text (first 200 chars): {refined_text[:200]}...")
         
         # Validate output
         validation = validate_all(
@@ -246,7 +252,8 @@ def refine_chunk(
                     model=model,
                     system_prompt=system_prompt,
                     user_prompt=retry_user_prompt,
-                    temperature=retry_temperature
+                    temperature=retry_temperature,
+                    host=host
                 )
                 retry_decision, retry_text = parse_llm_response(retry_response)
                 
@@ -278,9 +285,16 @@ def refine_chunk(
         norm_current = normalize_counts(current)
         norm_refined = normalize_counts(refined_text)
         
+        if debug:
+            logger.info(f"Normalized current length: {len(norm_current)}, refined length: {len(norm_refined)}")
+            if norm_current == norm_refined:
+                logger.info("Output normalized to same as current (stabilized)")
+            else:
+                logger.info("Output differs from current, continuing...")
+        
         if norm_current == norm_refined:
             if debug:
-                logger.info("Output stabilized (no change)")
+                logger.info("Output stabilized (no change) - returning refined text")
             return refined_text
         
         # Update current and last_good
@@ -289,15 +303,18 @@ def refine_chunk(
         
         if debug:
             logger.info(f"Accepted output (stats: {validation.stats})")
+            logger.info(f"Refined text length: {len(refined_text)} chars vs original: {len(ocr_chunk)} chars")
         
         # Stop if decision is STOP
         if decision == "STOP":
-            if debug:
-                logger.info("Model returned STOP")
+            logger.info("Model returned STOP - returning refined text")
             return refined_text
     
+    logger.info(f"Reached max iterations ({max_iters}); returning {len(last_good)} chars")
+    if last_good == ocr_chunk:
+        logger.warning("WARNING: output identical to input - no changes were made (check validation or try --debug)")
     if debug:
-        logger.info(f"Reached max iterations ({max_iters})")
+        logger.info(f"Returning last_good (length: {len(last_good)} chars)")
     return last_good
 
 
@@ -361,11 +378,13 @@ def refine_document(
     chunk_params: Optional[Dict] = None,
     refinement_params: Optional[Dict] = None,
     overlap_strategy: str = "drop_overlap",
-    debug: bool = False
+    host: str = "http://localhost:11434",
+    debug: bool = False,
+    page_mode: bool = False,
 ) -> str:
     """
-    Refine entire OCR document chunk by chunk.
-    
+    Refine entire OCR document chunk by chunk (or one chunk per page if page_mode=True).
+
     Args:
         ocr_text: Full OCR text
         model: Ollama model name
@@ -373,7 +392,8 @@ def refine_document(
         refinement_params: Parameters for refinement (max_iters, tolerances, etc.)
         overlap_strategy: Strategy for stitching chunks
         debug: Enable debug logging
-    
+        page_mode: If True, treat entire input as one chunk (e.g. one page = one chunk).
+
     Returns:
         Refined document text
     """
@@ -381,15 +401,25 @@ def refine_document(
         chunk_params = {}
     if refinement_params is None:
         refinement_params = {}
-    
-    # Create chunks
-    chunks = make_chunks(ocr_text, **chunk_params)
 
-    # Split mixed chunks that contain table-like runs into separate table/non-table chunks
-    chunks = split_chunks_for_tables(chunks)
+    # Create chunks: one per page (whole file) or by token count
+    if page_mode:
+        logger.info("Page mode: one chunk = entire input")
+        chunks = make_single_chunk(ocr_text)
+    else:
+        if debug:
+            logger.info(f"Chunking parameters: min_tokens={chunk_params.get('min_tokens', 150)}, max_tokens={chunk_params.get('max_tokens', 600)}, overlap_lines={chunk_params.get('overlap_lines', 2)}")
+        chunks = make_chunks(ocr_text, **chunk_params)
+        # Split mixed chunks that contain table-like runs into separate table/non-table chunks
+        chunks = split_chunks_for_tables(chunks)
     
     if debug:
         logger.info(f"Created {len(chunks)} chunks")
+        # Show token counts for first few chunks
+        from .chunker import estimate_word_count
+        for i, chunk in enumerate(chunks[:5]):
+            word_count = estimate_word_count(chunk.text)
+            logger.info(f"  Chunk {i}: {word_count} words, {len(chunk.text)} chars (lines {chunk.start_line}-{chunk.end_line})")
     
     # Refine each chunk
     refined_chunks = []
@@ -402,6 +432,7 @@ def refine_document(
                 model=model,
                 ocr_chunk=chunk.text,
                 is_table=chunk.is_table,
+            host=host,
                 debug=debug,
                 **refinement_params
             )
@@ -450,14 +481,20 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="qwen2.5:14b",
-        help="Ollama model name (default: qwen2.5:14b)"
+        default="qwen2.5:7b",
+        help="Ollama model name (default: qwen2.5:7b)"
+    )
+    parser.add_argument(
+        "--ollama-host",
+        dest="ollama_host",
+        default=os.environ.get("OLLAMA_HOST", "http://localhost:11434"),
+        help="Ollama host URL (default: env OLLAMA_HOST or http://localhost:11434)"
     )
     parser.add_argument(
         "--max-iters",
         type=int,
-        default=6,
-        help="Maximum refinement iterations per chunk (default: 6)"
+        default=1,
+        help="Maximum refinement iterations per chunk (default: 1)"
     )
     parser.add_argument(
         "--wc-tol",
@@ -518,6 +555,12 @@ def main():
         action="store_true",
         help="Enable debug logging"
     )
+    parser.add_argument(
+        "--page-mode",
+        action="store_true",
+        dest="page_mode",
+        help="Treat entire input as one chunk (e.g. one page = one chunk; for page-by-page processing)"
+    )
     
     args = parser.parse_args()
     
@@ -561,7 +604,9 @@ def main():
             model=args.model,
             chunk_params=chunk_params,
             refinement_params=refinement_params,
-            debug=args.debug
+            host=args.ollama_host,
+            debug=args.debug,
+            page_mode=args.page_mode,
         )
     except Exception as e:
         logger.error(f"Refinement failed: {e}", exc_info=args.debug)

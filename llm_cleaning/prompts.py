@@ -7,28 +7,29 @@ from typing import Optional
 
 def get_system_prompt() -> str:
     """Get the system prompt for OCR correction."""
-    return """You are an OCR correction engine. Your task is to refine OCR text while preserving its original meaning and structure.
+    return """You are an OCR correction engine. Clean the text. Do not paraphrase. Remove line-break hyphens (join words broken across lines into one word).
 
-Rules:
-- Use the OCR_CHUNK as evidence; do not invent missing content.
-- Reordering is allowed (e.g., fixing paragraph order), but paraphrasing is not.
-- If uncertain about a word or phrase, keep the OCR token or mark it as [[unclear]].
-- Preserve the original vocabulary and terminology.
-- Correct obvious OCR errors (e.g., "rn" -> "m", "0" -> "O" in context).
-- Fix spacing and punctuation issues. Do not update punctuation if it seems merely out of style.
-- Do not make stylistic or grammatical changes that are not suggested by the OCR text. For example, do not change `it  now  making` to `is now being made` unless the OCR text suggests it.
-- Do not add content that is not suggested by the OCR text.
-- Do not include any commentary, notes, or explanations in the output—only the corrected text.
-- If the chunk is just loose words (e.g., OCR word soup), do not try to create grammatical sentences; only fix obvious OCR errors and keep the word-level sequence.
+What to do:
+- Actively correct every clear OCR error. Do not leave obviously wrong text unchanged.
+- Fix character-level errors: e.g. "rn" -> "m", "0" -> "O", "l" -> "I", "S10" -> "$10", "teh" -> "the", "Cyhemehics" -> "Cybernetics", "Prryt83" -> "Progress", "Sysfas" -> "Systems", garbled letters in titles/headers (e.g. "VI76 ta" -> "Vol 76 to" when context is journal/series).
+- Remove hyphens that are only from line breaks: join the two parts into one word (e.g. "re-\nsearch" -> "research"). Keep hyphens that are part of compound words (e.g. "well-known").
+- Fix spacing: collapse multiple spaces, fix missing space after punctuation.
+- Fix stray scan artifacts: odd symbols (¥, |), asterisks, unmatched quotes, that are clearly not part of the intended text.
+- Preserve meaning, vocabulary, and structure. Reordering lines/paragraphs is allowed if the OCR order is wrong; do not paraphrase.
+- If a word is clearly wrong from context but you are unsure of the exact correction, use your best guess or mark [[unclear]] only when you truly cannot infer it.
+
+Constraints:
+- Do not invent content that is not in or strongly suggested by the OCR text.
+- Do not add sentences, change meaning, or make purely stylistic/grammatical edits (e.g. do not change "it now making" to "is now being made" unless the OCR suggests it).
+- Output only the corrected text—no commentary or notes.
+- If the chunk is loose words (OCR word soup), fix obvious errors and keep the word sequence; do not invent grammar.
 
 Output format (strict):
 DECISION: STOP|CONTINUE
 TEXT:
 <your corrected text here>
 
-DECISION indicates whether you believe further refinement is needed:
-- STOP: The text is correct or cannot be improved without guessing.
-- CONTINUE: You can make additional improvements in the next iteration."""
+DECISION: Use STOP when the text is correct or further change would be guesswork. Use CONTINUE when you can still fix clear OCR errors."""
 
 
 def get_user_prompt(
@@ -86,13 +87,13 @@ def get_user_prompt(
     
     # Instructions
     prompt_parts.append("Instructions:")
-    prompt_parts.append("- Refine the text to correct OCR errors while staying within the tolerance limits.")
-    prompt_parts.append("- Your output word count must be within the specified tolerance of the OCR word count.")
-    prompt_parts.append("- If you cannot improve the text without guessing or exceeding tolerances, return DECISION: STOP.")
-    prompt_parts.append("- Do not add content that is not present in the OCR text.")
-    prompt_parts.append("- Do not include commentary, rationale, or notes—only the corrected text.")
-    prompt_parts.append("- The OCR is from scanned newspaper microfiche. You may clean any stray special characters, such as asterisks, unmatched quotes, etc. that are likely to be transcription errors due to smudges, bleed, etc.")
-    prompt_parts.append("- Make your best guess at where currency symbols belong. If the text says 'per anunum, ... 010 00' or 'per anunum, ... S10 00' then it is likely to actually be 'per anunum, ... $10.00'.")
+    prompt_parts.append("- Clean the text. Do not paraphrase. Remove line-break hyphens (join words broken across lines into one word).")
+    prompt_parts.append("- Correct every clear OCR error. Fix misread words from context, character swaps, stray symbols, and spacing.")
+    prompt_parts.append("- Stay within the word and character count tolerances above; small changes in count from corrections are acceptable.")
+    prompt_parts.append("- If you cannot improve further without guessing, return DECISION: STOP. Otherwise return DECISION: CONTINUE.")
+    prompt_parts.append("- Do not add content that is not in the OCR. Output only the corrected text—no commentary.")
+    prompt_parts.append("- The OCR is from scanned documents (e.g. journal articles). Clean stray special characters (asterisks, ¥, |, unmatched quotes) that are scan artifacts.")
+    prompt_parts.append("- Fix obvious number/currency misreads (e.g. '010 00' or 'S10 00' in context -> '$10.00').")
     if is_table:
         prompt_parts.append("- This chunk is tabular/list-like. Preserve line breaks and relative spacing; treat each input line as a row.")
         prompt_parts.append("- Do not merge or reorder lines; only fix OCR errors inside each line.")
@@ -124,4 +125,4 @@ def get_user_prompt(
 def get_retry_user_prompt_suffix() -> str:
     """Get additional prompt text for retry attempts after validation failure."""
     return "\n\nWARNING: Your last output failed validation due to length drift or novel tokens. Be more conservative; do not add content. Stay strictly within the tolerance limits and do not introduce words that are not present in the OCR text."
-
+    

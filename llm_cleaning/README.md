@@ -38,6 +38,28 @@ python -m llm_cleaning.ocr_refiner --in input.txt --out output.txt
 python -m llm_cleaning.ocr_refiner --in input.txt --out output.txt --model mistral:7b
 ```
 
+### With Custom Ollama Host (GPU/remote)
+
+```bash
+python -m llm_cleaning.ocr_refiner \
+  --in input.txt \
+  --out output.txt \
+  --ollama-host http://localhost:11434
+```
+
+The host also honors `OLLAMA_HOST`. On NVIDIA (Linux), install Ollama with GPU support; on Apple Silicon, Ollama will use Metal by default.
+
+### With Custom Ollama Host (GPU/remote)
+
+```bash
+python -m llm_cleaning.ocr_refiner \
+  --in input.txt \
+  --out output.txt \
+  --ollama-host http://localhost:11434
+```
+
+The host also honors `OLLAMA_HOST`. On NVIDIA (Linux), install Ollama with GPU support; on Apple Silicon, Ollama will use Metal by default.
+
 ### With Document Metadata
 
 ```bash
@@ -75,6 +97,13 @@ python -m llm_cleaning.ocr_refiner \
   --out output.txt \
   --debug
 ```
+
+
+**for running on GPU**
+```bash
+python3 -m llm_cleaning.ocr_refiner --in llm_cleaning/dailycolonist349uvic/dailycolonist349uvic_djvu_p1.txt --out "llm_cleaning/dailycolonist349uvic/dailycolonist349uvic_djvu_p1_cleantext.txt" --year 1862 --month 10 --location "Victoria, Canada" --debug --wc-tol 0.2 --cc-tol 0.2 --novel-tok-ratio 0.2 --max-iters 10 --min-tokens 250 --model qwen2.5:32b --overlap-lines 0
+```
+
 
 ## Command-Line Options
 
@@ -265,4 +294,12 @@ python map_up_text.py \
 - Tighten tolerances to prevent hallucination
 - Increase `--max-iters` for more refinement passes
 - Provide document metadata (`--year`, `--location`) for better context
+
+## GPU / Device Notes
+
+- The Python layer is device-agnostic; GPU use is handled by Ollama.
+- Apple Silicon: Ollama uses Metal automatically.
+- NVIDIA: install the GPU-enabled Ollama build on Linux; ensure NVIDIA drivers/CUDA are present.
+- Point to a remote or non-default host with `--ollama-host` or `OLLAMA_HOST`.
+- Control GPU usage via Ollama options (e.g., `OLLAMA_NUM_GPU`, `OLLAMA_MAX_LOADED_MODELS`); see Ollama docs.
 

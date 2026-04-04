@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Built-in OCR: run Tesseract on a PDF or image to produce ALTO XML and plain text.
-Output layout matches what run_pipeline expects: <out_dir>/<base>.txt and <out_dir>/alto/*.xml.
+Built-in OCR: run Tesseract on a PDF or image to produce ALTO XML, hOCR HTML, and plain text.
+Output layout matches what run_pipeline expects:
+  <out_dir>/<base>.txt, <out_dir>/alto/*.xml, <out_dir>/hocr/*.hocr.html
 Requires: tesseract (CLI), and for PDFs: pdftoppm (poppler-utils).
 """
 import argparse
@@ -60,6 +61,25 @@ def run_tesseract_txt(image_path: Path, output_base: Path, lang: str = "eng", ps
     return txt_path if txt_path.is_file() else output_base.with_suffix(".txt")
 
 
+def run_tesseract_hocr(image_path: Path, output_base: Path, lang: str = "eng", psm: int = 4) -> Path:
+    """
+    Run tesseract with hOCR output. Output name varies by Tesseract build: often
+    ``<output_base>.hocr.html`` (Tesseract 5 docs) or ``<output_base>.hocr``; we accept either.
+    See Tesseract CLI output formats (hOCR).
+    """
+    subprocess.run(
+        ["tesseract", str(image_path), str(output_base), "-l", lang, "--psm", str(psm), "hocr"],
+        check=True,
+        capture_output=True,
+    )
+    # Tesseract may write .hocr.html or .hocr depending on build/OS.
+    for suffix in (".hocr.html", ".hocr"):
+        candidate = Path(str(output_base) + suffix)
+        if candidate.is_file():
+            return candidate
+    raise RuntimeError(f"Tesseract hOCR output not found for base {output_base}")
+
+
 def ocr_image(
     image_path: Path,
     out_dir: Path,
@@ -67,21 +87,26 @@ def ocr_image(
     lang: str = "eng",
     psm: int = 4,
 ) -> tuple[Path, Path]:
-    """Run Tesseract on one image. Writes out_dir/alto/<page_name>.xml and returns (alto_path, txt_path).
+    """Run Tesseract on one image. Writes out_dir/alto/<page>.xml, out_dir/hocr/<page>.hocr.html, page txt; returns (alto_path, txt_path).
     Does not write a combined .txt; caller can concatenate for multi-page."""
     out_dir = Path(out_dir).resolve()
     alto_dir = out_dir / "alto"
+    hocr_dir = out_dir / "hocr"
     alto_dir.mkdir(parents=True, exist_ok=True)
+    hocr_dir.mkdir(parents=True, exist_ok=True)
     work = out_dir / "_work" / page_name
     work.mkdir(parents=True, exist_ok=True)
     base = work / "out"
     alto_path = run_tesseract_alto(image_path, base, lang=lang, psm=psm)
     txt_path = run_tesseract_txt(image_path, base, lang=lang, psm=psm)
+    hocr_path = run_tesseract_hocr(image_path, base, lang=lang, psm=psm)
     # Move to final location
     dest_alto = alto_dir / f"{page_name}.xml"
     dest_txt = out_dir / f"{page_name}.txt"
+    dest_hocr = hocr_dir / f"{page_name}.hocr.html"
     shutil.copy2(alto_path, dest_alto)
     shutil.copy2(txt_path, dest_txt)
+    shutil.copy2(hocr_path, dest_hocr)
     return dest_alto, dest_txt
 
 
@@ -100,6 +125,7 @@ def ocr_pdf(
       out_dir/<base_name>.txt   (concatenated plain text)
       out_dir/page-1.txt, page-2.txt, ...
       out_dir/alto/page-1.xml, page-2.xml, ...
+      out_dir/hocr/page-1.hocr.html, page-2.hocr.html, ...
       If save_pages: out_dir/page-1.png, page-2.png, ... (for VLLM or other use)
     Returns out_dir.
     """
@@ -113,7 +139,9 @@ def ocr_pdf(
         if not images:
             raise RuntimeError(f"No pages produced from {pdf_path}")
         alto_dir = out_dir / "alto"
+        hocr_dir = out_dir / "hocr"
         alto_dir.mkdir(parents=True, exist_ok=True)
+        hocr_dir.mkdir(parents=True, exist_ok=True)
         all_txt = []
         for i, img in enumerate(images, start=1):
             page_name = f"page-{i}"
@@ -124,8 +152,11 @@ def ocr_pdf(
             base = page_work / "out"
             alto_path = run_tesseract_alto(img, base, lang=lang, psm=psm)
             txt_path = run_tesseract_txt(img, base, lang=lang, psm=psm)
+            hocr_path = run_tesseract_hocr(img, base, lang=lang, psm=psm)
             dest_alto = alto_dir / f"{page_name}.xml"
+            dest_hocr = hocr_dir / f"{page_name}.hocr.html"
             shutil.copy2(alto_path, dest_alto)
+            shutil.copy2(hocr_path, dest_hocr)
             with open(txt_path, encoding="utf-8") as f:
                 all_txt.append(f.read())
         # Per-page plain text (for page-by-page LLM cleaning)
@@ -170,9 +201,9 @@ def ocr_input(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Tesseract OCR on a PDF or image. Output: ALTO XML + plain text.")
+    parser = argparse.ArgumentParser(description="Run Tesseract OCR on a PDF or image. Output: ALTO + hOCR + plain text.")
     parser.add_argument("input", type=Path, help="PDF or image (png, jpg, tiff)")
-    parser.add_argument("--output-dir", "-o", type=Path, required=True, help="Output directory (<base>.txt and alto/*.xml)")
+    parser.add_argument("--output-dir", "-o", type=Path, required=True, help="Output directory (<base>.txt, alto/*.xml, hocr/*.hocr.html)")
     parser.add_argument("--save-pages", action="store_true", help="Save page PNGs to output dir (page-1.png, page-2.png, ...) for VLLM etc.")
     parser.add_argument("--dpi", type=int, default=300, help="DPI for PDF rendering (default 300)")
     parser.add_argument("--lang", default="eng", help="Tesseract language (default eng)")
@@ -192,6 +223,10 @@ def main():
         if alto_dir.is_dir():
             for f in sorted(alto_dir.glob("*.xml")):
                 print("  ALTO:", f)
+        hocr_dir = out / "hocr"
+        if hocr_dir.is_dir():
+            for f in sorted(hocr_dir.glob("*.hocr.html"), key=lambda p: (len(p.name), p.name)):
+                print("  hOCR:", f)
         if args.save_pages:
             for f in sorted(out.glob("page-*.png"), key=lambda p: (len(p.stem), p.stem)):
                 print("  Page image:", f)
