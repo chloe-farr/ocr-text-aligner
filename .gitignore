@@ -214,6 +214,10 @@ __marimo__/
 # output files - results of the OCR text alignment process
 outputs/
 
+# pipeline working directory and local config (may contain machine-specific paths)
+pipeline_work/
+pipeline_config.json
+
 
 
 # cursor chat export files - full chat logs. Summary of chat contents are in the chats/INDEX.md file.
@@ -224,3 +228,5 @@ raw_chat_files/
 
 #Files that show work but are irrelevant to the program.
 work/
+inputs/
+docs/paper/

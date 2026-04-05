@@ -1,5 +1,7 @@
 # How Words Are Mapped: An Explanation of the OCR Text Alignment Pipeline
 
+> **Scope:** This document describes **alignment logic inside this repository** only. For where CUDA/GPU applies in a full PDF→VLM→ALTO workflow, and how to run without NVIDIA hardware, see **[FULL_PIPELINE_AND_CUDA.md](FULL_PIPELINE_AND_CUDA.md)**.
+
 When working with historical documents, we face a fundamental challenge: the text extracted by optical character recognition (OCR) is often imperfect, containing errors, split words, and formatting quirks. Meanwhile, we have a clean, corrected version of the text—perhaps produced by a language model that has carefully reviewed and corrected the content. The task is to map each word from the clean text back to its corresponding location in the original OCR output, creating a bridge between the corrected version and the document's physical structure.
 
 The mapping process begins with what we might call "first impressions." Each word detected by OCR is compared against the entire vocabulary of clean text words, looking for close matches. This initial fuzzy matching finds words that are similar—perhaps "unconscous" in the OCR text matches "unconscious" in the clean text, or "resi-" (a word broken at a line break) might match "residence." But this first pass is just the beginning, because many words will have multiple possible matches, and some words won't match at all.
