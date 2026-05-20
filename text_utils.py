@@ -4,6 +4,7 @@ Text processing utilities for OCR text alignment.
 
 import re
 import html
+import unicodedata
 import xml_obj as XMLOBJ
 
 HY_PHENS = ("-", "-", "—", "--")  # plain hyphen + common variants
@@ -30,9 +31,10 @@ def decode_html_entities(text: str) -> str:
 
 def normalize_for_matching(word: str) -> str:
     """
-    Strips a string of all characters aside from alphanumeric and hyphens. Then strips whitespace.
+    Strips a string of all characters aside from Unicode letters, digits, and hyphens.
     Preserves hyphens (including trailing hyphens) to maintain word-wrapping information.
-    
+    Works for any language/script — ä, é, ñ, ü, etc. are preserved.
+
     Args:
         word (str): word to clean.
 
@@ -51,17 +53,19 @@ def normalize_for_matching(word: str) -> str:
 
     >>> normalize_for_matching("unconscious:")
     'unconscious'
-    
+
     >>> normalize_for_matching("anti-aircraft")
     'antiaircraft'
+
+    >>> normalize_for_matching("Ärger")
+    'ärger'
+
+    >>> normalize_for_matching("naïve.")
+    'naïve'
     """
     s = word.lower()
-    # Preserve hyphens (including trailing hyphens that indicate word wrapping)
-    # but remove all other non-alphanumeric characters
-    # Character class: [^0-9a-z] means "not alphanumeric", then add hyphen variants (regular hyphen (-), en dash (–), em dash (—))
-    # In character classes, hyphens must be at start/end or escaped to be literal (e.g. \-)
-    s = re.sub(r"[^0-9a-z\-–—]", "", s)  # Preserves all hyphen variants including trailing ones
-    return s.strip()  # Only strips whitespace, preserves trailing hyphens
+    s = "".join(c for c in s if unicodedata.category(c).startswith(("L", "N")) or c in "-–—")
+    return s.strip()
 
 def is_hyphenish(word: XMLOBJ.StringWord) -> bool:
     """
