@@ -230,3 +230,15 @@ raw_chat_files/
 work/
 inputs/
 docs/paper/
+
+# data dumps / IA downloads
+llm_cleaning/dailycolonist349uvic/
+llm_cleaning/dailycolonist349uvic.zip
+llm_cleaning/*.zip
+
+# editor / tool caches
+.mplconfig/
+.DS_Store
+
+# chat logs
+chats/
