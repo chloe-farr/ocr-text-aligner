@@ -231,10 +231,12 @@ work/
 inputs/
 docs/
 
-# data dumps / IA downloads
+# data dumps / IA downloads and dev scratch
 llm_cleaning/dailycolonist349uvic/
 llm_cleaning/dailycolonist349uvic.zip
 llm_cleaning/*.zip
+llm_cleaning/*.txt
+llm_cleaning/diff_analysis.md
 
 # editor / tool caches
 .mplconfig/
