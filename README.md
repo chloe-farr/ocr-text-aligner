@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ## Current State
 
 - **OCR** — Built-in in this repo (`tesseract_ocr.py`): run Tesseract on a PDF or image → ALTO XML + plain text. No separate project needed. Optionally, set `TESSERACT_EXPERIMENT_DIR` to use your own OCR script instead.
-- **LLM clean text** — Implemented in `llm_cleaning/` (Ollama-based refinement). Run via the pipeline or standalone.
+- **LLM clean text** — Implemented in `llm_cleaning/` (Ollama-based refinement). Run via the pipeline or standalone. **Note:** this step is unreliable — LLM output should be manually reviewed before passing it to the aligner. For better results, a VLM-OCR tool (e.g. Chandra, GOT-OCR) is recommended instead; save its output as plain text with all comments, image descriptions, and annotations removed.
 - **Alignment** — Implemented in `map_up_text.py` (ALTO or hOCR + cleantext → aligned ALTO or hOCR and visualizations).
 
 ### Unified pipeline (single workflow)

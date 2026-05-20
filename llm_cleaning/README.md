@@ -2,6 +2,8 @@
 
 This module provides chunked, iterative refinement of OCR text using local Ollama models. It processes OCR text in chunks, iteratively refines each chunk until stable, and validates outputs to prevent hallucination.
 
+> **Warning:** This step is unreliable. LLM output should be manually reviewed before passing it to the aligner. For better results, consider using a VLM-OCR tool (e.g. Chandra, GOT-OCR) and saving its output as plain text with all comments, image descriptions, and annotations removed.
+
 ## Installation
 
 ### Prerequisites
