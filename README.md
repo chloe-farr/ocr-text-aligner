@@ -12,23 +12,21 @@ python3 run_pipeline.py align --hocr-file examples/sample_page/page-1.hocr.html 
 ```
 See examples/README.md for details.
 
-Designed by Chloë Farr. Co-scripted by Chloë Farr and Cursor Agent.
+Designed by Chloë Farr. Co-scripted by Chloë Farr and Cursor Agent (up to April 2026, then Claude Code).
 
 Start date of coding: November 21, 2025
-Last updated: April 4, 2026
+Last updated: May 20, 2026
 
-## ⚠️ GPU / CUDA vs this repository
+## GPU / CUDA vs this repository
 This aligner is CPU-only. pip install -r requirements.txt does not install PyTorch or CUDA.
 
 If you are running the full workflow (PDF → layout models → Chandra / vLLM → clean text → then this tool), the vision and LLM servers may expect a NVIDIA GPU. On a laptop or server without CUDA, you can still run map_up_text.py; you must configure the upstream pipeline for CPU, smaller batches, or a remote inference host.
-
-Read the full guide: FULL_PIPELINE_AND_CUDA.md (what runs where, nvidia-smi, CPU expectations, Apple Silicon, hyphen-friendly upstream chunking).
 
 Using the pipeline (digital humanities)
 Run OCR → LLM clean → align (or any step alone). You need: an ALTO XML file and a clean text file for alignment; for the full pipeline, a PDF or image and Ollama for the clean step. See Setup and Unified pipeline below.
 
 ## Extending the algorithms (ML / research)
-The alignment pipeline is modular. For a high-level flow and file/function pointers (fuzzy → context → hyphen/merges → linking → proximity), see ALGORITHM.md. Known gaps and analysis (paragraph boundaries, duplicate words) are in docs/PENDING_ANALYSIS.md. Planned backlog items (e.g. Unicode/i18n normalization for matching) are in docs/OUTSTANDING_FEATURES.md. The logic in tagged_span_matcher.py is experimental and not yet correct—see Limitations below.
+The alignment pipeline is modular. For a high-level flow and file/function pointers (fuzzy → context → hyphen/merges → linking → proximity), see ALGORITHM.md.
 
 ## Setup
 
@@ -40,7 +38,6 @@ The alignment pipeline is modular. For a high-level flow and file/function point
 - For LLM clean step: `Ollama`
 - For alignment only (skip OCR): an ALTO XML file and a clean text file
 - Optional — custom OCR script: Set TESSERACT_EXPERIMENT_DIR to the directory containing your ocr_pdf.sh to use it instead of the built-in Tesseract pipeline. You can also use a config file: copy pipeline_config.example.json to pipeline_config.json and set tesseract_experiment_dir to that path. The repo does not commit pipeline_config.json (it may contain machine-specific paths).
-- Optional: For upstream VLM/layout work, see FULL_PIPELINE_AND_CUDA.md—not required for alignment only.
 
 ### Installation
 Create a virtual environment:
@@ -62,7 +59,7 @@ pip install -r requirements.txt
 
 ### Unified pipeline (single workflow)
 
-Everything is in this repo. One entry point: OCR → LLM clean → align (or run any step alone).
+Everything is in this repo. OCR → LLM clean → align (or run any step alone).
 
 1. **Run the full pipeline** (built-in OCR → clean → align):
    ```bash
@@ -121,7 +118,7 @@ See [PIPELINE_EXPLANATION.md](PIPELINE_EXPLANATION.md) for the logic behind the 
 
 ## Usage
 
-1. **Ensure you have an ALTO XML file** and a **clean text file** (LLM-cleaned).
+1. **Ensure you have an ALTO XML file** and a **clean text file** (LLM-cleaned or VLM-OCR output (remove all comments, image descriptions, etc.)).
 
 2. **Run the alignment pipeline** (both `--xml-file` and `--clean-text` are required):
    ```bash
@@ -188,9 +185,7 @@ The script will:
 
 ## Limitations / Known issues
 
-- Alignment works best when the LLM-cleaned (or corrected) text is close to the OCR content and OCR quality is moderate. Heavy rewrites or very poor OCR can leave words unmatched.
-- Tested so far mainly on single-article or manually prepared full-page material. Full-page and complex multi-column layouts may need manual prep or future improvements.
-- **Tagged span → ALTO block matching:** The logic in `tagged_span_matcher.py` (chunk–block scoring, anchor chain) is experimental and not yet correct; it needs to be written/fixed (e.g. coherence within a span, short-block handling, ordering constraints). For algorithm notes and known issues (paragraph boundaries, duplicate-word resolution), see [ALGORITHM.md](ALGORITHM.md) and [docs/PENDING_ANALYSIS.md](docs/PENDING_ANALYSIS.md). Design notes and plans are in `docs/`.
+- Alignment works best when the LLM-cleaned (or corrected) text is close to the OCR content (within approximately 20% accuracy) and OCR quality is moderate (better than 70% accuracy). Heavy rewrites or very poor OCR can leave words unmatched.
 
 ## Project Structure
 
@@ -213,7 +208,7 @@ Listed in `requirements.txt`: Pillow, reportlab, rapidfuzz, matplotlib, rich, re
 ## Future Development
 
 Planned features:
-- **Unicode-aware matching normalization** — `normalize_for_matching` currently keeps only ASCII letters, so German (ä, ö, ü, ß) and other scripts fail before RapidFuzz runs. See [docs/OUTSTANDING_FEATURES.md](docs/OUTSTANDING_FEATURES.md) for problem statement, file pointers, and a **copy-paste implementer prompt**.
+- **Unicode-aware matching normalization** — `normalize_for_matching` currently keeps only ASCII letters, so German (ä, ö, ü, ß) and other scripts fail before RapidFuzz runs.
 - **GUI** — Run any pipeline step (OCR, clean, align) with settings (e.g. tagging, model, tolerances) from a single app.
 - Image pre-processing pipeline (or continue using your existing Tesseract preprocessing).
 - Batch processing support.

@@ -229,7 +229,7 @@ raw_chat_files/
 #Files that show work but are irrelevant to the program.
 work/
 inputs/
-docs/paper/
+docs/
 
 # data dumps / IA downloads
 llm_cleaning/dailycolonist349uvic/
