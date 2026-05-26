@@ -220,26 +220,48 @@ def narrow_hypothesis_token_candidates_by_context(hypothesis_list: List['TokenHy
         anchor = token_hypothesis.anchor
         # Only flag if both before and after words exist (meaning there should be context on both sides)
         if anchor.before_word is not None and anchor.after_word is not None:
+            # Detect cross-block neighbors: in multi-column newspaper layout the ALTO
+            # before_word / after_word may belong to a DIFFERENT TextBlock (a different
+            # article entirely).  A zero context score on that side is expected — the
+            # mismatch is structural, not a content error.
+            # Primary check: TextBlock ID mismatch (stamped by iter_words in xml_obj.py).
+            # Fallback: vpos jump > 50 px — catches column wraps and cases where Tesseract
+            # has merged multiple articles into one TextBlock (so IDs match but context doesn't).
+            _CROSS_BLOCK_VPOS_FALLBACK = 50  # px
+            before_cross_block = (
+                (getattr(anchor, 'text_block_id', None) is not None and
+                 getattr(anchor.before_word, 'text_block_id', None) is not None and
+                 anchor.text_block_id != anchor.before_word.text_block_id)
+                or
+                (hasattr(anchor, 'vpos') and hasattr(anchor.before_word, 'vpos') and
+                 abs(anchor.vpos - anchor.before_word.vpos) > _CROSS_BLOCK_VPOS_FALLBACK)
+            )
+            after_cross_block = (
+                (getattr(anchor, 'text_block_id', None) is not None and
+                 getattr(anchor.after_word, 'text_block_id', None) is not None and
+                 anchor.text_block_id != anchor.after_word.text_block_id)
+                or
+                (hasattr(anchor, 'vpos') and hasattr(anchor.after_word, 'vpos') and
+                 abs(anchor.after_word.vpos - anchor.vpos) > _CROSS_BLOCK_VPOS_FALLBACK)
+            )
+
             for candidate in token_hypothesis.candidates:
                 for llm_element, before_score, after_score in candidate.possible_llm_elements_by_context:
                     # If one side is 0 and the other is > 0, this indicates a problem
                     # (e.g., "day" with before="Wednes-" doesn't match LLM "day"'s before_word)
-                    # BUT: If the 0 score is because LLM token is at boundary, it's valid (paragraph boundaries)
+                    # BUT: skip if the zero side is a cross-block ALTO neighbor — the mismatch
+                    # is structural (article boundary), not a content error.
                     if (before_score == 0.0 and after_score > 0.0):
-                        # Before is 0, after is > 0
-                        # This is only a problem if LLM token has a w_before (not at start)
-                        if llm_element.w_before is not None:
+                        if llm_element.w_before is not None and not before_cross_block:
                             has_zero_context_on_one_side = True
                             break
                     elif (before_score > 0.0 and after_score == 0.0):
-                        # Before is > 0, after is 0
-                        # This is only a problem if LLM token has a w_after (not at end)
-                        if llm_element.w_after is not None:
+                        if llm_element.w_after is not None and not after_cross_block:
                             has_zero_context_on_one_side = True
                             break
                 if has_zero_context_on_one_side:
                     break
-        
+
         if has_zero_context_on_one_side:
             # Flag for reassessment - might need hyphenation, merging, or incorrect ordering
             token_hypothesis.flagged_for_error = True

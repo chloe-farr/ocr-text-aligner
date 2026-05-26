@@ -69,6 +69,7 @@ class StringWord(ContentElement):
 	after_word: Optional[StringWord] = None
 	best_clean_content: Optional[str] = None
 	page_id: Optional[str] = None  # set after load; not part of String ID
+	text_block_id: Optional[str] = None  # ID of parent TextBlock; set by iter_words()
 
 	@classmethod
 	def from_xml(cls, el: ET.Element) -> "StringWord":
@@ -264,11 +265,12 @@ class Page(XMLObj):
 
 	def iter_words(self) -> Iterator["StringWord"]:
 		"""
-		Yield all words on the page in reading order.
+		Yield all words on the page in reading order, stamping text_block_id on each word.
 		"""
 		for block in self.content_elements:
 			for line in block.content_elements:
 				for word in line.content_elements:
+					word.text_block_id = block.id
 					yield word
 
 	def find_words_with_neighbors(self, text: str) -> List[Tuple[Optional["StringWord"], "StringWord", Optional["StringWord"]]]:

@@ -377,6 +377,105 @@ def run_iterative_pipeline(
     return hypothesis_list
 
 
+def _apply_token_stealing_pass(
+    hypothesis_list: List[TokenHypotheses],
+) -> Tuple[List[TokenHypotheses], int]:
+    """
+    Fix 3 (Cause 3): token stealing.
+
+    Some Tesseract words remain flagged_for_error with no chosen_LLM_token because an
+    earlier pass assigned their correct LLM token to a DIFFERENT Tesseract word that
+    had better neighbor context at the time (disambiguation error).
+
+    If the flagged word has a significantly higher fuzzy-match score for that token
+    (it is a better *text* match), steal it: clear the holder's assignment and give
+    the token to the flagged word.  The donor gets one recovery attempt using its
+    remaining candidates before the pipeline computes final stats.
+
+    Guards:
+      - Flagged word fuzzy_score must be ≥ 90.
+      - Improvement over the holder must be ≥ 3 points.
+      - Token must be rare/distinctive: candidate has ≤ 15 entries in
+        possible_llm_elements_by_fuzzy_match (excludes very common words like
+        "the", "and", etc. which require context, not fuzzy score, to disambiguate).
+      - Non-cascading: one pass only; the same token cannot be stolen twice.
+    """
+    # Map LLMToken id → hypothesis currently holding it
+    token_id_to_holder: Dict[int, TokenHypotheses] = {
+        id(h.chosen_LLM_token): h
+        for h in hypothesis_list
+        if h.chosen_LLM_token is not None
+    }
+
+    stolen_ids: set = set()
+    pending_swaps: List[Tuple[TokenHypotheses, TokenHypotheses, LLMToken]] = []
+
+    for hyp in hypothesis_list:
+        if hyp.chosen_LLM_token is not None or not hyp.flagged_for_error:
+            continue
+        if not hyp.candidates:
+            continue
+
+        best: Optional[Tuple[LLMToken, TokenHypotheses, float, float]] = None
+
+        for candidate in hyp.candidates:
+            our_score = candidate.fuzzy_score
+            if our_score < 90.0:
+                continue
+            if len(candidate.possible_llm_elements_by_fuzzy_match) > 15:
+                continue  # too common — context must decide
+
+            for llm_token in candidate.possible_llm_elements_by_fuzzy_match:
+                if not llm_token.matched:
+                    continue  # unmatched tokens handled by earlier passes
+                if id(llm_token) in stolen_ids:
+                    continue  # already earmarked this pass
+
+                holder = token_id_to_holder.get(id(llm_token))
+                if holder is None or holder is hyp:
+                    continue
+
+                # Find holder's best fuzzy score for this specific token
+                holder_score = 0.0
+                for hc in holder.candidates:
+                    if llm_token in hc.possible_llm_elements_by_fuzzy_match:
+                        holder_score = max(holder_score, hc.fuzzy_score)
+
+                if our_score >= holder_score + 3.0:  # meaningful improvement
+                    gain = our_score - holder_score
+                    if best is None or gain > (best[2] - best[3]):
+                        best = (llm_token, holder, our_score, holder_score)
+
+        if best is not None:
+            llm_token, holder, our_score, holder_score = best
+            stolen_ids.add(id(llm_token))
+            pending_swaps.append((hyp, holder, llm_token))
+
+    if not pending_swaps:
+        return hypothesis_list, 0
+
+    # Apply swaps
+    for hyp, holder, llm_token in pending_swaps:
+        holder.chosen_LLM_token = None
+        hyp.chosen_LLM_token = llm_token
+        hyp.flagged_for_error = False
+
+    # Give donors one recovery attempt: pick up any now-unmatched token
+    for _, holder, _ in pending_swaps:
+        if holder.chosen_LLM_token is not None:
+            continue
+        for candidate in holder.candidates:
+            for fallback in candidate.possible_llm_elements_by_fuzzy_match:
+                if not fallback.matched:
+                    holder.chosen_LLM_token = fallback
+                    fallback.matched = True
+                    break
+            if holder.chosen_LLM_token:
+                break
+
+    return hypothesis_list, len(pending_swaps)
+
+
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Map OCR text to clean LLM text')
@@ -752,7 +851,15 @@ if __name__ == "__main__":
     # without destabilizing already-chosen token assignments via another full
     # candidate/context re-selection pass.
     hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
-    
+
+    # ── Fix 3: token-stealing pass ───────────────────────────────────────────
+    # Reassign LLM tokens from lower-confidence holders to higher-confidence
+    # flagged words (words that were displaced by an earlier disambiguation error).
+    hypothesis_list, n_steals = _apply_token_stealing_pass(hypothesis_list)
+    if n_steals:
+        print(f"[Token Stealing] {n_steals} token(s) reassigned to higher-confidence words")
+        hypothesis_list = link_hypothesis_objects_by_context(hypothesis_list)
+
     # Calculate final state for summary
     final_matched = sum(1 for h in hypothesis_list if h.chosen_LLM_token is not None)
     final_errors = sum(1 for h in hypothesis_list if h.flagged_for_error)
