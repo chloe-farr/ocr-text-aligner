@@ -2,7 +2,7 @@
 
 ## Align only (no OCR, no LLM)
 
-Use one of the Daily Colonist pages to run the alignment step with no external services.
+Use the Daily Colonist page to run the alignment step with no external services.
 
 From the **project root**:
 
@@ -12,40 +12,31 @@ pip install -r requirements.txt
 
 # Align cleantext to ALTO and write aligned XML
 python3 run_pipeline.py align \
-  --xml-file examples/daily_colonist_1972_10_12/page_0014/page_0014.xml \
-  --clean-text examples/daily_colonist_1972_10_12/page_0014/page_0014_cleantext.txt \
+  --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
+  --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-xml
 ```
 
-Output: aligned ALTO is written by default to `outputs/page_0014/page_0014_aligned.xml` (or pass a path after `--output-xml` to choose a location). You will also see a pipeline summary in the terminal and, by default, visualizations under `outputs/`.
+Output: aligned ALTO is written by default to `outputs/page_0000/page_0000_aligned.xml` (or pass a path after `--output-xml` to choose a location). You will also see a pipeline summary in the terminal and visualizations under `outputs/`.
 
-### Align cleantext to hOCR (IA-friendly) and write aligned hOCR
+### Align cleantext to hOCR and write aligned hOCR
 
 ```bash
 python3 run_pipeline.py align \
-  --hocr-file examples/daily_colonist_1972_10_12/page_0014/page_0014.hocr \
-  --clean-text examples/daily_colonist_1972_10_12/page_0014/page_0014_cleantext.txt \
+  --hocr-file examples/daily_colonist_1972_10_12/page_0000/page_0000.hocr \
+  --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-hocr
 ```
 
-Output: aligned hOCR is written by default to `outputs/page_0014/page_0014_aligned_hocr.html` (or pass a path after `--output-hocr` to choose a location).
+Output: aligned hOCR is written by default to `outputs/page_0000/page_0000_aligned_hocr.html`.
 
 Same via `map_up_text.py` directly:
 
 ```bash
 python3 map_up_text.py \
-  --xml-file examples/daily_colonist_1972_10_12/page_0014/page_0014.xml \
-  --clean-text examples/daily_colonist_1972_10_12/page_0014/page_0014_cleantext.txt \
+  --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
+  --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-xml
-```
-
-And for hOCR:
-
-```bash
-python3 map_up_text.py \
-  --hocr-file examples/daily_colonist_1972_10_12/page_0014/page_0014.hocr \
-  --clean-text examples/daily_colonist_1972_10_12/page_0014/page_0014_cleantext.txt \
-  --output-hocr
 ```
 
 ## Full pipeline (OCR → clean → align)
@@ -65,4 +56,4 @@ Outputs go to `pipeline_work/` by default. See the main [README](../README.md) f
 
 ## Sample data
 
-- **examples/daily_colonist_1972_10_12/** — Two pages from the *Victoria Daily Colonist*, Oct. 12 1972, with Tesseract ALTO XML + hOCR and VLM-prepared clean text. `page_0003` is the editorial/opinion page (international news); `page_0014` is a local news page. See the [dataset README](daily_colonist_1972_10_12/README.md) for full run commands and notes on the clean-text quality.
+- **examples/daily_colonist_1972_10_12/** — Front page of the *Victoria Daily Colonist*, Oct. 12 1972, with Tesseract ALTO XML + hOCR and a manually ordered clean text. See the [dataset README](daily_colonist_1972_10_12/README.md) for notes on clean-text preparation and expected alignment quality.

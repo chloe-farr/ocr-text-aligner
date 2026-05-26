@@ -43,6 +43,7 @@ except ImportError:
 import xml_obj as XMLOBJ
 import text_utils
 from map_up_text import TokenCandidate, TokenHypotheses, LLMToken
+from alignment_confidence import alignment_confidence
 
 console = Console() if RICH_AVAILABLE else Console()
 
@@ -169,25 +170,19 @@ def visualize_cleaned_text_positions(
     """
     Create a visualization of cleaned text positioned using TokenHypotheses.
     Uses the anchor's hpos, vpos, width, height and the chosen_LLM_token's word value.
-    
-    Color coding:
-    - Green: Words that were corrected from the original XML
-    - Red: Words that are errors (flagged_for_error and no chosen_LLM_token)
-    - Dark orange: Words that are pending (has candidates but not matched, or context links missing / wrong token instance)
-    - Black: Matched words that were not corrected
 
-    Exported ALTO/hOCR also carries a numeric ALIGNCONF (ALTO attribute) / alignconf (hOCR title) from
-    alignment_confidence.py for QA without changing this color logic.
-    
+    Color coding: ALIGNCONF-based gradient from black (score=100, most confident)
+    to red (score=0, least confident). Computed per word via alignment_confidence().
+
     Args:
         hypothesis_list: List of TokenHypotheses objects
         page: The page object for dimensions
         xml_filename: The XML filename (e.g., "page-1alto-Maclear.xml")
         output_dir: Directory to save the PNG file (default: "outputs")
-        original_alto_content_by_id: Optional mapping of anchor ID to original ALTO content
-    
+        original_alto_content_by_id: Unused; kept for backward compatibility
+
     Returns:
-        The output file path that was used
+        The output figure, or None if matplotlib is unavailable
     """
     if not MATPLOTLIB_AVAILABLE:
         console.print("[yellow]matplotlib not available. Install with: pip install matplotlib[/yellow]")
@@ -235,83 +230,16 @@ def visualize_cleaned_text_positions(
     for hypothesis in hypothesis_list:
         anchor = hypothesis.anchor
         
-        # Determine text and color based on status
+        # Text: LLM-cleaned word if matched, else raw Tesseract content
         if hypothesis.chosen_LLM_token:
             text = hypothesis.chosen_LLM_token.word
-            
-            # Check if word was corrected from original XML
-            # A word is corrected if the chosen LLM token differs from the original ALTO content(s)
-            is_corrected = False
-            if original_alto_content_by_id:
-                original_contents = []
-                # Get all original ALTO words (may be merged)
-                if hypothesis.chosen and hypothesis.chosen.alto_words:
-                    # Use chosen candidate's ALTO words (handles merged words)
-                    for alto_word in hypothesis.chosen.alto_words:
-                        alto_id = id(alto_word)
-                        if alto_id in original_alto_content_by_id:
-                            original_contents.append(original_alto_content_by_id[alto_id])
-                        else:
-                            # Fallback to current content if original not found
-                            original_contents.append(text_utils.decode_html_entities(alto_word.content))
-                else:
-                    # Fallback: use anchor's original content
-                    anchor_id = id(anchor)
-                    if anchor_id in original_alto_content_by_id:
-                        original_contents.append(original_alto_content_by_id[anchor_id])
-                    else:
-                        original_contents.append(text_utils.decode_html_entities(anchor.content))
-                
-                # Combine original contents and normalize for comparison
-                # For merged words like "dams" + "aged" = "damaged", compare "damsaged" vs "damaged"
-                original_combined = "".join(original_contents)
-                original_normalized = text_utils.normalize_for_matching(original_combined)
-                current_normalized = text_utils.normalize_for_matching(text)
-                # Consider corrected if normalized forms differ
-                is_corrected = (original_normalized != current_normalized)
-            
-            # PENDING: requires context-linked neighbors to match the *exact* expected LLM tokens.
-            # (ALTO spatial before/after is a poor proxy at line/column boundaries — strict linking
-            # misses some repeats but avoids false PENDING on every line start/end.)
-            missing_left = False
-            if hypothesis.chosen_LLM_token.w_before is not None:
-                if hypothesis.left_matched is None:
-                    missing_left = True
-                elif (hypothesis.left_matched.chosen_LLM_token is None or
-                      hypothesis.left_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_before):
-                    missing_left = True
-
-            missing_right = False
-            if hypothesis.chosen_LLM_token.w_after is not None:
-                if hypothesis.right_matched is None:
-                    missing_right = True
-                elif (hypothesis.right_matched.chosen_LLM_token is None or
-                      hypothesis.right_matched.chosen_LLM_token != hypothesis.chosen_LLM_token.w_after):
-                    missing_right = True
-            
-            if is_corrected:
-                # Green: corrected from XML
-                text_color = 'green'
-            elif missing_left or missing_right:
-                # Dark orange: pending (missing neighbors or neighbors have wrong LLM tokens)
-                text_color = '#CC6600'  # Dark orange
-            else:
-                # Black: matched but not corrected
-                text_color = 'black'
         else:
-            # No chosen LLM token
-            if hypothesis.flagged_for_error:
-                # Red: error
-                text = text_utils.decode_html_entities(anchor.content)
-                text_color = 'red'
-            elif hypothesis.candidates:
-                # Dark orange: pending (has candidates but not matched)
-                text = text_utils.decode_html_entities(anchor.content)
-                text_color = '#CC6600'  # Dark orange
-            else:
-                # Red: no candidates (error)
-                text = text_utils.decode_html_entities(anchor.content)
-                text_color = 'red'
+            text = text_utils.decode_html_entities(anchor.content)
+
+        # Color: black (confident) → red (uncertain) via ALIGNCONF 0–100
+        ac = alignment_confidence(hypothesis)
+        r = (1.0 - ac / 100.0) * (220 / 255.0)
+        text_color = (r, 0.0, 0.0)
 
         # Calculate font size to fit within the bounding box
         height_scale = 0.20
