@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v3#"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.loc.gov/standards/alto/ns-v3# http://www.loc.gov/standards/alto/v3/alto-3-0.xsd">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>page-1.png</fileName>
+    </sourceImageInformation>
+    <OCRProcessing ID="OCR_0">
+      <ocrProcessingStep>
+        <processingSoftware>
+          <softwareName>tesseract</softwareName>
+          <softwareVersion>5.0</softwareVersion>
+        </processingSoftware>
+      </ocrProcessingStep>
+    </OCRProcessing>
+  </Description>
+  <Layout>
+    <Page WIDTH="800" HEIGHT="100" PHYSICAL_IMG_NR="1" ID="page_1">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="800" HEIGHT="100">
+        <TextBlock ID="block_1" HPOS="10" VPOS="20" WIDTH="760" HEIGHT="60">
+          <TextLine ID="line_1" HPOS="10" VPOS="20" WIDTH="760" HEIGHT="60">
+            <String ID="word_1_1" CONTENT="The"   HPOS="10"  VPOS="20" WIDTH="50"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="60"  VPOS="20"/>
+            <String ID="word_1_2" CONTENT="quick" HPOS="70"  VPOS="20" WIDTH="80"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="150" VPOS="20"/>
+            <String ID="word_1_3" CONTENT="brown" HPOS="160" VPOS="20" WIDTH="85"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="245" VPOS="20"/>
+            <String ID="word_1_4" CONTENT="fox"   HPOS="255" VPOS="20" WIDTH="55"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="310" VPOS="20"/>
+            <String ID="word_1_5" CONTENT="jumps" HPOS="320" VPOS="20" WIDTH="85"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="405" VPOS="20"/>
+            <String ID="word_1_6" CONTENT="over"  HPOS="415" VPOS="20" WIDTH="70"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="485" VPOS="20"/>
+            <String ID="word_1_7" CONTENT="the"   HPOS="495" VPOS="20" WIDTH="45"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="540" VPOS="20"/>
+            <String ID="word_1_8" CONTENT="lazy"  HPOS="550" VPOS="20" WIDTH="65"  HEIGHT="40" WC="0.95"/>
+            <SP WIDTH="10" HPOS="615" VPOS="20"/>
+            <String ID="word_1_9" CONTENT="dog."  HPOS="625" VPOS="20" WIDTH="65"  HEIGHT="40" WC="0.95"/>
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

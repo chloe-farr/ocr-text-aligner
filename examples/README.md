@@ -66,3 +66,5 @@ Outputs go to `pipeline_work/` by default. See the main [README](../README.md) f
 ## Sample data
 
 - **examples/sample_page/** — Minimal ALTO (`page-1.xml`), minimal hOCR (`page-1.hocr.html`), and cleantext (`page-1_cleantext.txt`) for the sentence “The quick brown fox jumps over the lazy dog”. Use this to verify alignment without your own files.
+
+- **examples/daily_colonist_1972_10_12/** — Two pages from the *Victoria Daily Colonist*, Oct. 12 1972, with Tesseract ALTO XML + hOCR and VLM-prepared clean text. `page_0003` is the editorial/opinion page (international news); `page_0014` is a local news page. See the [dataset README](daily_colonist_1972_10_12/README.md) for full run commands and notes on the clean-text quality.
