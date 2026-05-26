@@ -478,32 +478,39 @@ def reorder_paragraphs(
     
     # Iteratively find and apply swaps until no more improvements
     prev_pending_count = sum(1 for h in hypothesis_list if is_pending_word(h))
-    
+    prev_prev_pending_count = None  # two iterations ago (detects 2-cycles)
+
     for iteration in range(max_iterations):
         # Find cross-boundary matches (chains of swaps)
         cross_boundary_matches = find_cross_boundary_neighbor_matches(hypothesis_list)
-        
+
         if not cross_boundary_matches:
             if iteration == 0:
                 print(f"[Cross-Boundary Matching] No swaps found")
             else:
                 print(f"[Cross-Boundary Matching] No more swaps found after {iteration} iterations")
             break
-        
+
         # Apply all swaps from chains (pass pre-computed matches to avoid redundant search)
         hypothesis_list = link_cross_boundary_neighbors(hypothesis_list, cross_boundary_matches)
-        
+
         # Re-link after swaps to update neighbor relationships
         hypothesis_list = map_up_text.link_hypothesis_objects_by_context(hypothesis_list)
-        
+
         # Check if we made progress
         current_pending_count = sum(1 for h in hypothesis_list if is_pending_word(h))
-        
+
         if current_pending_count == prev_pending_count:
             print(f"[Cross-Boundary Matching] Converged after {iteration + 1} iterations (no change in PENDING count)")
             break
-        
+
+        # Detect 2-cycles (count oscillates A→B→A→B…) and stop
+        if prev_prev_pending_count is not None and current_pending_count == prev_prev_pending_count:
+            print(f"[Cross-Boundary Matching] Stopped after {iteration + 1} iterations (2-cycle detected, oscillating ±{abs(current_pending_count - prev_pending_count)})")
+            break
+
         print(f"[Cross-Boundary Matching] Iteration {iteration + 1}: PENDING words: {prev_pending_count} → {current_pending_count} ({current_pending_count - prev_pending_count:+d})")
+        prev_prev_pending_count = prev_pending_count
         prev_pending_count = current_pending_count
     
     return hypothesis_list
