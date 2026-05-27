@@ -26,4 +26,4 @@ jobs:
         run: python tests/test_align_smoke.py
 
       - name: Run LLM cleaning tests
-        run: python -m llm_cleaning.test_ocr_refiner
+        run: PYTHONPATH=src python -m llm_cleaning.test_ocr_refiner
