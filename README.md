@@ -1,32 +1,38 @@
 # ocr-text-aligner
 
-**What this does:** Maps LLM-cleaned (or otherwise corrected) text back onto ALTO XML from OCR—word by word—using fuzzy matching, context, and layout. You get aligned ALTO and optional searchable PDFs.
+**What this does:** Maps LLM-cleaned (or otherwise corrected) text back onto ALTO XML from OCR—word by word—using fuzzy matching, context, and layout. You get aligned ALTO/hOCR with per-word confidence scores and optional visualizations.
+
 **Quickstart (align only, no OCR or LLM):**
 ```bash
 pip install -r requirements.txt
-python3 src/run_pipeline.py align --xml-file examples/sample_page/page-1.xml --clean-text examples/sample_page/page-1_cleantext.txt --output-xml
+python3 src/run_pipeline.py align \
+  --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
+  --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
+  --output-xml
 ```
-Or using IA-friendly hOCR as input/output:
+Or using hOCR as input/output:
 ```bash
-python3 src/run_pipeline.py align --hocr-file examples/sample_page/page-1.hocr.html --clean-text examples/sample_page/page-1_cleantext.txt --output-hocr
+python3 src/run_pipeline.py align \
+  --hocr-file examples/daily_colonist_1972_10_12/page_0000/page_0000.hocr \
+  --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
+  --output-hocr
 ```
-See examples/README.md for details.
 
 Designed by Chloë Farr. Co-scripted by Chloë Farr and Cursor Agent (up to April 2026, then Claude Code).
 
-Start date of coding: November 21, 2025
-Last updated: May 20, 2026
+Start date of coding: November 21, 2025  
+Last updated: May 27, 2026
 
 ## GPU / CUDA vs this repository
-This aligner is CPU-only. pip install -r requirements.txt does not install PyTorch or CUDA.
+This aligner is CPU-only. `pip install -r requirements.txt` does not install PyTorch or CUDA.
 
-If you are running the full workflow (PDF → layout models → Chandra / vLLM → clean text → then this tool), the vision and LLM servers may expect a NVIDIA GPU. On a laptop or server without CUDA, you can still run map_up_text.py; you must configure the upstream pipeline for CPU, smaller batches, or a remote inference host.
+If you are running the full workflow (PDF → layout models → Chandra / vLLM → clean text → then this tool), the vision and LLM servers may expect a NVIDIA GPU. On a laptop or server without CUDA, you can still run `src/map_up_text.py`; you must configure the upstream pipeline for CPU, smaller batches, or a remote inference host.
 
-Using the pipeline (digital humanities)
+## Using the pipeline (digital humanities)
 Run OCR → LLM clean → align (or any step alone). You need: an ALTO XML file and a clean text file for alignment; for the full pipeline, a PDF or image and Ollama for the clean step. See Setup and Unified pipeline below.
 
 ## Extending the algorithms (ML / research)
-The alignment pipeline is modular. For a high-level flow and file/function pointers (fuzzy → context → hyphen/merges → linking → proximity), see ALGORITHM.md.
+The alignment pipeline is modular. For a high-level flow and file/function pointers (fuzzy → context → hyphen/merges → linking → proximity → cross-boundary → output), see [ALGORITHM.md](ALGORITHM.md).
 
 ## Setup
 
@@ -35,27 +41,22 @@ The alignment pipeline is modular. For a high-level flow and file/function point
 - Python 3.8 or higher (tested with 3.8+)
 - Tesseract (CLI) — e.g. `brew install tesseract`
 - For PDF input: pdftoppm (poppler) — e.g. `brew install poppler`
-- For LLM clean step: `Ollama`
+- For LLM clean step: [Ollama](https://ollama.ai)
 - For alignment only (skip OCR): an ALTO XML file and a clean text file
-- Optional — custom OCR script: Set TESSERACT_EXPERIMENT_DIR to the directory containing your ocr_pdf.sh to use it instead of the built-in Tesseract pipeline. You can also use a config file: copy pipeline_config.example.json to pipeline_config.json and set tesseract_experiment_dir to that path. The repo does not commit pipeline_config.json (it may contain machine-specific paths).
+- Optional — custom OCR script: Set `TESSERACT_EXPERIMENT_DIR` to the directory containing your `ocr_pdf.sh` to use it instead of the built-in Tesseract pipeline. You can also use a config file: copy `pipeline_config.example.json` to `pipeline_config.json` and set `tesseract_experiment_dir` to that path. The repo does not commit `pipeline_config.json` (it may contain machine-specific paths).
 
 ### Installation
-Create a virtual environment:
 ```bash
 python3 -m venv venv
-```
-Activate the virtual environment:
-```bash
 source venv/bin/activate
-Install required packages:
-
 pip install -r requirements.txt
 ```
+
 ## Current State
 
-- **OCR** — Built-in in this repo (`tesseract_ocr.py`): run Tesseract on a PDF or image → ALTO XML + plain text. No separate project needed. Optionally, set `TESSERACT_EXPERIMENT_DIR` to use your own OCR script instead.
-- **LLM clean text** — Implemented in `llm_cleaning/` (Ollama-based refinement). Run via the pipeline or standalone. **Note:** this step is unreliable — LLM output should be manually reviewed before passing it to the aligner. For better results, a VLM-OCR tool (e.g. Chandra, GOT-OCR) is recommended instead; save its output as plain text with all comments, image descriptions, and annotations removed.
-- **Alignment** — Implemented in `src/map_up_text.py` (ALTO or hOCR + cleantext → aligned ALTO or hOCR and visualizations).
+- **OCR** — Built-in in this repo (`src/tesseract_ocr.py`): run Tesseract on a PDF or image → ALTO XML + plain text. No separate project needed. Optionally, set `TESSERACT_EXPERIMENT_DIR` to use your own OCR script instead.
+- **LLM clean text** — Implemented in `src/llm_cleaning/` (Ollama-based refinement). Run via the pipeline or standalone. **Note:** this step is unreliable — LLM output should be manually reviewed before passing it to the aligner. For better results, a VLM-OCR tool (e.g. Chandra, GOT-OCR) is recommended instead; save its output as plain text with all comments, image descriptions, and annotations removed.
+- **Alignment** — Implemented in `src/map_up_text.py` (ALTO or hOCR + cleantext → aligned ALTO or hOCR with per-word ALIGNCONF scores and visualizations).
 
 ### Unified pipeline (single workflow)
 
@@ -84,23 +85,21 @@ Everything is in this repo. OCR → LLM clean → align (or run any step alone).
      ```bash
      python3 src/run_pipeline.py align --xml-file path/to.alto.xml --clean-text path/to/cleantext.txt --output-xml
      ```
-  - **Align only** (hOCR + cleantext → aligned hOCR):
-    ```bash
-    python3 src/run_pipeline.py align --hocr-file path/to.hocr.html --clean-text path/to/cleantext.txt --output-hocr
-    ```
+   - **Align only** (hOCR + cleantext → aligned hOCR):
+     ```bash
+     python3 src/run_pipeline.py align --hocr-file path/to.hocr.html --clean-text path/to/cleantext.txt --output-hocr
+     ```
 
 3. **Use existing OCR output** (skip OCR step):
    ```bash
    python3 src/run_pipeline.py all --ocr-output-dir /path/to/dir/with/base.txt/and/alto/
    ```
 
-4. **Use your own OCR script** instead of built-in: set `TESSERACT_EXPERIMENT_DIR` to the directory containing `ocr_pdf.sh`, then run as above. The pipeline will call that script when `--tesseract-dir` (or the env) is set.
+4. **Use your own OCR script** instead of built-in: set `TESSERACT_EXPERIMENT_DIR` to the directory containing `ocr_pdf.sh`, then run as above.
 
-OCR output layout (built-in or expected from external): a directory with `<base>.txt` and `alto/*.xml` (one ALTO per page). Built-in OCR also writes `page-1.txt`, `page-2.txt`, … for each page.
+OCR output layout (built-in or expected from external): a directory with `<base>.txt` and `alto/*.xml` (one ALTO per page).
 
-**Multi-page (e.g. non-newspaper)**: When you run the full pipeline on a multi-page PDF (or have per-page ALTO + plain text), the pipeline runs **page-by-page**:
-- **Clean**: Each page’s plain text (`page-1.txt`, …) is refined with `--page-mode` (one chunk = entire page). Use `--page-mode` when running the clean step alone for a single-page or page-by-page workflow.
-- **Align**: Each page’s ALTO is aligned with that page’s cleantext, then all aligned pages are merged into one `*_aligned.xml` file.
+**Multi-page**: When you run the full pipeline on a multi-page PDF, the pipeline runs page-by-page. Use `--page-mode` when running the clean step alone for a single-page or page-by-page workflow.
 
 A future GUI can call these same steps (ocr / clean / align / all) with settings for tagging and other options.
 
@@ -110,111 +109,93 @@ See [PIPELINE_EXPLANATION.md](PIPELINE_EXPLANATION.md) for the logic behind the 
 
 **Assumptions (when running alignment alone):**
 1. An ALTO XML file already exists (e.g., from your Tesseract pipeline).
-2. Clean text already exists (from the LLM step or elsewhere).
-
-**Important:**
-- Pass the ALTO XML file with `--xml-file` and the clean text file with `--clean-text` (both are required).
-- To write a new ALTO XML with aligned content, use the `--output-xml` flag (see **Usage** below).
+2. Clean text already exists (from the LLM step, a VLM-OCR tool, or manual correction).
 
 ## Usage
 
-1. **Ensure you have an ALTO XML file** and a **clean text file** (LLM-cleaned or VLM-OCR output (remove all comments, image descriptions, etc.)).
+**Run the alignment pipeline:**
+```bash
+python3 src/map_up_text.py --xml-file "path/to/your.alto.xml" --clean-text "path/to/cleantext.txt"
+```
+To write a new ALTO XML with aligned content:
+```bash
+python3 src/map_up_text.py --xml-file "path/to/your.alto.xml" --clean-text "path/to/cleantext.txt" --output-xml
+```
 
-2. **Run the alignment pipeline** (both `--xml-file` and `--clean-text` are required):
-   ```bash
-   python3 src/map_up_text.py --xml-file "path/to/your.alto.xml" --clean-text "path/to/cleantext.txt"
-   ```
-   To also write a new ALTO XML with aligned content:
-   ```bash
-   python3 src/map_up_text.py --xml-file "path/to/your.alto.xml" --clean-text "path/to/cleantext.txt" --output-xml
-   ```
+**Flags**
 
-   **Flags**
-   - `--show-table` - bool: Display the full LLM token mapping table in terminal (default: show only summary)
-   ```bash
-   python3 src/map_up_text.py --show-table
-   ```
-   - `--show-ocr-accuracy` - bool: Display OCR accuracy analysis at the beginning
-   ```bash
-   python3 src/map_up_text.py --show-ocr-accuracy
-   ```
-   - `--track-word` - str: Display pipeline flowchart for a specific word
-   ```bash
-   python3 src/map_up_text.py --track-word "dams"
-   ```
-   - `--clean-text` - str: Path to clean text file to use for the pipeline
-   ```bash
-   python3 src/map_up_text.py --clean-text "inputs/1972_10_12_p1/1972_10_12_p1_Maclear_Gaglardi_cleantext.txt"
-   ```
-   - `--xml-file` - str: Path to ALTO XML file to use for the pipeline
-   ```bash
-   python3 src/map_up_text.py --xml-file "inputs/1972_10_12_p1/1972_10_12_p1_Tesseract_XML_minus-separatists-kissinger.xml"
-   ```
-   - `--output-xml` - optional path: Write a new ALTO XML file with CONTENT updated to the aligned (cleaned) text. If the flag is given with no path, the file is written to `outputs/<pagename>/<pagename>_aligned.xml`, where *pagename* is derived from the XML path: if the path starts with `input/`, it is the next segment (e.g. `input/1972_10_12_p1/file.xml` → `1972_10_12_p1`); otherwise it is the XML filename without extension (e.g. `page-1alto-Maclear.xml` → `page-1alto-Maclear`). If a path is given after the flag, that path is used. Handles splits (1→3 words), same-line merges (N→1 with merged bounds), and cross-line merges (first word gets merged text, rest empty).
-   ```bash
-   python3 src/map_up_text.py --xml-file "inputs/.../file.xml" --clean-text "inputs/.../cleantext.txt" --output-xml
-   python3 src/map_up_text.py --xml-file "inputs/.../file.xml" --clean-text "inputs/.../cleantext.txt" --output-xml "outputs/my_aligned.xml"
-   ```
+| Flag | Type | Description |
+|------|------|-------------|
+| `--xml-file` | path | ALTO XML input file |
+| `--hocr-file` | path | hOCR HTML input file (alternative to `--xml-file`) |
+| `--clean-text` | path | Clean text file (required) |
+| `--output-xml` | optional path | Write aligned ALTO XML; if no path given, writes to `outputs/<pagename>/<pagename>_aligned.xml` |
+| `--output-hocr` | optional path | Write aligned hOCR HTML; requires `--hocr-file` input |
+| `--fuzzy-cutoff` | float (default: 60) | Minimum fuzzy match score (0–100) for candidate generation. Lower values recover more OCR-noisy words at the cost of more ambiguous candidates. |
+| `--show-ocr-accuracy` | flag | Display OCR accuracy analysis at the start |
+| `--show-pending` | flag | Print analysis for remaining PENDING words after the pipeline |
 
-3. **Create a cleaned PDF** from the original PDF or a single PNG and the aligned ALTO (optional). Requires Pillow and reportlab; for PDF input, `pdftoppm` (poppler) as well.
-   ```bash
-   python3 src/make_cleaned_pdf.py --pdf path/to/original.pdf --aligned-xml path/to/doc_aligned.xml --output path/to/cleaned.pdf
-   python3 src/make_cleaned_pdf.py --image path/to/page-1.png --aligned-xml path/to/page-1_aligned.xml --output path/to/cleaned.pdf
-   ```
-   With `--pdf`: renders each page to an image, draws cleaned text over it, writes a new PDF (if ALTO has fewer pages, only the first N are used). With `--image`: uses the PNG as the single page; ALTO must have exactly one page. The output has a **searchable text layer** from the aligned (cleaned) ALTO.  
-   **Note:** Tesseract’s own `tesseract image out pdf` creates a searchable PDF by running OCR; it does *not* accept existing ALTO as input. To use Tesseract’s PDF path (raw OCR, no cleaned ALTO), run:
-   ```bash
-   python3 src/make_cleaned_pdf.py --image path/to/page.png --output path/to/out.pdf --tesseract-pdf
-   ```
+**Create a cleaned PDF** from the original PDF or PNG and the aligned ALTO (requires Pillow, reportlab, and poppler for PDF input):
+```bash
+python3 src/make_cleaned_pdf.py --pdf path/to/original.pdf --aligned-xml path/to/doc_aligned.xml --output path/to/cleaned.pdf
+python3 src/make_cleaned_pdf.py --image path/to/page-1.png --aligned-xml path/to/page-1_aligned.xml --output path/to/cleaned.pdf
+```
 
-   **Combine flags to display all above**
-   ```bash
-   python3 src/map_up_text.py --show-table --show-ocr-accuracy --track-word "dams"
-   ```
-
-The script will:
-- Load the ALTO XML file (via `--xml-file`) and clean text (via `--clean-text`)
-- Process the clean text and perform fuzzy matching and context analysis
-- Handle hyphenated words, merges, and splits
-- Generate visualizations of the matching process
-   - outputs a PNG file with a visualization recreation of the text in place
-- Display the final results as a table
-   - displayed in the terminal with flag `--show-table`
-   - outputs a PDF file with the table
-- **With `--output-xml`:** write a new ALTO XML file whose String CONTENT reflects the aligned (cleaned) text; layout and structure are preserved; word IDs are renumbered per line where splits or same-line merges occur.
+The pipeline produces:
+- A terminal summary (matched / error / PENDING word counts before and after)
+- A PNG visualization: each word rendered at its ALTO bounding-box position, colored by ALIGNCONF — black (confident) → red (uncertain)
+- Aligned ALTO / hOCR (with `--output-xml` / `--output-hocr`), with per-word `ALIGNCONF` attribute (0–100)
 
 ## Limitations / Known issues
 
-- Alignment works best when the LLM-cleaned (or corrected) text is close to the OCR content (within approximately 20% accuracy) and OCR quality is moderate (better than 70% accuracy). Heavy rewrites or very poor OCR can leave words unmatched.
+- Alignment works best when the clean text is close to the OCR content (within ~20% character difference). Heavy rewrites or very poor OCR (below ~70% accuracy) can leave words unmatched.
+- Multi-column and multi-article layouts (e.g. newspaper front pages) cause elevated PENDING counts because ALTO spatial reading order diverges from article reading order. These words are matched but unconfirmed by context — they are marked PENDING (lower ALIGNCONF) rather than ERROR. Providing a clean text file in article reading order (rather than spatial block order) significantly reduces this.
 
 ## Project Structure
 
-- `src/run_pipeline.py` - **Unified pipeline**: OCR → clean → align; run any step or all. Single entry point for CLI and future GUI.
-- `tesseract_ocr.py` - **Built-in OCR**: PDF or image → Tesseract → ALTO XML + plain text (no external script required).
-- `pipeline_config.json` - Optional: copy from `pipeline_config.example.json`, then set `tesseract_experiment_dir` to use your own OCR script instead of built-in.
-- `src/map_up_text.py` - Main alignment pipeline module
-- `xml_obj.py` - ALTO XML parsing and object model
-- `write_aligned_alto.py` - Writes a new ALTO XML file from the alignment result (invoked with `--output-xml`)
-- `src/make_cleaned_pdf.py` - Builds a new PDF from original PDF + aligned ALTO (renders pages, draws cleaned text, outputs PDF)
-- `proximity_scoring.py` - Geometric proximity analysis for word matching
-- `visualize_matching.py` - Visualization tools for debugging and analysis
-- `llm_cleaning/` - LLM-based OCR refinement (Ollama)
-- `requirements.txt` - Python package dependencies
+```
+src/
+  run_pipeline.py        Unified pipeline: OCR → clean → align; single CLI entry point
+  map_up_text.py         Main alignment pipeline
+  alignment_confidence.py  Per-word ALIGNCONF score (0–100)
+  context_matching.py    Candidate scoring and neighbor linking
+  fuzzy_matching.py      RapidFuzz wrapper
+  hyphen_linking.py      Hyphen/line-wrap handling
+  word_merges.py         N:1 and 1:N word merge detection
+  paragraph_reordering.py  Cross-boundary PENDING resolution
+  weak_fuzzy_matching.py   Geometry + neighbor-strength matching for unresolved words
+  proximity_scoring.py   Reading-order distance and column detection
+  xml_obj.py             ALTO XML parsing and object model
+  hocr_obj.py            hOCR parsing
+  llm_tokens.py          Clean-text tokenization and LLM token model
+  layout_tags.py         Layout tag parsing from clean text
+  text_utils.py          Normalization, HTML entity decoding
+  write_aligned_alto.py  Write aligned ALTO XML
+  write_aligned_hocr.py  Write aligned hOCR HTML
+  visualize_matching.py  Visualization tools
+  make_cleaned_pdf.py    Build searchable PDF from original + aligned ALTO
+  tesseract_ocr.py       Built-in OCR (Tesseract → ALTO + plain text)
+  hocr_combine.py        Combine per-page hOCR into multi-page hOCR
+  llm_cleaning/          LLM-based OCR refinement (Ollama)
+
+examples/
+  daily_colonist_1972_10_12/  Newspaper front page (1 page, multi-column)
+  Gaines_CEAI75/              Academic report (9 pages, single-column)
+
+pipeline_config.example.json  Copy to pipeline_config.json to set custom paths
+requirements.txt
+```
 
 ## Dependencies
 
-Listed in `requirements.txt`: Pillow, reportlab, rapidfuzz, matplotlib, rich, requests. Python 3.8+ and these dependencies are sufficient for the alignment pipeline; OCR and PDF steps need Tesseract and (for PDF) poppler as well.
+Listed in `requirements.txt`: Pillow, reportlab, rapidfuzz, matplotlib, rich, requests. Python 3.8+ and these packages are sufficient for the alignment pipeline; OCR and PDF steps need Tesseract and (for PDF) poppler as well.
 
 ## Future Development
 
-Planned features:
-- **Unicode-aware matching normalization** — `normalize_for_matching` currently keeps only ASCII letters, so German (ä, ö, ü, ß) and other scripts fail before RapidFuzz runs.
-- **GUI** — Run any pipeline step (OCR, clean, align) with settings (e.g. tagging, model, tolerances) from a single app.
-- Image pre-processing pipeline (or continue using your existing Tesseract preprocessing).
-- Batch processing support.
-- Generate a new searchable PDF with the aligned results.
+- **GUI** — Run any pipeline step (OCR, clean, align) with settings from a single app.
+- **Batch processing** — multi-document queue.
+- **Unicode normalization** — extend `normalize_for_matching` for non-Latin scripts.
 
 ## License
 
-MIT License - See LICENSE file for details.
-
+MIT License — see [LICENSE](LICENSE) for details.
