@@ -12,7 +12,7 @@ Front page of the Victoria *Daily Colonist*, digitized at the UVic Library (Kula
 
 ```bash
 # From project root
-python3 run_pipeline.py align \
+python3 src/run_pipeline.py align \
   --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
   --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-xml
@@ -21,7 +21,7 @@ python3 run_pipeline.py align \
 ## Run alignment — hOCR input
 
 ```bash
-python3 run_pipeline.py align \
+python3 src/run_pipeline.py align \
   --hocr-file examples/daily_colonist_1972_10_12/page_0000/page_0000.hocr \
   --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-hocr

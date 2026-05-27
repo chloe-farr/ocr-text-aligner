@@ -1,0 +1,55 @@
+approach by giving the controller tnittal “insseuectens" of
+the form, ‘If the pressure error is negative big, and thea
+change Im pressure error Is near zero then Increase tne hast
+Input siitghtiy’., A fuzzy control strategy of this form was
+constructed and used quite formally by the cantroaller ec a
+computer program embodying the rutes of fuzzy lorie. The
+resultant performance was better than that of the best linear
+controllers and way beyond that ever achteved by anv of the
+“Yearning machines’ !
+
+The most fascinating aspect of this story fs the way in
+which the synthesis of a control policy using fuzzy reasoning
+so mirrors one's Intuitive grasp of how controllers are
+devetoped. The destgn engtneer ‘plays' with the plant, getttriz
+the ‘feel’ of it before taking formal measurements. His mode}
+of the plant and the instrumentation to enable this to be
+quantiffled are conditioned by hts knowledge of it, and those
+ltke it, and by his own Interaction with it. Currently this
+knowledge is translated Into the mathematics of linear system
+theory and the design of a@ controller then becomes a
+mathematical problem, The direct linguistic transformation of
+statements about the plant Inte a contre! strategy is Im many
+ways more natural. Mamdani has recently produced independent
+evidence that this ts so: Chapter 10 of Perry & Waddall's
+(1972) book on rotary cement kilns ts an operations handbook
+for the human operator of a lime kiln. Since ft is intended to
+be valid for any kttn it is couched In qualitative rather than
+numeric terms, and consists of 27 rules of the form: "Tf the
+hurning zone temperature ts drastically low, the percentage of
+oxygen is low and the back-end temperature fs Tow then reduce
+the kiln speed and reduce the fuel", ete., a ‘fuzzy’ contro}
+strategy priming the human controller !
+
+Like algebraic techniques, or any Innevation In any
+subject area, it wit?t take time for results such as those of
+Mamdant & Assilfan to be tested In a range of situations and
+assimitated into CE. However, they do [liustrate that the gap
+between the continuous linear world of CE and the
+discontinuous lingulstte world of Af ts mot insuperable.
+
+5 References
+
+M.A.Arbib (1965) A common framework for automata theory and
+control theory, SIAM Journal of Control, vol.3, p9.206-222,
+
+M.A.Arbib (1966) Automata theory and control theory: a
+rapprochement, Automatica, vol.3, po.161-189.
+
+M.A.Arbib (1975a) From automata theory to brain theory,
+International Journal of Man-Machine Studies, vol.7, pt.3.
+
+M.A.Arbib (1975b) Cyberneties after 25 years: a personal view
+of system theory and brain theory, IEFE Transactions on
+Systems, Man and Cybernetics, May 1975, vol.SMC=-5, pp.359-353,
+

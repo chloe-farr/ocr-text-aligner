@@ -1,0 +1,583 @@
+<?xml version='1.0' encoding='utf-8'?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v3#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/standards/alto/ns-v3# http://www.loc.gov/alto/v3/alto-3-0.xsd">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName />
+    </sourceImageInformation>
+    <OCRProcessing ID="OCR_0">
+      <ocrProcessingStep>
+        <processingSoftware>
+          <softwareName>tesseract 4.1.1</softwareName>
+        </processingSoftware>
+      </ocrProcessingStep>
+    </OCRProcessing>
+  </Description>
+  <Layout>
+    <Page WIDTH="2480" HEIGHT="3435" PHYSICAL_IMG_NR="0" ID="page_0">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="2480" HEIGHT="3435">
+        <ComposedBlock ID="cblock_0" HPOS="284" VPOS="427" WIDTH="1851" HEIGHT="741">
+          <TextBlock ID="block_0" HPOS="284" VPOS="427" WIDTH="1851" HEIGHT="741">
+            <TextLine ID="line_0" HPOS="287" VPOS="427" WIDTH="1752" HEIGHT="46">
+              <String ID="WORD_line_0_001" HPOS="287" VPOS="427" WIDTH="55" HEIGHT="38" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_0_002" HPOS="375" VPOS="438" WIDTH="23" HEIGHT="27" CONTENT="a" WC="91" ALIGNCONF="91" CLEANPARA="0" />
+              <String ID="WORD_line_0_003" HPOS="437" VPOS="436" WIDTH="177" HEIGHT="35" CONTENT="system" WC="88" ALIGNCONF="88" CLEANPARA="0" />
+              <String ID="WORD_line_0_004" HPOS="646" VPOS="436" WIDTH="55" HEIGHT="32" CONTENT="to" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_0_005" HPOS="742" VPOS="431" WIDTH="77" HEIGHT="38" CONTENT="its" WC="86" ALIGNCONF="86" CLEANPARA="0" />
+              <String ID="WORD_line_0_006" HPOS="857" VPOS="433" WIDTH="175" HEIGHT="38" CONTENT="future" WC="40" ALIGNCONF="40" CLEANPARA="0" />
+              <String ID="WORD_line_0_007" HPOS="1065" VPOS="432" WIDTH="289" HEIGHT="41" CONTENT="behaviour." WC="84" ALIGNCONF="84" CLEANPARA="0" />
+              <String ID="WORD_line_0_008" HPOS="1424" VPOS="432" WIDTH="175" HEIGHT="39" CONTENT="Whilst" WC="87" ALIGNCONF="87" CLEANPARA="0" />
+              <String ID="WORD_line_0_009" HPOS="1632" VPOS="433" WIDTH="176" HEIGHT="38" CONTENT="modern" WC="92" ALIGNCONF="92" CLEANPARA="0" />
+              <String ID="WORD_line_0_010" HPOS="1843" VPOS="434" WIDTH="196" HEIGHT="37" CONTENT="control" WC="89" ALIGNCONF="89" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_1" HPOS="289" VPOS="477" WIDTH="1698" HEIGHT="48">
+              <String ID="WORD_line_1_001" HPOS="289" VPOS="477" WIDTH="177" HEIGHT="43" CONTENT="theory" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_1_002" HPOS="493" VPOS="489" WIDTH="90" HEIGHT="30" CONTENT="may" WC="95" ALIGNCONF="57" CLEANPARA="0" />
+              <String ID="WORD_line_1_003" HPOS="617" VPOS="480" WIDTH="52" HEIGHT="37" CONTENT="be" WC="96" ALIGNCONF="58" CLEANPARA="3" />
+              <String ID="WORD_line_1_004" HPOS="707" VPOS="490" WIDTH="111" HEIGHT="29" CONTENT="seen" WC="82" ALIGNCONF="49" CLEANPARA="0" />
+              <String ID="WORD_line_1_005" HPOS="858" VPOS="487" WIDTH="53" HEIGHT="32" CONTENT="to" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_1_006" HPOS="946" VPOS="482" WIDTH="52" HEIGHT="38" CONTENT="be" WC="92" ALIGNCONF="92" CLEANPARA="0" />
+              <String ID="WORD_line_1_007" HPOS="1033" VPOS="483" WIDTH="266" HEIGHT="42" CONTENT="crucially" WC="38" ALIGNCONF="38" CLEANPARA="0" />
+              <String ID="WORD_line_1_008" HPOS="1336" VPOS="483" WIDTH="145" HEIGHT="38" CONTENT="based" WC="95" ALIGNCONF="57" CLEANPARA="0" />
+              <String ID="WORD_line_1_009" HPOS="1515" VPOS="493" WIDTH="54" HEIGHT="26" CONTENT="om" WC="63" ALIGNCONF="28" />
+              <String ID="WORD_line_1_010" HPOS="1606" VPOS="482" WIDTH="83" HEIGHT="38" CONTENT="the" WC="96" ALIGNCONF="58" CLEANPARA="0" />
+              <String ID="WORD_line_1_011" HPOS="1723" VPOS="481" WIDTH="174" HEIGHT="40" CONTENT="notion" WC="30" ALIGNCONF="30" CLEANPARA="0" />
+              <String ID="WORD_line_1_012" HPOS="1932" VPOS="480" WIDTH="55" HEIGHT="38" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_2" HPOS="289" VPOS="530" WIDTH="1727" HEIGHT="44">
+              <String ID="WORD_line_2_001" HPOS="289" VPOS="532" WIDTH="176" HEIGHT="36" CONTENT="system" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_2_002" HPOS="499" VPOS="534" WIDTH="166" HEIGHT="40" CONTENT="state," WC="92" ALIGNCONF="92" CLEANPARA="0" />
+              <String ID="WORD_line_2_003" HPOS="706" VPOS="530" WIDTH="114" HEIGHT="38" CONTENT="this" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_2_004" HPOS="863" VPOS="530" WIDTH="45" HEIGHT="38" CONTENT="is" WC="94" ALIGNCONF="56" CLEANPARA="0" />
+              <String ID="WORD_line_2_005" HPOS="943" VPOS="536" WIDTH="84" HEIGHT="35" CONTENT="tat" WC="49" ALIGNCONF="22" />
+              <String ID="WORD_line_2_006" HPOS="1064" VPOS="534" WIDTH="326" HEIGHT="39" CONTENT="necessarily" WC="95" ALIGNCONF="57" CLEANPARA="0" />
+              <String ID="WORD_line_2_007" HPOS="1427" VPOS="535" WIDTH="81" HEIGHT="36" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_2_008" HPOS="1542" VPOS="538" WIDTH="114" HEIGHT="31" CONTENT="most" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_2_009" HPOS="1695" VPOS="531" WIDTH="321" HEIGHT="41" CONTENT="appropriate" WC="53" ALIGNCONF="53" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_3" HPOS="287" VPOS="576" WIDTH="1728" HEIGHT="47">
+              <String ID="WORD_line_3_001" HPOS="287" VPOS="576" WIDTH="142" HEIGHT="40" CONTENT="basis" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_3_002" HPOS="468" VPOS="577" WIDTH="83" HEIGHT="40" CONTENT="for" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_3_003" HPOS="588" VPOS="584" WIDTH="176" HEIGHT="35" CONTENT="system" WC="72" ALIGNCONF="72" CLEANPARA="0" />
+              <String ID="WORD_line_3_004" HPOS="797" VPOS="581" WIDTH="322" HEIGHT="40" CONTENT="development" WC="65" ALIGNCONF="65" CLEANPARA="0" />
+              <String ID="WORD_line_3_005" HPOS="1155" VPOS="590" WIDTH="55" HEIGHT="29" CONTENT="or" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_3_006" HPOS="1243" VPOS="580" WIDTH="291" HEIGHT="43" CONTENT="modelling," WC="82" ALIGNCONF="82" CLEANPARA="0" />
+              <String ID="WORD_line_3_007" HPOS="1574" VPOS="579" WIDTH="354" HEIGHT="44" CONTENT="particularly" WC="72" ALIGNCONF="72" CLEANPARA="0" />
+              <String ID="WORD_line_3_008" HPOS="1962" VPOS="579" WIDTH="53" HEIGHT="38" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_4" HPOS="286" VPOS="626" WIDTH="1820" HEIGHT="49">
+              <String ID="WORD_line_4_001" HPOS="286" VPOS="626" WIDTH="286" HEIGHT="45" CONTENT="biological" WC="88" ALIGNCONF="88" CLEANPARA="0" />
+              <String ID="WORD_line_4_002" HPOS="616" VPOS="635" WIDTH="230" HEIGHT="35" CONTENT="systems." WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_4_003" HPOS="917" VPOS="631" WIDTH="85" HEIGHT="38" CONTENT="For" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_4_004" HPOS="1032" VPOS="632" WIDTH="230" HEIGHT="43" CONTENT="example," WC="79" ALIGNCONF="79" CLEANPARA="0" />
+              <String ID="WORD_line_4_005" HPOS="1306" VPOS="631" WIDTH="83" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_4_006" HPOS="1427" VPOS="627" WIDTH="233" HEIGHT="43" CONTENT="&quot;causal&quot;" WC="42" ALIGNCONF="42" CLEANPARA="0" />
+              <String ID="WORD_line_4_007" HPOS="1692" VPOS="628" WIDTH="323" HEIGHT="43" CONTENT="explanation" WC="88" ALIGNCONF="88" CLEANPARA="0" />
+              <String ID="WORD_line_4_008" HPOS="2052" VPOS="629" WIDTH="54" HEIGHT="38" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_5" HPOS="288" VPOS="675" WIDTH="1637" HEIGHT="46">
+              <String ID="WORD_line_5_001" HPOS="288" VPOS="677" WIDTH="80" HEIGHT="35" CONTENT="the" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_5_002" HPOS="406" VPOS="675" WIDTH="266" HEIGHT="41" CONTENT="behaviour" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_5_003" HPOS="702" VPOS="679" WIDTH="59" HEIGHT="36" CONTENT="of" WC="91" ALIGNCONF="91" CLEANPARA="0" />
+              <String ID="WORD_line_5_004" HPOS="793" VPOS="687" WIDTH="57" HEIGHT="30" CONTENT="an" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_5_005" HPOS="883" VPOS="680" WIDTH="171" HEIGHT="38" CONTENT="animal" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_5_006" HPOS="1093" VPOS="689" WIDTH="55" HEIGHT="27" CONTENT="as" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_5_007" HPOS="1187" VPOS="679" WIDTH="293" HEIGHT="40" CONTENT="determined" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_5_008" HPOS="1516" VPOS="681" WIDTH="55" HEIGHT="40" CONTENT="by" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_5_009" HPOS="1612" VPOS="679" WIDTH="77" HEIGHT="37" CONTENT="its" WC="65" ALIGNCONF="65" CLEANPARA="0" />
+              <String ID="WORD_line_5_010" HPOS="1723" VPOS="685" WIDTH="202" HEIGHT="32" CONTENT="current" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_6" HPOS="293" VPOS="722" WIDTH="1748" HEIGHT="49">
+              <String ID="WORD_line_6_001" HPOS="293" VPOS="722" WIDTH="219" HEIGHT="41" CONTENT="internal" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_6_002" HPOS="559" VPOS="730" WIDTH="140" HEIGHT="35" CONTENT="state" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_6_003" HPOS="734" VPOS="728" WIDTH="87" HEIGHT="37" CONTENT="and" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_6_004" HPOS="853" VPOS="730" WIDTH="230" HEIGHT="39" CONTENT="external" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_6_005" HPOS="1131" VPOS="729" WIDTH="137" HEIGHT="42" CONTENT="input" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_6_006" HPOS="1302" VPOS="739" WIDTH="89" HEIGHT="31" CONTENT="may" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_6_007" HPOS="1425" VPOS="728" WIDTH="55" HEIGHT="40" CONTENT="be" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_6_008" HPOS="1512" VPOS="732" WIDTH="267" HEIGHT="39" CONTENT="extremely" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_6_009" HPOS="1812" VPOS="729" WIDTH="229" HEIGHT="42" CONTENT="complex," WC="90" ALIGNCONF="90" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_7" HPOS="284" VPOS="773" WIDTH="1612" HEIGHT="49">
+              <String ID="WORD_line_7_001" HPOS="284" VPOS="773" WIDTH="206" HEIGHT="41" CONTENT="whereas" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_7_002" HPOS="525" VPOS="777" WIDTH="84" HEIGHT="39" CONTENT="the" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_7_003" HPOS="647" VPOS="775" WIDTH="415" HEIGHT="47" CONTENT="&quot;teleological&quot;" WC="41" ALIGNCONF="41" CLEANPARA="0" />
+              <String ID="WORD_line_7_004" HPOS="1094" VPOS="780" WIDTH="326" HEIGHT="42" CONTENT="explanation" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_7_005" HPOS="1463" VPOS="779" WIDTH="45" HEIGHT="38" CONTENT="in" WC="61" ALIGNCONF="61" CLEANPARA="0" />
+              <String ID="WORD_line_7_006" HPOS="1548" VPOS="784" WIDTH="140" HEIGHT="34" CONTENT="terms" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_7_007" HPOS="1723" VPOS="780" WIDTH="55" HEIGHT="38" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_7_008" HPOS="1821" VPOS="780" WIDTH="75" HEIGHT="36" CONTENT="its" WC="92" ALIGNCONF="92" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_8" HPOS="295" VPOS="825" WIDTH="1805" HEIGHT="49">
+              <String ID="WORD_line_8_001" HPOS="295" VPOS="825" WIDTH="225" HEIGHT="40" CONTENT="intended" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_8_002" HPOS="557" VPOS="827" WIDTH="173" HEIGHT="40" CONTENT="future" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_8_003" HPOS="765" VPOS="829" WIDTH="266" HEIGHT="40" CONTENT="behaviour" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_8_004" HPOS="1059" VPOS="839" WIDTH="94" HEIGHT="33" CONTENT="may" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_8_005" HPOS="1185" VPOS="829" WIDTH="55" HEIGHT="40" CONTENT="be" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_8_006" HPOS="1272" VPOS="838" WIDTH="117" HEIGHT="36" CONTENT="very" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_8_007" HPOS="1427" VPOS="829" WIDTH="173" HEIGHT="44" CONTENT="simple" WC="91" ALIGNCONF="55" CLEANPARA="0" />
+              <String ID="WORD_line_8_008" HPOS="1634" VPOS="843" WIDTH="21" HEIGHT="11" CONTENT="###" WC="79" ALIGNCONF="47" CLEANPARA="2" />
+              <String ID="WORD_line_8_009" HPOS="1698" VPOS="829" WIDTH="199" HEIGHT="39" CONTENT="Rescher" WC="90" ALIGNCONF="54" CLEANPARA="0" />
+              <String ID="WORD_line_8_010" HPOS="1938" VPOS="827" WIDTH="162" HEIGHT="40" CONTENT="(1963)" WC="77" ALIGNCONF="77" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_9" HPOS="285" VPOS="876" WIDTH="1815" HEIGHT="46">
+              <String ID="WORD_line_9_001" HPOS="285" VPOS="876" WIDTH="145" HEIGHT="43" CONTENT="gives" WC="92" ALIGNCONF="92" CLEANPARA="0" />
+              <String ID="WORD_line_9_002" HPOS="467" VPOS="886" WIDTH="112" HEIGHT="30" CONTENT="some" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_9_003" HPOS="623" VPOS="876" WIDTH="319" HEIGHT="46" CONTENT="interesting" WC="79" ALIGNCONF="79" CLEANPARA="0" />
+              <String ID="WORD_line_9_004" HPOS="973" VPOS="882" WIDTH="237" HEIGHT="39" CONTENT="examples" WC="68" ALIGNCONF="68" CLEANPARA="0" />
+              <String ID="WORD_line_9_005" HPOS="1245" VPOS="880" WIDTH="55" HEIGHT="38" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_9_006" HPOS="1338" VPOS="880" WIDTH="109" HEIGHT="38" CONTENT="this" WC="92" ALIGNCONF="92" CLEANPARA="0" />
+              <String ID="WORD_line_9_007" HPOS="1491" VPOS="880" WIDTH="47" HEIGHT="38" CONTENT="in" WC="89" ALIGNCONF="89" CLEANPARA="0" />
+              <String ID="WORD_line_9_008" HPOS="1576" VPOS="884" WIDTH="142" HEIGHT="34" CONTENT="terms" WC="91" ALIGNCONF="91" CLEANPARA="0" />
+              <String ID="WORD_line_9_009" HPOS="1754" VPOS="879" WIDTH="55" HEIGHT="39" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_9_010" HPOS="1842" VPOS="883" WIDTH="258" HEIGHT="37" CONTENT="automata." WC="96" ALIGNCONF="96" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_10" HPOS="288" VPOS="926" WIDTH="1788" HEIGHT="47">
+              <String ID="WORD_line_10_001" HPOS="288" VPOS="927" WIDTH="173" HEIGHT="37" CONTENT="States" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_10_002" HPOS="494" VPOS="926" WIDTH="115" HEIGHT="41" CONTENT="have" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_10_003" HPOS="643" VPOS="937" WIDTH="25" HEIGHT="27" CONTENT="a" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_10_004" HPOS="705" VPOS="927" WIDTH="350" HEIGHT="42" CONTENT="definitional" WC="90" ALIGNCONF="90" CLEANPARA="0" />
+              <String ID="WORD_line_10_005" HPOS="1104" VPOS="929" WIDTH="286" HEIGHT="44" CONTENT="importance" WC="88" ALIGNCONF="88" CLEANPARA="0" />
+              <String ID="WORD_line_10_006" HPOS="1426" VPOS="931" WIDTH="113" HEIGHT="37" CONTENT="that" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_10_007" HPOS="1572" VPOS="929" WIDTH="144" HEIGHT="38" CONTENT="makes" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_10_008" HPOS="1755" VPOS="931" WIDTH="113" HEIGHT="36" CONTENT="them" WC="94" ALIGNCONF="94" CLEANPARA="0" />
+              <String ID="WORD_line_10_009" HPOS="1902" VPOS="938" WIDTH="174" HEIGHT="33" CONTENT="appear" WC="78" ALIGNCONF="78" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_11" HPOS="289" VPOS="975" WIDTH="1846" HEIGHT="47">
+              <String ID="WORD_line_11_001" HPOS="289" VPOS="975" WIDTH="344" HEIGHT="47" CONTENT="fundamental," WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_11_002" HPOS="676" VPOS="977" WIDTH="83" HEIGHT="40" CONTENT="but" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_11_003" HPOS="803" VPOS="978" WIDTH="46" HEIGHT="39" CONTENT="it" WC="79" ALIGNCONF="79" CLEANPARA="0" />
+              <String ID="WORD_line_11_004" HPOS="883" VPOS="978" WIDTH="56" HEIGHT="38" CONTENT="ts" WC="80" ALIGNCONF="36" />
+              <String ID="WORD_line_11_005" HPOS="981" VPOS="978" WIDTH="258" HEIGHT="40" CONTENT="important" WC="0" ALIGNCONF="0" CLEANPARA="0" />
+              <String ID="WORD_line_11_006" HPOS="1277" VPOS="983" WIDTH="53" HEIGHT="34" CONTENT="to" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_11_007" HPOS="1367" VPOS="979" WIDTH="203" HEIGHT="39" CONTENT="realize" WC="75" ALIGNCONF="75" CLEANPARA="0" />
+              <String ID="WORD_line_11_008" HPOS="1606" VPOS="981" WIDTH="110" HEIGHT="37" CONTENT="that" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_11_009" HPOS="1756" VPOS="978" WIDTH="82" HEIGHT="40" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_11_010" HPOS="1876" VPOS="977" WIDTH="259" HEIGHT="40" CONTENT="&quot;inferred" WC="68" ALIGNCONF="68" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_12" HPOS="288" VPOS="1024" WIDTH="1726" HEIGHT="49">
+              <String ID="WORD_line_12_001" HPOS="288" VPOS="1024" WIDTH="174" HEIGHT="42" CONTENT="state&quot;" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_12_002" HPOS="504" VPOS="1027" WIDTH="44" HEIGHT="36" CONTENT="is" WC="91" ALIGNCONF="91" CLEANPARA="0" />
+              <String ID="WORD_line_12_003" HPOS="583" VPOS="1036" WIDTH="56" HEIGHT="29" CONTENT="an" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_12_004" HPOS="675" VPOS="1028" WIDTH="233" HEIGHT="40" CONTENT="artefact" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_12_005" HPOS="944" VPOS="1030" WIDTH="56" HEIGHT="36" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_12_006" HPOS="1036" VPOS="1030" WIDTH="82" HEIGHT="38" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_12_007" HPOS="1153" VPOS="1029" WIDTH="266" HEIGHT="43" CONTENT="observing" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_12_008" HPOS="1456" VPOS="1036" WIDTH="175" HEIGHT="37" CONTENT="system" WC="93" ALIGNCONF="93" CLEANPARA="0" />
+              <String ID="WORD_line_12_009" HPOS="1662" VPOS="1030" WIDTH="86" HEIGHT="38" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_12_010" HPOS="1784" VPOS="1030" WIDTH="110" HEIGHT="37" CONTENT="does" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_12_011" HPOS="1931" VPOS="1035" WIDTH="83" HEIGHT="33" CONTENT="not" WC="91" ALIGNCONF="91" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_13" HPOS="284" VPOS="1075" WIDTH="1791" HEIGHT="48">
+              <String ID="WORD_line_13_001" HPOS="284" VPOS="1075" WIDTH="324" HEIGHT="44" CONTENT="necessarily" WC="73" ALIGNCONF="73" CLEANPARA="0" />
+              <String ID="WORD_line_13_002" HPOS="645" VPOS="1077" WIDTH="114" HEIGHT="40" CONTENT="have" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_13_003" HPOS="793" VPOS="1087" WIDTH="56" HEIGHT="30" CONTENT="an" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_13_004" HPOS="883" VPOS="1083" WIDTH="207" HEIGHT="40" CONTENT="analogy" WC="86" ALIGNCONF="86" CLEANPARA="0" />
+              <String ID="WORD_line_13_005" HPOS="1132" VPOS="1079" WIDTH="46" HEIGHT="38" CONTENT="in" WC="84" ALIGNCONF="84" CLEANPARA="0" />
+              <String ID="WORD_line_13_006" HPOS="1218" VPOS="1079" WIDTH="79" HEIGHT="39" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_13_007" HPOS="1337" VPOS="1084" WIDTH="261" HEIGHT="34" CONTENT="structure" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_13_008" HPOS="1633" VPOS="1079" WIDTH="55" HEIGHT="39" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="0" />
+              <String ID="WORD_line_13_009" HPOS="1724" VPOS="1080" WIDTH="80" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="0" />
+              <String ID="WORD_line_13_010" HPOS="1841" VPOS="1079" WIDTH="234" HEIGHT="39" CONTENT="observed" WC="82" ALIGNCONF="82" CLEANPARA="0" />
+            </TextLine>
+            <TextLine ID="line_14" HPOS="288" VPOS="1131" WIDTH="196" HEIGHT="37">
+              <String ID="WORD_line_14_001" HPOS="288" VPOS="1131" WIDTH="196" HEIGHT="37" CONTENT="system." WC="87" ALIGNCONF="87" CLEANPARA="0" />
+            </TextLine>
+          </TextBlock>
+        </ComposedBlock>
+        <ComposedBlock ID="cblock_1" HPOS="282" VPOS="1226" WIDTH="1851" HEIGHT="738">
+          <TextBlock ID="block_1" HPOS="282" VPOS="1226" WIDTH="1851" HEIGHT="738">
+            <TextLine ID="line_15" HPOS="462" VPOS="1226" WIDTH="1575" HEIGHT="44">
+              <String ID="WORD_line_15_001" HPOS="462" VPOS="1226" WIDTH="237" HEIGHT="38" CONTENT="Automata" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_15_002" HPOS="736" VPOS="1226" WIDTH="176" HEIGHT="42" CONTENT="theory" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_15_003" HPOS="951" VPOS="1227" WIDTH="49" HEIGHT="38" CONTENT="is" WC="89" ALIGNCONF="89" CLEANPARA="1" />
+              <String ID="WORD_line_15_004" HPOS="1036" VPOS="1228" WIDTH="84" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_15_005" HPOS="1155" VPOS="1228" WIDTH="234" HEIGHT="38" CONTENT="ultimate" WC="84" ALIGNCONF="84" CLEANPARA="1" />
+              <String ID="WORD_line_15_006" HPOS="1421" VPOS="1227" WIDTH="296" HEIGHT="42" CONTENT="expression" WC="56" ALIGNCONF="56" CLEANPARA="1" />
+              <String ID="WORD_line_15_007" HPOS="1752" VPOS="1226" WIDTH="55" HEIGHT="39" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_15_008" HPOS="1841" VPOS="1227" WIDTH="196" HEIGHT="43" CONTENT="general" WC="71" ALIGNCONF="71" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_16" HPOS="287" VPOS="1275" WIDTH="1846" HEIGHT="43">
+              <String ID="WORD_line_16_001" HPOS="287" VPOS="1275" WIDTH="472" HEIGHT="40" CONTENT="state-determined" WC="72" ALIGNCONF="72" CLEANPARA="1" />
+              <String ID="WORD_line_16_002" HPOS="794" VPOS="1276" WIDTH="267" HEIGHT="39" CONTENT="behaviour" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_16_003" HPOS="1093" VPOS="1277" WIDTH="86" HEIGHT="38" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_16_004" HPOS="1221" VPOS="1276" WIDTH="45" HEIGHT="38" CONTENT="it" WC="87" ALIGNCONF="87" CLEANPARA="1" />
+              <String ID="WORD_line_16_005" HPOS="1304" VPOS="1277" WIDTH="85" HEIGHT="37" CONTENT="has" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_16_006" HPOS="1431" VPOS="1276" WIDTH="75" HEIGHT="37" CONTENT="its" WC="61" ALIGNCONF="61" CLEANPARA="1" />
+              <String ID="WORD_line_16_007" HPOS="1542" VPOS="1277" WIDTH="146" HEIGHT="41" CONTENT="place" WC="74" ALIGNCONF="74" CLEANPARA="1" />
+              <String ID="WORD_line_16_008" HPOS="1730" VPOS="1276" WIDTH="46" HEIGHT="38" CONTENT="in" WC="90" ALIGNCONF="90" CLEANPARA="1" />
+              <String ID="WORD_line_16_009" HPOS="1810" VPOS="1281" WIDTH="114" HEIGHT="32" CONTENT="most" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_16_010" HPOS="1959" VPOS="1275" WIDTH="174" HEIGHT="38" CONTENT="modern" WC="54" ALIGNCONF="54" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_17" HPOS="286" VPOS="1324" WIDTH="1818" HEIGHT="43">
+              <String ID="WORD_line_17_001" HPOS="286" VPOS="1324" WIDTH="265" HEIGHT="39" CONTENT="textbooks" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_17_002" HPOS="584" VPOS="1333" WIDTH="54" HEIGHT="30" CONTENT="on" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_17_003" HPOS="673" VPOS="1327" WIDTH="200" HEIGHT="37" CONTENT="control" WC="68" ALIGNCONF="68" CLEANPARA="1" />
+              <String ID="WORD_line_17_004" HPOS="916" VPOS="1325" WIDTH="195" HEIGHT="42" CONTENT="theory." WC="92" ALIGNCONF="92" CLEANPARA="1" />
+              <String ID="WORD_line_17_005" HPOS="1192" VPOS="1327" WIDTH="78" HEIGHT="37" CONTENT="Its" WC="48" ALIGNCONF="48" CLEANPARA="1" />
+              <String ID="WORD_line_17_006" HPOS="1304" VPOS="1327" WIDTH="167" HEIGHT="37" CONTENT="actual" WC="90" ALIGNCONF="54" CLEANPARA="1" />
+              <String ID="WORD_line_17_007" HPOS="1518" VPOS="1327" WIDTH="110" HEIGHT="37" CONTENT="rate" WC="66" ALIGNCONF="30" />
+              <String ID="WORD_line_17_008" HPOS="1665" VPOS="1335" WIDTH="54" HEIGHT="28" CONTENT="so" WC="96" ALIGNCONF="58" CLEANPARA="1" />
+              <String ID="WORD_line_17_009" HPOS="1754" VPOS="1325" WIDTH="80" HEIGHT="39" CONTENT="far" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_17_010" HPOS="1873" VPOS="1326" WIDTH="82" HEIGHT="35" CONTENT="has" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_17_011" HPOS="1990" VPOS="1325" WIDTH="114" HEIGHT="38" CONTENT="been" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_18" HPOS="285" VPOS="1374" WIDTH="1642" HEIGHT="46">
+              <String ID="WORD_line_18_001" HPOS="285" VPOS="1374" WIDTH="285" HEIGHT="43" CONTENT="peripheral" WC="57" ALIGNCONF="57" CLEANPARA="1" />
+              <String ID="WORD_line_18_002" HPOS="615" VPOS="1378" WIDTH="54" HEIGHT="36" CONTENT="to" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_18_003" HPOS="703" VPOS="1375" WIDTH="115" HEIGHT="40" CONTENT="both" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_18_004" HPOS="852" VPOS="1378" WIDTH="198" HEIGHT="38" CONTENT="control" WC="62" ALIGNCONF="62" CLEANPARA="1" />
+              <String ID="WORD_line_18_005" HPOS="1097" VPOS="1376" WIDTH="173" HEIGHT="42" CONTENT="theory" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_18_006" HPOS="1303" VPOS="1378" WIDTH="84" HEIGHT="36" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_18_007" HPOS="1423" VPOS="1376" WIDTH="261" HEIGHT="44" CONTENT="practice," WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_18_008" HPOS="1726" VPOS="1376" WIDTH="201" HEIGHT="43" CONTENT="largely" WC="92" ALIGNCONF="92" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_19" HPOS="285" VPOS="1423" WIDTH="1821" HEIGHT="46">
+              <String ID="WORD_line_19_001" HPOS="285" VPOS="1423" WIDTH="203" HEIGHT="42" CONTENT="because" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_19_002" HPOS="523" VPOS="1425" WIDTH="57" HEIGHT="37" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_19_003" HPOS="614" VPOS="1425" WIDTH="87" HEIGHT="42" CONTENT="the" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_19_004" HPOS="738" VPOS="1426" WIDTH="110" HEIGHT="39" CONTENT="lack" WC="89" ALIGNCONF="89" CLEANPARA="1" />
+              <String ID="WORD_line_19_005" HPOS="884" VPOS="1429" WIDTH="54" HEIGHT="36" CONTENT="of" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_19_006" HPOS="974" VPOS="1427" WIDTH="228" HEIGHT="41" CONTENT="powerful" WC="62" ALIGNCONF="62" CLEANPARA="1" />
+              <String ID="WORD_line_19_007" HPOS="1242" VPOS="1427" WIDTH="201" HEIGHT="42" CONTENT="general" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_19_008" HPOS="1487" VPOS="1425" WIDTH="201" HEIGHT="40" CONTENT="results" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_19_009" HPOS="1723" VPOS="1425" WIDTH="293" HEIGHT="44" CONTENT="comparable" WC="63" ALIGNCONF="63" CLEANPARA="1" />
+              <String ID="WORD_line_19_010" HPOS="2052" VPOS="1429" WIDTH="54" HEIGHT="34" CONTENT="to" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_20" HPOS="287" VPOS="1474" WIDTH="1757" HEIGHT="44">
+              <String ID="WORD_line_20_001" HPOS="287" VPOS="1475" WIDTH="143" HEIGHT="36" CONTENT="those" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_20_002" HPOS="463" VPOS="1475" WIDTH="56" HEIGHT="37" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_20_003" HPOS="556" VPOS="1474" WIDTH="174" HEIGHT="42" CONTENT="linear" WC="91" ALIGNCONF="91" CLEANPARA="1" />
+              <String ID="WORD_line_20_004" HPOS="765" VPOS="1480" WIDTH="207" HEIGHT="38" CONTENT="systems" WC="66" ALIGNCONF="40" CLEANPARA="1" />
+              <String ID="WORD_line_20_005" HPOS="1006" VPOS="1477" WIDTH="199" HEIGHT="41" CONTENT="theory" WC="89" ALIGNCONF="53" CLEANPARA="1" />
+              <String ID="WORD_line_20_006" HPOS="1270" VPOS="1476" WIDTH="150" HEIGHT="38" CONTENT="Arbib" WC="86" ALIGNCONF="52" CLEANPARA="1" />
+              <String ID="WORD_line_20_007" HPOS="1460" VPOS="1475" WIDTH="192" HEIGHT="40" CONTENT="(1975a)" WC="85" ALIGNCONF="85" CLEANPARA="1" />
+              <String ID="WORD_line_20_008" HPOS="1694" VPOS="1476" WIDTH="83" HEIGHT="38" CONTENT="has" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_20_009" HPOS="1818" VPOS="1476" WIDTH="226" HEIGHT="42" CONTENT="recently" WC="82" ALIGNCONF="82" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_21" HPOS="285" VPOS="1523" WIDTH="1788" HEIGHT="46">
+              <String ID="WORD_line_21_001" HPOS="285" VPOS="1523" WIDTH="235" HEIGHT="40" CONTENT="provided" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_21_002" HPOS="551" VPOS="1533" WIDTH="25" HEIGHT="27" CONTENT="a" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_21_003" HPOS="612" VPOS="1525" WIDTH="170" HEIGHT="38" CONTENT="useful" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_21_004" HPOS="822" VPOS="1524" WIDTH="236" HEIGHT="44" CONTENT="critique" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_21_005" HPOS="1094" VPOS="1527" WIDTH="56" HEIGHT="37" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_21_006" HPOS="1185" VPOS="1526" WIDTH="83" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_21_007" HPOS="1309" VPOS="1527" WIDTH="110" HEIGHT="38" CONTENT="role" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_21_008" HPOS="1454" VPOS="1525" WIDTH="52" HEIGHT="39" CONTENT="of" WC="76" ALIGNCONF="76" CLEANPARA="1" />
+              <String ID="WORD_line_21_009" HPOS="1543" VPOS="1532" WIDTH="234" HEIGHT="32" CONTENT="automata" WC="96" ALIGNCONF="58" CLEANPARA="1" />
+              <String ID="WORD_line_21_010" HPOS="1813" VPOS="1526" WIDTH="171" HEIGHT="43" CONTENT="theory" WC="95" ALIGNCONF="57" CLEANPARA="1" />
+              <String ID="WORD_line_21_011" HPOS="2028" VPOS="1525" WIDTH="45" HEIGHT="37" CONTENT="in" WC="61" ALIGNCONF="37" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_22" HPOS="282" VPOS="1575" WIDTH="1816" HEIGHT="47">
+              <String ID="WORD_line_22_001" HPOS="282" VPOS="1575" WIDTH="267" HEIGHT="44" CONTENT="modelling" WC="35" ALIGNCONF="35" CLEANPARA="1" />
+              <String ID="WORD_line_22_002" HPOS="585" VPOS="1576" WIDTH="288" HEIGHT="43" CONTENT="biological" WC="69" ALIGNCONF="69" CLEANPARA="1" />
+              <String ID="WORD_line_22_003" HPOS="916" VPOS="1582" WIDTH="225" HEIGHT="39" CONTENT="systems," WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_22_004" HPOS="1184" VPOS="1577" WIDTH="106" HEIGHT="43" CONTENT="and," WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_22_005" HPOS="1332" VPOS="1585" WIDTH="114" HEIGHT="32" CONTENT="over" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_22_006" HPOS="1483" VPOS="1587" WIDTH="23" HEIGHT="28" CONTENT="@" WC="89" ALIGNCONF="40" />
+              <String ID="WORD_line_22_007" HPOS="1545" VPOS="1586" WIDTH="111" HEIGHT="33" CONTENT="span" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_22_008" HPOS="1693" VPOS="1578" WIDTH="54" HEIGHT="36" CONTENT="of" WC="92" ALIGNCONF="92" CLEANPARA="1" />
+              <String ID="WORD_line_22_009" HPOS="1784" VPOS="1585" WIDTH="109" HEIGHT="30" CONTENT="some" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_22_010" HPOS="1931" VPOS="1585" WIDTH="167" HEIGHT="37" CONTENT="years," WC="95" ALIGNCONF="95" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_23" HPOS="285" VPOS="1623" WIDTH="1848" HEIGHT="48">
+              <String ID="WORD_line_23_001" HPOS="285" VPOS="1624" WIDTH="54" HEIGHT="40" CONTENT="he" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_23_002" HPOS="373" VPOS="1623" WIDTH="82" HEIGHT="40" CONTENT="has" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_23_003" HPOS="494" VPOS="1625" WIDTH="113" HEIGHT="40" CONTENT="been" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_23_004" HPOS="643" VPOS="1625" WIDTH="176" HEIGHT="39" CONTENT="active" WC="88" ALIGNCONF="88" CLEANPARA="1" />
+              <String ID="WORD_line_23_005" HPOS="860" VPOS="1626" WIDTH="49" HEIGHT="36" CONTENT="in" WC="63" ALIGNCONF="63" CLEANPARA="1" />
+              <String ID="WORD_line_23_006" HPOS="943" VPOS="1628" WIDTH="265" HEIGHT="43" CONTENT="promoting" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_23_007" HPOS="1244" VPOS="1626" WIDTH="84" HEIGHT="38" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_23_008" HPOS="1370" VPOS="1628" WIDTH="109" HEIGHT="36" CONTENT="role" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_23_009" HPOS="1512" VPOS="1625" WIDTH="56" HEIGHT="39" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_23_010" HPOS="1603" VPOS="1630" WIDTH="233" HEIGHT="35" CONTENT="automata" WC="94" ALIGNCONF="56" CLEANPARA="1" />
+              <String ID="WORD_line_23_011" HPOS="1873" VPOS="1626" WIDTH="172" HEIGHT="43" CONTENT="theory" WC="96" ALIGNCONF="24" />
+              <String ID="WORD_line_23_012" HPOS="2087" VPOS="1625" WIDTH="46" HEIGHT="38" CONTENT="tn" WC="84" ALIGNCONF="38" />
+            </TextLine>
+            <TextLine ID="line_24" HPOS="283" VPOS="1673" WIDTH="1756" HEIGHT="47">
+              <String ID="WORD_line_24_001" HPOS="283" VPOS="1674" WIDTH="198" HEIGHT="45" CONTENT="control" WC="86" ALIGNCONF="52" CLEANPARA="1" />
+              <String ID="WORD_line_24_002" HPOS="522" VPOS="1674" WIDTH="327" HEIGHT="46" CONTENT="engineering" WC="78" ALIGNCONF="78" CLEANPARA="1" />
+              <String ID="WORD_line_24_003" HPOS="889" VPOS="1676" WIDTH="169" HEIGHT="40" CONTENT="(Arbib" WC="50" ALIGNCONF="50" CLEANPARA="1" />
+              <String ID="WORD_line_24_004" HPOS="1094" VPOS="1676" WIDTH="138" HEIGHT="44" CONTENT="1965," WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_24_005" HPOS="1274" VPOS="1675" WIDTH="138" HEIGHT="45" CONTENT="1966," WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_24_006" HPOS="1451" VPOS="1675" WIDTH="145" HEIGHT="38" CONTENT="Arbib" WC="88" ALIGNCONF="88" CLEANPARA="1" />
+              <String ID="WORD_line_24_007" HPOS="1630" VPOS="1677" WIDTH="27" HEIGHT="34" CONTENT="&amp;" WC="88" ALIGNCONF="88" CLEANPARA="1" />
+              <String ID="WORD_line_24_008" HPOS="1695" VPOS="1675" WIDTH="171" HEIGHT="42" CONTENT="Zeiger" WC="47" ALIGNCONF="47" CLEANPARA="1" />
+              <String ID="WORD_line_24_009" HPOS="1902" VPOS="1673" WIDTH="137" HEIGHT="40" CONTENT="1969)" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_25" HPOS="283" VPOS="1723" WIDTH="1787" HEIGHT="46">
+              <String ID="WORD_line_25_001" HPOS="283" VPOS="1726" WIDTH="85" HEIGHT="36" CONTENT="and" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_25_002" HPOS="408" VPOS="1723" WIDTH="81" HEIGHT="39" CONTENT="its" WC="59" ALIGNCONF="59" CLEANPARA="1" />
+              <String ID="WORD_line_25_003" HPOS="528" VPOS="1726" WIDTH="352" HEIGHT="43" CONTENT="relationship" WC="85" ALIGNCONF="85" CLEANPARA="1" />
+              <String ID="WORD_line_25_004" HPOS="916" VPOS="1732" WIDTH="55" HEIGHT="33" CONTENT="to" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_25_005" HPOS="1006" VPOS="1726" WIDTH="173" HEIGHT="40" CONTENT="linear" WC="90" ALIGNCONF="90" CLEANPARA="1" />
+              <String ID="WORD_line_25_006" HPOS="1214" VPOS="1734" WIDTH="202" HEIGHT="35" CONTENT="systems" WC="90" ALIGNCONF="54" CLEANPARA="1" />
+              <String ID="WORD_line_25_007" HPOS="1455" VPOS="1726" WIDTH="171" HEIGHT="43" CONTENT="theory" WC="93" ALIGNCONF="42" />
+              <String ID="WORD_line_25_008" HPOS="1669" VPOS="1724" WIDTH="167" HEIGHT="41" CONTENT="(Arbib" WC="79" ALIGNCONF="47" CLEANPARA="1" />
+              <String ID="WORD_line_25_009" HPOS="1869" VPOS="1726" WIDTH="26" HEIGHT="36" CONTENT="&amp;" WC="89" ALIGNCONF="89" CLEANPARA="1" />
+              <String ID="WORD_line_25_010" HPOS="1928" VPOS="1726" WIDTH="142" HEIGHT="37" CONTENT="Manes" WC="96" ALIGNCONF="58" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_26" HPOS="286" VPOS="1774" WIDTH="1789" HEIGHT="45">
+              <String ID="WORD_line_26_001" HPOS="286" VPOS="1774" WIDTH="168" HEIGHT="39" CONTENT="is" WC="50" ALIGNCONF="50" CLEANPARA="0" />
+              <String ID="WORD_line_26_002" HPOS="521" VPOS="1775" WIDTH="115" HEIGHT="38" CONTENT="This" WC="63" ALIGNCONF="38" CLEANPARA="1" />
+              <String ID="WORD_line_26_003" HPOS="674" VPOS="1776" WIDTH="175" HEIGHT="38" CONTENT="series" WC="77" ALIGNCONF="77" CLEANPARA="1" />
+              <String ID="WORD_line_26_004" HPOS="883" VPOS="1777" WIDTH="56" HEIGHT="37" CONTENT="of" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_26_005" HPOS="973" VPOS="1786" WIDTH="175" HEIGHT="33" CONTENT="papers" WC="67" ALIGNCONF="67" CLEANPARA="1" />
+              <String ID="WORD_line_26_006" HPOS="1189" VPOS="1776" WIDTH="47" HEIGHT="38" CONTENT="is" WC="58" ALIGNCONF="58" CLEANPARA="1" />
+              <String ID="WORD_line_26_007" HPOS="1271" VPOS="1778" WIDTH="108" HEIGHT="36" CONTENT="well" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_26_008" HPOS="1421" VPOS="1777" WIDTH="144" HEIGHT="36" CONTENT="worth" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_26_009" HPOS="1608" VPOS="1777" WIDTH="197" HEIGHT="41" CONTENT="reading" WC="94" ALIGNCONF="94" CLEANPARA="1" />
+              <String ID="WORD_line_26_010" HPOS="1841" VPOS="1775" WIDTH="114" HEIGHT="40" CONTENT="both" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_26_011" HPOS="1991" VPOS="1775" WIDTH="84" HEIGHT="38" CONTENT="for" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_27" HPOS="291" VPOS="1824" WIDTH="1662" HEIGHT="47">
+              <String ID="WORD_line_27_001" HPOS="291" VPOS="1824" WIDTH="75" HEIGHT="36" CONTENT="its" WC="91" ALIGNCONF="91" CLEANPARA="1" />
+              <String ID="WORD_line_27_002" HPOS="402" VPOS="1826" WIDTH="199" HEIGHT="43" CONTENT="general" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_27_003" HPOS="651" VPOS="1824" WIDTH="226" HEIGHT="41" CONTENT="interest" WC="83" ALIGNCONF="83" CLEANPARA="1" />
+              <String ID="WORD_line_27_004" HPOS="911" VPOS="1827" WIDTH="87" HEIGHT="38" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_27_005" HPOS="1030" VPOS="1835" WIDTH="55" HEIGHT="30" CONTENT="as" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_27_006" HPOS="1122" VPOS="1836" WIDTH="55" HEIGHT="28" CONTENT="an" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_27_007" HPOS="1220" VPOS="1827" WIDTH="347" HEIGHT="38" CONTENT="introduction" WC="80" ALIGNCONF="80" CLEANPARA="1" />
+              <String ID="WORD_line_27_008" HPOS="1605" VPOS="1831" WIDTH="53" HEIGHT="33" CONTENT="to" WC="95" ALIGNCONF="95" CLEANPARA="1" />
+              <String ID="WORD_line_27_009" HPOS="1691" VPOS="1824" WIDTH="262" HEIGHT="47" CONTENT="algebraic" WC="53" ALIGNCONF="53" CLEANPARA="1" />
+            </TextLine>
+            <TextLine ID="line_28" HPOS="283" VPOS="1873" WIDTH="1663" HEIGHT="91">
+              <String ID="WORD_line_28_001" HPOS="283" VPOS="1877" WIDTH="164" HEIGHT="87" CONTENT="‘Seay" WC="0" ALIGNCONF="0" />
+              <String ID="WORD_line_28_002" HPOS="620" VPOS="1875" WIDTH="45" HEIGHT="40" CONTENT="in" WC="95" ALIGNCONF="57" CLEANPARA="1" />
+              <String ID="WORD_line_28_003" HPOS="702" VPOS="1878" WIDTH="80" HEIGHT="43" CONTENT="CE," WC="93" ALIGNCONF="56" CLEANPARA="1" />
+              <String ID="WORD_line_28_004" HPOS="821" VPOS="1878" WIDTH="358" HEIGHT="43" CONTENT="particularly" WC="42" ALIGNCONF="42" CLEANPARA="1" />
+              <String ID="WORD_line_28_005" HPOS="1215" VPOS="1877" WIDTH="82" HEIGHT="39" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="1" />
+              <String ID="WORD_line_28_006" HPOS="1331" VPOS="1873" WIDTH="114" HEIGHT="88" CONTENT="work" WC="90" ALIGNCONF="90" CLEANPARA="1" />
+              <String ID="WORD_line_28_007" HPOS="1483" VPOS="1878" WIDTH="52" HEIGHT="36" CONTENT="of" WC="93" ALIGNCONF="93" CLEANPARA="1" />
+              <String ID="WORD_line_28_008" HPOS="1574" VPOS="1877" WIDTH="173" HEIGHT="38" CONTENT="Kalman" WC="88" ALIGNCONF="88" CLEANPARA="1" />
+              <String ID="WORD_line_28_009" HPOS="1788" VPOS="1877" WIDTH="76" HEIGHT="39" CONTENT="(et" WC="84" ALIGNCONF="84" CLEANPARA="1" />
+              <String ID="WORD_line_28_010" HPOS="1899" VPOS="1878" WIDTH="47" HEIGHT="36" CONTENT="a" WC="80" ALIGNCONF="80" CLEANPARA="1" />
+            </TextLine>
+          </TextBlock>
+        </ComposedBlock>
+        <ComposedBlock ID="cblock_2" HPOS="284" VPOS="2075" WIDTH="654" HEIGHT="44">
+          <TextBlock ID="block_2" HPOS="284" VPOS="2075" WIDTH="654" HEIGHT="44">
+            <TextLine ID="line_29" HPOS="284" VPOS="2075" WIDTH="654" HEIGHT="44">
+              <String ID="WORD_line_29_001" HPOS="284" VPOS="2076" WIDTH="20" HEIGHT="35" CONTENT="3" WC="64" ALIGNCONF="64" CLEANPARA="2" />
+              <String ID="WORD_line_29_002" HPOS="340" VPOS="2075" WIDTH="201" HEIGHT="41" CONTENT="Control" WC="93" ALIGNCONF="93" CLEANPARA="2" />
+              <String ID="WORD_line_29_003" HPOS="582" VPOS="2077" WIDTH="356" HEIGHT="42" CONTENT="Applications" WC="63" ALIGNCONF="63" CLEANPARA="2" />
+            </TextLine>
+          </TextBlock>
+        </ComposedBlock>
+        <ComposedBlock ID="cblock_3" HPOS="279" VPOS="2276" WIDTH="1821" HEIGHT="495">
+          <TextBlock ID="block_3" HPOS="279" VPOS="2276" WIDTH="1821" HEIGHT="495">
+            <TextLine ID="line_30" HPOS="461" VPOS="2276" WIDTH="1639" HEIGHT="46">
+              <String ID="WORD_line_30_001" HPOS="461" VPOS="2276" WIDTH="176" HEIGHT="39" CONTENT="Whilst" WC="87" ALIGNCONF="87" CLEANPARA="3" />
+              <String ID="WORD_line_30_002" HPOS="673" VPOS="2278" WIDTH="84" HEIGHT="38" CONTENT="the" WC="92" ALIGNCONF="92" CLEANPARA="3" />
+              <String ID="WORD_line_30_003" HPOS="793" VPOS="2279" WIDTH="291" HEIGHT="40" CONTENT="development" WC="61" ALIGNCONF="61" CLEANPARA="3" />
+              <String ID="WORD_line_30_004" HPOS="1119" VPOS="2280" WIDTH="59" HEIGHT="34" CONTENT="of" WC="85" ALIGNCONF="85" CLEANPARA="3" />
+              <String ID="WORD_line_30_005" HPOS="1210" VPOS="2281" WIDTH="197" HEIGHT="35" CONTENT="control" WC="60" ALIGNCONF="60" CLEANPARA="3" />
+              <String ID="WORD_line_30_006" HPOS="1452" VPOS="2279" WIDTH="174" HEIGHT="43" CONTENT="theory" WC="78" ALIGNCONF="78" CLEANPARA="3" />
+              <String ID="WORD_line_30_007" HPOS="1662" VPOS="2278" WIDTH="81" HEIGHT="36" CONTENT="has" WC="94" ALIGNCONF="94" CLEANPARA="3" />
+              <String ID="WORD_line_30_008" HPOS="1788" VPOS="2277" WIDTH="72" HEIGHT="37" CONTENT="its" WC="62" ALIGNCONF="62" CLEANPARA="3" />
+              <String ID="WORD_line_30_009" HPOS="1903" VPOS="2278" WIDTH="197" HEIGHT="37" CONTENT="lessons" WC="91" ALIGNCONF="91" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_31" HPOS="282" VPOS="2324" WIDTH="1522" HEIGHT="49">
+              <String ID="WORD_line_31_001" HPOS="282" VPOS="2324" WIDTH="106" HEIGHT="47" CONTENT="for," WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_31_002" HPOS="430" VPOS="2324" WIDTH="85" HEIGHT="40" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_31_003" HPOS="557" VPOS="2326" WIDTH="351" HEIGHT="41" CONTENT="interactions" WC="78" ALIGNCONF="78" CLEANPARA="3" />
+              <String ID="WORD_line_31_004" HPOS="939" VPOS="2328" WIDTH="141" HEIGHT="44" CONTENT="with," WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_31_005" HPOS="1121" VPOS="2329" WIDTH="80" HEIGHT="44" CONTENT="AI," WC="72" ALIGNCONF="72" CLEANPARA="3" />
+              <String ID="WORD_line_31_006" HPOS="1248" VPOS="2327" WIDTH="46" HEIGHT="37" CONTENT="it" WC="69" ALIGNCONF="69" CLEANPARA="3" />
+              <String ID="WORD_line_31_007" HPOS="1338" VPOS="2327" WIDTH="45" HEIGHT="38" CONTENT="is" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_31_008" HPOS="1423" VPOS="2331" WIDTH="170" HEIGHT="40" CONTENT="surely" WC="78" ALIGNCONF="78" CLEANPARA="3" />
+              <String ID="WORD_line_31_009" HPOS="1636" VPOS="2328" WIDTH="49" HEIGHT="37" CONTENT="in" WC="67" ALIGNCONF="67" CLEANPARA="3" />
+              <String ID="WORD_line_31_010" HPOS="1722" VPOS="2328" WIDTH="82" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_32" HPOS="280" VPOS="2377" WIDTH="1701" HEIGHT="45">
+              <String ID="WORD_line_32_001" HPOS="280" VPOS="2377" WIDTH="380" HEIGHT="45" CONTENT="applications," WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_32_002" HPOS="701" VPOS="2380" WIDTH="84" HEIGHT="37" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_32_003" HPOS="821" VPOS="2380" WIDTH="263" HEIGHT="42" CONTENT="attempted" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_32_004" HPOS="1120" VPOS="2378" WIDTH="380" HEIGHT="44" CONTENT="applications," WC="61" ALIGNCONF="61" CLEANPARA="3" />
+              <String ID="WORD_line_32_005" HPOS="1540" VPOS="2379" WIDTH="54" HEIGHT="37" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_32_006" HPOS="1629" VPOS="2380" WIDTH="53" HEIGHT="37" CONTENT="CE" WC="94" ALIGNCONF="94" CLEANPARA="3" />
+              <String ID="WORD_line_32_007" HPOS="1722" VPOS="2379" WIDTH="110" HEIGHT="37" CONTENT="that" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_32_008" HPOS="1868" VPOS="2384" WIDTH="113" HEIGHT="32" CONTENT="most" WC="93" ALIGNCONF="93" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_33" HPOS="279" VPOS="2426" WIDTH="1585" HEIGHT="45">
+              <String ID="WORD_line_33_001" HPOS="279" VPOS="2427" WIDTH="150" HEIGHT="37" CONTENT="value" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_33_002" HPOS="469" VPOS="2426" WIDTH="46" HEIGHT="39" CONTENT="is" WC="73" ALIGNCONF="73" CLEANPARA="3" />
+              <String ID="WORD_line_33_003" HPOS="553" VPOS="2432" WIDTH="54" HEIGHT="32" CONTENT="to" WC="96" ALIGNCONF="58" CLEANPARA="3" />
+              <String ID="WORD_line_33_004" HPOS="645" VPOS="2428" WIDTH="165" HEIGHT="39" CONTENT="found." WC="92" ALIGNCONF="55" CLEANPARA="3" />
+              <String ID="WORD_line_33_005" HPOS="883" VPOS="2427" WIDTH="202" HEIGHT="44" CONTENT="Finding" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_33_006" HPOS="1123" VPOS="2429" WIDTH="232" HEIGHT="38" CONTENT="suitable" WC="46" ALIGNCONF="46" CLEANPARA="3" />
+              <String ID="WORD_line_33_007" HPOS="1390" VPOS="2429" WIDTH="233" HEIGHT="39" CONTENT="problems" WC="46" ALIGNCONF="46" CLEANPARA="3" />
+              <String ID="WORD_line_33_008" HPOS="1665" VPOS="2427" WIDTH="78" HEIGHT="39" CONTENT="for" WC="88" ALIGNCONF="88" CLEANPARA="3" />
+              <String ID="WORD_line_33_009" HPOS="1782" VPOS="2429" WIDTH="82" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_34" HPOS="280" VPOS="2476" WIDTH="1672" HEIGHT="44">
+              <String ID="WORD_line_34_001" HPOS="280" VPOS="2476" WIDTH="326" HEIGHT="43" CONTENT="application" WC="29" ALIGNCONF="29" CLEANPARA="3" />
+              <String ID="WORD_line_34_002" HPOS="641" VPOS="2478" WIDTH="56" HEIGHT="38" CONTENT="of" WC="95" ALIGNCONF="57" CLEANPARA="3" />
+              <String ID="WORD_line_34_003" HPOS="728" VPOS="2478" WIDTH="51" HEIGHT="36" CONTENT="al" WC="76" ALIGNCONF="46" CLEANPARA="1" />
+              <String ID="WORD_line_34_004" HPOS="823" VPOS="2478" WIDTH="294" HEIGHT="42" CONTENT="techniques" WC="93" ALIGNCONF="56" CLEANPARA="1" />
+              <String ID="WORD_line_34_005" HPOS="1159" VPOS="2478" WIDTH="45" HEIGHT="38" CONTENT="is" WC="76" ALIGNCONF="46" CLEANPARA="3" />
+              <String ID="WORD_line_34_006" HPOS="1241" VPOS="2488" WIDTH="25" HEIGHT="27" CONTENT="a" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_34_007" HPOS="1300" VPOS="2478" WIDTH="295" HEIGHT="42" CONTENT="continuing" WC="87" ALIGNCONF="87" CLEANPARA="3" />
+              <String ID="WORD_line_34_008" HPOS="1634" VPOS="2477" WIDTH="318" HEIGHT="41" CONTENT="requirement" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_35" HPOS="288" VPOS="2523" WIDTH="1634" HEIGHT="47">
+              <String ID="WORD_line_35_001" HPOS="288" VPOS="2525" WIDTH="170" HEIGHT="39" CONTENT="(where" WC="76" ALIGNCONF="76" CLEANPARA="3" />
+              <String ID="WORD_line_35_002" HPOS="500" VPOS="2523" WIDTH="280" HEIGHT="42" CONTENT="'suitable'" WC="60" ALIGNCONF="60" CLEANPARA="3" />
+              <String ID="WORD_line_35_003" HPOS="829" VPOS="2527" WIDTH="198" HEIGHT="43" CONTENT="implies" WC="72" ALIGNCONF="72" CLEANPARA="3" />
+              <String ID="WORD_line_35_004" HPOS="1062" VPOS="2529" WIDTH="113" HEIGHT="39" CONTENT="both" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_35_005" HPOS="1217" VPOS="2529" WIDTH="258" HEIGHT="39" CONTENT="relevance" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_35_006" HPOS="1512" VPOS="2530" WIDTH="81" HEIGHT="36" CONTENT="and" WC="92" ALIGNCONF="92" CLEANPARA="3" />
+              <String ID="WORD_line_35_007" HPOS="1630" VPOS="2528" WIDTH="292" HEIGHT="37" CONTENT="borderline" WC="49" ALIGNCONF="49" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_36" HPOS="284" VPOS="2575" WIDTH="1699" HEIGHT="47">
+              <String ID="WORD_line_36_001" HPOS="284" VPOS="2575" WIDTH="376" HEIGHT="46" CONTENT="solvability)," WC="73" ALIGNCONF="73" CLEANPARA="3" />
+              <String ID="WORD_line_36_002" HPOS="698" VPOS="2578" WIDTH="88" HEIGHT="36" CONTENT="and" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_36_003" HPOS="817" VPOS="2578" WIDTH="239" HEIGHT="44" CONTENT="advanced" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_36_004" HPOS="1089" VPOS="2578" WIDTH="56" HEIGHT="36" CONTENT="CE" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_36_005" HPOS="1180" VPOS="2587" WIDTH="85" HEIGHT="34" CONTENT="may" WC="95" ALIGNCONF="57" CLEANPARA="3" />
+              <String ID="WORD_line_36_006" HPOS="1301" VPOS="2577" WIDTH="52" HEIGHT="37" CONTENT="he" WC="69" ALIGNCONF="31" />
+              <String ID="WORD_line_36_007" HPOS="1390" VPOS="2587" WIDTH="114" HEIGHT="27" CONTENT="seen" WC="95" ALIGNCONF="57" CLEANPARA="3" />
+              <String ID="WORD_line_36_008" HPOS="1540" VPOS="2587" WIDTH="50" HEIGHT="27" CONTENT="as" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_36_009" HPOS="1631" VPOS="2576" WIDTH="232" HEIGHT="41" CONTENT="defining" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_36_010" HPOS="1901" VPOS="2576" WIDTH="82" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_37" HPOS="285" VPOS="2626" WIDTH="1695" HEIGHT="43">
+              <String ID="WORD_line_37_001" HPOS="285" VPOS="2626" WIDTH="143" HEIGHT="38" CONTENT="lower" WC="70" ALIGNCONF="70" CLEANPARA="3" />
+              <String ID="WORD_line_37_002" HPOS="459" VPOS="2626" WIDTH="87" HEIGHT="38" CONTENT="end" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_37_003" HPOS="582" VPOS="2627" WIDTH="54" HEIGHT="37" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_37_004" HPOS="668" VPOS="2636" WIDTH="25" HEIGHT="26" CONTENT="a" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_37_005" HPOS="733" VPOS="2631" WIDTH="239" HEIGHT="38" CONTENT="spectrum" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_37_006" HPOS="1000" VPOS="2628" WIDTH="55" HEIGHT="36" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_37_007" HPOS="1089" VPOS="2627" WIDTH="145" HEIGHT="39" CONTENT="which" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_37_008" HPOS="1276" VPOS="2626" WIDTH="259" HEIGHT="40" CONTENT="realistic" WC="70" ALIGNCONF="42" CLEANPARA="3" />
+              <String ID="WORD_line_37_009" HPOS="1568" VPOS="2627" WIDTH="50" HEIGHT="35" CONTENT="Al" WC="94" ALIGNCONF="42" />
+              <String ID="WORD_line_37_010" HPOS="1661" VPOS="2626" WIDTH="201" HEIGHT="37" CONTENT="defines" WC="94" ALIGNCONF="56" CLEANPARA="3" />
+              <String ID="WORD_line_37_011" HPOS="1900" VPOS="2626" WIDTH="80" HEIGHT="36" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_38" HPOS="281" VPOS="2671" WIDTH="1729" HEIGHT="90">
+              <String ID="WORD_line_38_001" HPOS="281" VPOS="2676" WIDTH="143" HEIGHT="39" CONTENT="other" WC="88" ALIGNCONF="88" CLEANPARA="3" />
+              <String ID="WORD_line_38_002" HPOS="467" VPOS="2676" WIDTH="256" HEIGHT="39" CONTENT="(standard" WC="95" ALIGNCONF="95" CLEANPARA="3" />
+              <String ID="WORD_line_38_003" HPOS="759" VPOS="2678" WIDTH="56" HEIGHT="36" CONTENT="CE" WC="95" ALIGNCONF="57" CLEANPARA="3" />
+              <String ID="WORD_line_38_004" HPOS="857" VPOS="2677" WIDTH="47" HEIGHT="38" CONTENT="ts" WC="43" ALIGNCONF="19" />
+              <String ID="WORD_line_38_005" HPOS="942" VPOS="2678" WIDTH="83" HEIGHT="37" CONTENT="the" WC="95" ALIGNCONF="57" CLEANPARA="3" />
+              <String ID="WORD_line_38_006" HPOS="1067" VPOS="2677" WIDTH="281" HEIGHT="43" CONTENT="infra-red," WC="0" ALIGNCONF="0" CLEANPARA="3" />
+              <String ID="WORD_line_38_007" HPOS="1389" VPOS="2677" WIDTH="86" HEIGHT="38" CONTENT="and" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_38_008" HPOS="1497" VPOS="2671" WIDTH="304" HEIGHT="90" CONTENT="optimistic" WC="91" ALIGNCONF="55" CLEANPARA="3" />
+              <String ID="WORD_line_38_009" HPOS="1837" VPOS="2677" WIDTH="49" HEIGHT="38" CONTENT="Al" WC="78" ALIGNCONF="35" />
+              <String ID="WORD_line_38_010" HPOS="1930" VPOS="2675" WIDTH="80" HEIGHT="38" CONTENT="the" WC="92" ALIGNCONF="55" CLEANPARA="3" />
+            </TextLine>
+            <TextLine ID="line_39" HPOS="283" VPOS="2726" WIDTH="1006" HEIGHT="45">
+              <String ID="WORD_line_39_001" HPOS="283" VPOS="2726" WIDTH="375" HEIGHT="45" CONTENT="ultra-violet," WC="53" ALIGNCONF="53" CLEANPARA="3" />
+              <String ID="WORD_line_39_002" HPOS="699" VPOS="2728" WIDTH="56" HEIGHT="36" CONTENT="of" WC="94" ALIGNCONF="94" CLEANPARA="3" />
+              <String ID="WORD_line_39_003" HPOS="791" VPOS="2728" WIDTH="113" HEIGHT="38" CONTENT="this" WC="94" ALIGNCONF="94" CLEANPARA="3" />
+              <String ID="WORD_line_39_004" HPOS="942" VPOS="2731" WIDTH="237" HEIGHT="39" CONTENT="spectrum" WC="96" ALIGNCONF="96" CLEANPARA="3" />
+              <String ID="WORD_line_39_005" HPOS="1218" VPOS="2726" WIDTH="71" HEIGHT="40" CONTENT="!)." WC="16" ALIGNCONF="16" CLEANPARA="3" />
+            </TextLine>
+          </TextBlock>
+        </ComposedBlock>
+        <ComposedBlock ID="cblock_4" HPOS="277" VPOS="2826" WIDTH="1821" HEIGHT="493">
+          <TextBlock ID="block_4" HPOS="277" VPOS="2826" WIDTH="1821" HEIGHT="493">
+            <TextLine ID="line_40" HPOS="462" VPOS="2826" WIDTH="1453" HEIGHT="42">
+              <String ID="WORD_line_40_001" HPOS="462" VPOS="2826" WIDTH="52" HEIGHT="40" CONTENT="By" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_40_002" HPOS="553" VPOS="2826" WIDTH="80" HEIGHT="40" CONTENT="far" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_40_003" HPOS="671" VPOS="2828" WIDTH="83" HEIGHT="37" CONTENT="the" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_40_004" HPOS="790" VPOS="2829" WIDTH="113" HEIGHT="39" CONTENT="best" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_40_005" HPOS="941" VPOS="2837" WIDTH="205" HEIGHT="30" CONTENT="sources" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_40_006" HPOS="1181" VPOS="2828" WIDTH="54" HEIGHT="37" CONTENT="of" WC="92" ALIGNCONF="92" CLEANPARA="4" />
+              <String ID="WORD_line_40_007" HPOS="1275" VPOS="2827" WIDTH="319" HEIGHT="39" CONTENT="information" WC="85" ALIGNCONF="85" CLEANPARA="4" />
+              <String ID="WORD_line_40_008" HPOS="1630" VPOS="2838" WIDTH="51" HEIGHT="26" CONTENT="on" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_40_009" HPOS="1719" VPOS="2827" WIDTH="196" HEIGHT="38" CONTENT="control" WC="53" ALIGNCONF="53" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_41" HPOS="279" VPOS="2876" WIDTH="1819" HEIGHT="44">
+              <String ID="WORD_line_41_001" HPOS="279" VPOS="2877" WIDTH="353" HEIGHT="42" CONTENT="applications" WC="26" ALIGNCONF="26" CLEANPARA="4" />
+              <String ID="WORD_line_41_002" HPOS="668" VPOS="2886" WIDTH="90" HEIGHT="30" CONTENT="are" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_41_003" HPOS="791" VPOS="2878" WIDTH="82" HEIGHT="38" CONTENT="the" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_41_004" HPOS="911" VPOS="2879" WIDTH="234" HEIGHT="41" CONTENT="symposia" WC="90" ALIGNCONF="90" CLEANPARA="4" />
+              <String ID="WORD_line_41_005" HPOS="1177" VPOS="2879" WIDTH="57" HEIGHT="37" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_41_006" HPOS="1274" VPOS="2879" WIDTH="81" HEIGHT="37" CONTENT="the" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_41_007" HPOS="1398" VPOS="2878" WIDTH="368" HEIGHT="38" CONTENT="International" WC="73" ALIGNCONF="73" CLEANPARA="4" />
+              <String ID="WORD_line_41_008" HPOS="1811" VPOS="2876" WIDTH="287" HEIGHT="39" CONTENT="Federation" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_42" HPOS="283" VPOS="2923" WIDTH="1663" HEIGHT="46">
+              <String ID="WORD_line_42_001" HPOS="283" VPOS="2923" WIDTH="80" HEIGHT="40" CONTENT="for" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_42_002" HPOS="398" VPOS="2926" WIDTH="267" HEIGHT="39" CONTENT="Automatic" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_42_003" HPOS="698" VPOS="2928" WIDTH="200" HEIGHT="37" CONTENT="Control" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_42_004" HPOS="946" VPOS="2926" WIDTH="163" HEIGHT="40" CONTENT="(IFAC)" WC="23" ALIGNCONF="23" CLEANPARA="4" />
+              <String ID="WORD_line_42_005" HPOS="1150" VPOS="2929" WIDTH="83" HEIGHT="36" CONTENT="and" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_42_006" HPOS="1278" VPOS="2926" WIDTH="78" HEIGHT="38" CONTENT="its" WC="41" ALIGNCONF="41" CLEANPARA="4" />
+              <String ID="WORD_line_42_007" HPOS="1389" VPOS="2927" WIDTH="294" HEIGHT="37" CONTENT="associated" WC="89" ALIGNCONF="89" CLEANPARA="4" />
+              <String ID="WORD_line_42_008" HPOS="1718" VPOS="2927" WIDTH="228" HEIGHT="42" CONTENT="journal," WC="93" ALIGNCONF="93" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_43" HPOS="289" VPOS="2972" WIDTH="1780" HEIGHT="48">
+              <String ID="WORD_line_43_001" HPOS="289" VPOS="2972" WIDTH="369" HEIGHT="44" CONTENT="'Automatica'." WC="84" ALIGNCONF="84" CLEANPARA="4" />
+              <String ID="WORD_line_43_002" HPOS="728" VPOS="2980" WIDTH="114" HEIGHT="40" CONTENT="Many" WC="91" ALIGNCONF="91" CLEANPARA="4" />
+              <String ID="WORD_line_43_003" HPOS="879" VPOS="2979" WIDTH="199" HEIGHT="38" CONTENT="control" WC="80" ALIGNCONF="80" CLEANPARA="4" />
+              <String ID="WORD_line_43_004" HPOS="1120" VPOS="2977" WIDTH="233" HEIGHT="43" CONTENT="journals" WC="79" ALIGNCONF="79" CLEANPARA="4" />
+              <String ID="WORD_line_43_005" HPOS="1389" VPOS="2986" WIDTH="81" HEIGHT="29" CONTENT="are" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_43_006" HPOS="1508" VPOS="2986" WIDTH="115" HEIGHT="28" CONTENT="more" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_43_007" HPOS="1659" VPOS="2975" WIDTH="263" HEIGHT="40" CONTENT="concerned" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_43_008" HPOS="1955" VPOS="2974" WIDTH="114" HEIGHT="40" CONTENT="with" WC="67" ALIGNCONF="67" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_44" HPOS="279" VPOS="3026" WIDTH="1789" HEIGHT="44">
+              <String ID="WORD_line_44_001" HPOS="279" VPOS="3027" WIDTH="207" HEIGHT="42" CONTENT="applied" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_44_002" HPOS="525" VPOS="3027" WIDTH="75" HEIGHT="38" CONTENT="(?)" WC="47" ALIGNCONF="47" CLEANPARA="4" />
+              <String ID="WORD_line_44_003" HPOS="637" VPOS="3028" WIDTH="329" HEIGHT="39" CONTENT="mathematics" WC="24" ALIGNCONF="24" CLEANPARA="4" />
+              <String ID="WORD_line_44_004" HPOS="1003" VPOS="3029" WIDTH="112" HEIGHT="38" CONTENT="than" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_44_005" HPOS="1145" VPOS="3026" WIDTH="118" HEIGHT="38" CONTENT="with" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_44_006" HPOS="1298" VPOS="3028" WIDTH="237" HEIGHT="42" CONTENT="possible" WC="58" ALIGNCONF="58" CLEANPARA="4" />
+              <String ID="WORD_line_44_007" HPOS="1569" VPOS="3026" WIDTH="377" HEIGHT="43" CONTENT="applications," WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_44_008" HPOS="1987" VPOS="3026" WIDTH="81" HEIGHT="39" CONTENT="but" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_45" HPOS="288" VPOS="3076" WIDTH="1634" HEIGHT="43">
+              <String ID="WORD_line_45_001" HPOS="288" VPOS="3076" WIDTH="108" HEIGHT="38" CONTENT="IFAC" WC="63" ALIGNCONF="63" CLEANPARA="4" />
+              <String ID="WORD_line_45_002" HPOS="430" VPOS="3077" WIDTH="83" HEIGHT="37" CONTENT="has" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_45_003" HPOS="552" VPOS="3079" WIDTH="84" HEIGHT="37" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_45_004" HPOS="669" VPOS="3080" WIDTH="387" HEIGHT="38" CONTENT="well-deserved" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_45_005" HPOS="1096" VPOS="3078" WIDTH="287" HEIGHT="40" CONTENT="reputation" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_45_006" HPOS="1420" VPOS="3078" WIDTH="55" HEIGHT="35" CONTENT="of" WC="92" ALIGNCONF="92" CLEANPARA="4" />
+              <String ID="WORD_line_45_007" HPOS="1513" VPOS="3078" WIDTH="200" HEIGHT="40" CONTENT="keeping" WC="30" ALIGNCONF="30" CLEANPARA="4" />
+              <String ID="WORD_line_45_008" HPOS="1750" VPOS="3076" WIDTH="172" HEIGHT="43" CONTENT="theory" WC="85" ALIGNCONF="85" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_46" HPOS="277" VPOS="3126" WIDTH="1762" HEIGHT="44">
+              <String ID="WORD_line_46_001" HPOS="277" VPOS="3128" WIDTH="206" HEIGHT="40" CONTENT="closely" WC="73" ALIGNCONF="73" CLEANPARA="4" />
+              <String ID="WORD_line_46_002" HPOS="518" VPOS="3126" WIDTH="177" HEIGHT="40" CONTENT="allied" WC="74" ALIGNCONF="74" CLEANPARA="4" />
+              <String ID="WORD_line_46_003" HPOS="730" VPOS="3132" WIDTH="55" HEIGHT="32" CONTENT="to" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_46_004" HPOS="821" VPOS="3128" WIDTH="205" HEIGHT="41" CONTENT="reality" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_46_005" HPOS="1059" VPOS="3129" WIDTH="86" HEIGHT="36" CONTENT="and" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_46_006" HPOS="1180" VPOS="3130" WIDTH="56" HEIGHT="34" CONTENT="of" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_46_007" HPOS="1273" VPOS="3128" WIDTH="229" HEIGHT="42" CONTENT="treating" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_46_008" HPOS="1538" VPOS="3126" WIDTH="294" HEIGHT="43" CONTENT="experience" WC="51" ALIGNCONF="51" CLEANPARA="4" />
+              <String ID="WORD_line_46_009" HPOS="1874" VPOS="3126" WIDTH="46" HEIGHT="38" CONTENT="in" WC="84" ALIGNCONF="84" CLEANPARA="4" />
+              <String ID="WORD_line_46_010" HPOS="1960" VPOS="3128" WIDTH="79" HEIGHT="35" CONTENT="the" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_47" HPOS="277" VPOS="3177" WIDTH="1730" HEIGHT="43">
+              <String ID="WORD_line_47_001" HPOS="277" VPOS="3179" WIDTH="208" HEIGHT="40" CONTENT="complex" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_47_002" HPOS="518" VPOS="3178" WIDTH="234" HEIGHT="41" CONTENT="problems" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_47_003" HPOS="790" VPOS="3179" WIDTH="55" HEIGHT="37" CONTENT="of" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_47_004" HPOS="877" VPOS="3178" WIDTH="328" HEIGHT="41" CONTENT="controlling" WC="71" ALIGNCONF="71" CLEANPARA="4" />
+              <String ID="WORD_line_47_005" HPOS="1247" VPOS="3179" WIDTH="100" HEIGHT="37" CONTENT="real" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_47_006" HPOS="1391" VPOS="3183" WIDTH="202" HEIGHT="36" CONTENT="systems" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_47_007" HPOS="1628" VPOS="3177" WIDTH="115" HEIGHT="38" CONTENT="with" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_47_008" HPOS="1786" VPOS="3182" WIDTH="221" HEIGHT="38" CONTENT="respect," WC="95" ALIGNCONF="95" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_48" HPOS="277" VPOS="3224" WIDTH="1729" HEIGHT="46">
+              <String ID="WORD_line_48_001" HPOS="277" VPOS="3235" WIDTH="115" HEIGHT="30" CONTENT="even" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_48_002" HPOS="438" VPOS="3226" WIDTH="44" HEIGHT="38" CONTENT="if" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+              <String ID="WORD_line_48_003" HPOS="524" VPOS="3224" WIDTH="48" HEIGHT="40" CONTENT="it" WC="87" ALIGNCONF="87" CLEANPARA="4" />
+              <String ID="WORD_line_48_004" HPOS="610" VPOS="3226" WIDTH="114" HEIGHT="40" CONTENT="does" WC="96" ALIGNCONF="96" CLEANPARA="4" />
+              <String ID="WORD_line_48_005" HPOS="757" VPOS="3234" WIDTH="84" HEIGHT="32" CONTENT="not" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_48_006" HPOS="879" VPOS="3226" WIDTH="325" HEIGHT="44" CONTENT="necessarily" WC="95" ALIGNCONF="95" CLEANPARA="4" />
+              <String ID="WORD_line_48_007" HPOS="1248" VPOS="3226" WIDTH="286" HEIGHT="40" CONTENT="illustrate" WC="13" ALIGNCONF="13" CLEANPARA="4" />
+              <String ID="WORD_line_48_008" HPOS="1569" VPOS="3227" WIDTH="202" HEIGHT="41" CONTENT="elegant" WC="91" ALIGNCONF="91" CLEANPARA="4" />
+              <String ID="WORD_line_48_009" HPOS="1808" VPOS="3226" WIDTH="198" HEIGHT="43" CONTENT="general" WC="94" ALIGNCONF="94" CLEANPARA="4" />
+            </TextLine>
+            <TextLine ID="line_49" HPOS="279" VPOS="3277" WIDTH="561" HEIGHT="42">
+              <String ID="WORD_line_49_001" HPOS="279" VPOS="3281" WIDTH="205" HEIGHT="38" CONTENT="systems" WC="93" ALIGNCONF="93" CLEANPARA="4" />
+              <String ID="WORD_line_49_002" HPOS="518" VPOS="3277" WIDTH="322" HEIGHT="42" CONTENT="principles." WC="30" ALIGNCONF="30" CLEANPARA="4" />
+            </TextLine>
+          </TextBlock>
+        </ComposedBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

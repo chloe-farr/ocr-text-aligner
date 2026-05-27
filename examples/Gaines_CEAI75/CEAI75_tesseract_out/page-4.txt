@@ -1,0 +1,57 @@
+modetling of physical systems (Lee et al 1968).
+
+ft came 26 &@ shack ts cantrot engineers in the 56's to
+discover that the optimal controller for a linear system was
+not ftself tinear. Pontryagtnts famous ‘maximum’ orineiote
+(Leendes 1965) showed that to ciianae the state af a linear
+system In minimum time one aiwayvs had to appiy the maximum
+avallable force to ft. Only the sense of that force varied and
+this was determined by a ‘switching surface’ in the state
+space of the system, This resulted in a massive effort ta
+determine the forms of such ‘optimal controllers’ for a wide
+varlety of systems. it was a major change of direction for CE
+because the switching surfaces made the control algorithm a
+discontinuous, deciston-making strategy, utterly different
+from that of classtecal continuous control. ft was soon
+discovered (Wilde & Wescott 1962) that the human controtter
+used such ‘bang-hang’ strategies in limb movements so that, as
+go often happens, nature had been there a)1 the while. The
+application of optimal contro! to industrial systems became
+feasible with the advert of on-line computer control but, and
+here comes the moral of the story, it proved very
+disappointing in practice larrgety because the ootimal
+controllers tended to be extremely sensttive to errors in
+plant models, becoming very non-optimal when the real wortd
+Was Rot orecisely as expected. Fuller's (1967) classic paper
+showed that the old linear controlier was not ali that
+sub-optimal, and far more robust te changing plant
+characteristics. In retrospect one can see that the definition
+of optimality was at fault, and that In real CE the goal ts
+not the optimal control of one presertbed plant, but the
+reasonable control of any of a range of possibie plants. This
+concept was given a rigorous interpretation by Kwakernaak
+(1965) who termed a controller ‘admisstbie’ for a range of
+plants ff their was no cther controller that was uniformly
+better for all of them (a concept borrowed from statistics, and
+avery useful one).
+
+2.2 The Notlon of ‘State’ and Automata
+
+There {s one Important concept larrely developed In CF
+which we probably all take for granted se much as to forget
+its comparatively recent orfgins. The ‘state’ of a system may
+be defined as the minimum Informatton necessary to acesunt far
+Its potential future behaviour. Whtist the concept fs a
+stralghforward one In terms of system structure, [It becomes
+very much more subtle when used to define the ‘state’ of a
+model of a system determined from Its behaviour. Many systems
+theorists In recent years have analysed the concept of "state"
+in ways that throw tnteresting light on tha nature of
+explanation and causality - Zadeh (1964), Zadeh & hesoer
+*2963) or Zadeh & Potak (1971) are good Introductions.
+
+in a recent article, Arbth (1975b)} points out that
+Wiener, who as the father of cybernetics might be expected te
+be very state-orlentated, did not use the concept - Ris was a
+more “rheological” approach relating the entire past histery
+

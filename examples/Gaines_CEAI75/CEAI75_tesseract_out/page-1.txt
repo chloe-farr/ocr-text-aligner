@@ -1,0 +1,55 @@
+~
+
+Gaines, B. R. (1975). Control engineering and artificial intelligence. In Lecture Notes of AISB Summer School on
+Artificial Intelligence, pp. 52-60. AISB, Cambridge, UK.
+
+CONTROL ENGINEERING SND APTEFICTAL INTELLIGENCE
+BR .Gatnes
+
+Department of Electrical Ensitneert ng,
+University of Essex, Colchester, Essex, U.K.
+
+1 Background
+
+The relationship between control engineerIng (ME) and
+artiffctal intetifeence CAI) Is sientfteant far workers ina
+both distipliness-
+
+SYSTEM<-THEORETICALLY there Is much common ground In both
+obtectives and activittes, for example: ‘Identification and
+modetling' tn CE cf 'knewledge acaulsition and structurtng’ in
+At, or ‘control! tna CE cf 'goal-seeking' In At. By way of
+contrast, however, ‘stabitity and sensitivity’ analysis so
+central to CE seem to have no real equivatent In Al (perhaps
+some. concent of ‘rokhustness! of knowledee structures and of
+Strategies), and the linguistic informatton processing so
+ublauitous {tn Al has no real equivalent in CE much to Its
+detriment - see section &).
+
+TERMINOLOGICALLY both distpltnes have borrowed their
+vocabularfes freely from human analogies, e.g. ‘adaptive and
+Jearning' centrollers and robots, and this leads to a
+superfictal resemblance that does not necessarily denote a
+true correspondence and may be misteading.
+
+SOCIOLOGICALLY both distolines are new and have had to
+establish thelr identities In the face of substanttal
+opposition. Perhaps CE has had the easter time of it tn
+growtne out of well-established Engeineertne Separtments,
+whereas Al has had to struggle free of Commuter Sclence,
+itself struggling free from Mathematics Departments. However
+that fs another story not appropriate to these notes - ft is
+worth noting that the problems of Al as a subject a@rea are not
+unfque but occur with most new developments (see Merton 15973
+for 4 deep and fascinating aceount of such aspects of the
+soctolory of sctence).
+
+! cannot pretend in these notes to give a thorough
+aceount of CE and fits relationship to Al. They are intended as
+a guide to the mainstream of activities tn CE and to some
+real, and some @pparent, points of contact with Ai. The
+literature references are deliberately highty selective to
+make it feasthle and worthwhile to follow them up. The next
+section outifines the main subject sreas of contro! theory: the
+following section that of control applications and the final
+

@@ -1,0 +1,61 @@
+e
+q Py
+Aeoe
+
+section attempts to sun up the euerent state of the art.
+
+2 Control! Theory
+
+The theoretical faundattons of CE may be broadty divided
+inte @ logical sequence of three main subject areas:
+
+(a) System Identification - from the input/output behaviour of
+
+a system determine a suftable model for [its structure = In CE
+the ‘grey-box' approach is most common In that we assume quite
+a lot about the structure of the system to be modelled
+(generally that fit ts ltInear and not very comslicated) in
+order te acquire a model fairly rapidiy -if the model proves
+@ poor predictor this shaws up at the development stage and
+the assumptions are changed (nerhaps this is the story of
+science {) - the maln complication is that we can rarely
+indulge tn Identification alone, bur elther want to, or have
+to, control also to some extent (hecause it would blow up, or
+otherwise not be the same system if we did not), ~ this leads
+to the complications of the so-called ‘dual control probiem’
+of learning about a system whiist we are at the same time
+using that knowledge to control [ft ~ this problem is truly
+fundamental and may be studied fn {ts simplest form as the
+‘two-armed bandit probiem' (Witten (1575) Its an excellent
+summary of these problems - Evkhoff's (1974) book summarizes
+well the matin contributions to system Identtftcation);
+
+(b) Control itself ts clearty central - the significant
+factors are that it Imolfes a pursose and hence also a means
+of determining when, or how well, that purpose has been
+achteved = the classical picture of control Is that we use
+this measure of success to determine the control action ~
+‘negative feedback' fs a powerful paradiem that the
+cyherneticfan's are quick to see everywhere - however it Is
+stenifleant that much, perhaps most, Industrial control does
+not employ such short-term negative feedback of its primary
+performance variables - ‘open-toop’ control Is very comition tn
+which @ plant Is taken through a standard cycia without any
+on-line evaluation of the results - negative feedback fs used
+to control short~term secondary varlables tike the
+temperatures of various sub-systems, but performance feedback
+is by off-line chemical analysis of the products and its
+effactive Is retrospective,strategic rather than tacticai «- In
+this respect an Industrial plant strongly resembles a living
+organismwith Its local feedbacks for posture control
+underpinning its capability for action (in the philosophical
+sense - Care & Landesman 1968) but the feedback on the result
+of actions belng a long-term process of cogitation and
+learning. The moral ts, "don't take too much notice of the
+simple diagrams of negative feedback at work Im the contrat
+textbooks" ~ they are the spinal cord of control, not its
+ratn !.
+
+{c} Stability and Sensitivity analyses come “lasest to belng
+what control theory Is really about - having got 2 model for ea
+

@@ -1,0 +1,44 @@
+M.A Arbib, and E.G.Manes (1978) Foundations af svsrems theory:
+decomposable machines, Automatica, vol.it, pe.285-+302.
+
+M.A.Arbis, and H.P.Zelger (1969) On the relevance of abstract
+algebra to control theory, Automatica, vol.5, po.&8$-606.
+
+S.Assillian (1974) Arcifictal intelligence in the control of
+real dynamic systems, PhD thesis, Oueen Mary College,
+University of London, UK.
+
+N.S.Care, and C.Landesman (1968) Readtnes In the Theory of —
+Action, Bioomlagton: Indiana University Press.
+
+P Evykhoff (1974) System identification, London: Wiltev.
+
+A.T. Fuller (1967) Linear controt of nontinear systems.
+international Journal of Controt, vol.5, pp.197-283., Aise
+reprinted In a useful collection: A.T.Fuller (ed) €1975)
+Nonttnear Stochastic Control Systems, London: Tayior &
+Francts.
+
+B.R.Galnes (1972) Axtoms for adaptive behaviour, International
+Journal of ManeMachine Studtes, voi.4&, op.169-199,
+
+G.G Hendrix (1973) Modelling simultaneous actions and
+continuous processes, Artifictal intelligence, vol.4,
+pp.1k5-180,
+
+R.E.Kalman, P.L.Falb, and M.A.Arhbib (1969) Toptecs Ir
+Mathematical Systems Theory, New York: McGraw HITT.
+
+H.Kwakernaak (1965) Admissible adaptive control, Proc. fF AC
+Symposium on the Theory of Self-Adaptive Control Systems,
+Teddington, UK.
+
+T.H.Lee, G.E.Adams, and W.M.Gaines (1968) Computer Process
+Control: Modeling and Optimization, New York: Wiley.
+
+C.T.Leondes (ed) (1965) Modern Control Systems Theory, New
+York: McGraw HIiT.
+
+E.H.Mamdant (1978) Amplieation of fuzzy aigorithms for contro}
+of simple dynamic plant, Proc, fEE, voi.12i, pp.1585-1588.
+

@@ -1,0 +1,21 @@
+{
+  "file_name": "page-8.png",
+  "num_pages": 1,
+  "total_token_count": 971,
+  "total_chunks": 13,
+  "total_images": 0,
+  "pages": [
+    {
+      "page_num": 0,
+      "page_box": [
+        0,
+        0,
+        2481,
+        3434
+      ],
+      "token_count": 971,
+      "num_chunks": 13,
+      "num_images": 0
+    }
+  ]
+}

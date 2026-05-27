@@ -1,0 +1,43 @@
+E.H.Mamdani. and S.Assilian (216753 Ar experiment In tinguistic
+synthesis with s fuzzy logic coentretter, international dournal
+of Man-Machine Studies, vel.?, op.i-13,
+
+R.K.Merton (1973) The Socislomy of Sctence, Chicage;
+University of Chicage Press,
+
+K.E.Perry, and J.Jd,Waddel!, The Rotary Cement Kiln, New York:
+The Chemical Publishing Co.
+
+1 .Radanavic (19686) Sensitivity Methods In Modern Control
+Theory, Oxford: Pergamon Press.
+
+N.Rescher (1963) Oiscrete state systems, markov chains, ard
+problems In the theory of scfentiflc explanation and
+prediction, Phitosonmhy of Sclence, vol.35, po.325=345,
+
+Y.Z.Tsypkin (19713 Adantion and Learning in Automatic Systems,
+New York: Academic Prass. ,
+
+RW Wilde, and J.H.Wescott (1962) The characteristics of the
+human operator engaged tn a tracking task, Automatica, vol.1l,
+pp. 5°15,
+
+t.Witten (1975) The apparent canflict between estimation and
+control - a survey of the twoearmed bandit sroblem, Technical
+Report ERS-MMS-BAN-75, Department of Electrical Engineering
+Science, Essex Unfversity, Colchester, UK.
+
+L.A.Zadeh (196%) The concept of state in system theory, in
+M.Mesarovie (ed) Views on General Systems Theory, New York:
+Wi ley, pp. 39-50,
+
+L.A.Zgadeh (1973) Outline of a new approach to the analysis of
+complex systems and decision processes, IEEE Transactions on
+Systems, Man, and Cybernetics, vol.SMCe3, pp. 28-b4,
+
+L.A.Zadeh, and C.A.Desoer (1963) Linear System Theory, New
+York: McGraw-Hill,
+
+L.A.Zadeh, and E.Polak (eds) (1969) System Theory, New York:
+McGraw HIV),
+

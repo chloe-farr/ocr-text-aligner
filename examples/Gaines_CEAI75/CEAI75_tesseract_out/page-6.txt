@@ -1,0 +1,59 @@
+The topics sf the 12 t£AC symposia otanned for 1578
+incitide: contro) in suace; automation in pares: evhber and
+plastics; automation tn urtchare git FieiG Operations aynamic
+modelling and control fn national econemies; contrel
+mechanisms En bio- & eco-systems; ete. The range of interests
+is very wide and barely hinted at by most texthooks on CE. The
+proceedings of these symposia, and those of the fFAC
+congresses held once every 3 years (latest Aurust 1975,
+Boston, USA), should be the prime sources for those interested
+tn finding Interesting CE sttuations in which to apply Af
+techniques,
+
+& Concluding Remarks
+
+in the 60's there appeared to be much common ground
+between Al and CE ~ "learning controllers” in particular
+seemed to represent Al thinkinf In CE (see Tsypkin 1971 for a
+review of this type of work, and Gaines 1965 for a discussion
+of the vocabulary of ‘adaptton’ in blotoey and engineering).
+In the 70's, however, this communality has lessened with the
+decrease of Interest In machine learning as such in Al, and
+the disenchantment with the more esotert<« forms of “learning
+machine" in CE Cand the absorption of those that worked tnte
+the less emotive vocabulary of ‘ontimization', ete.}. Looking
+through the first 5 years of ‘artificial intelligence’ # find
+nothing which can be taken as a CE appifeation. Looking
+through the progranme for the {FAC 75 congress there is tittte
+that can be directly related to Al.
+
+However, this apparent guif is not as real as [t appears
+since many workers In CE are fully aware of the Af literature,
+and vice versa. Fundamentaliy the problems treated in CE, >
+particularly now that economic and blologtcal systems are
+attracting such attention, constitute a maturalt domain for Ai
+~ they are problems where human activittes are being aided or
+replaced by automated systems, and the frontiers of this work
+must, virtually be definition, be closely allied with Al.
+
+Finatiy, to end on a positive note, tet me Illustrate
+the Interesting developments that may arise when Af techniaues
+are applied to a reat control system by describing some recent
+work at Queen Mary College (Assiifan 1974, Mamdan! 1974,
+Assiltan & Mamdant 1975). A model steam engine has been used
+as a test bed for various forms forms of ‘learning contrceiter'
+~ chosen because of its nonlinearities, hysteresis, holduns,
+tong time-constants, and other real-life features (like
+proneness to blow-up $). The Infttal objective was to
+investigate a range of published learning algorithms comparing
+them amongst themselves and with some classtcal linear
+controllers, {t was realized that the learning controlters on
+any real plant would, In thelr Initial nafve state, close it
+down, or destroy It, before acquiring much informatton about
+it, and attention was focussed upon the possitbitity of
+‘priming’ the controller with a reasonable Initial strategy.
+
+Zadeh's (1973) application of fuzzy sets theory te
+linguistic reasoning. seemed to offer an opportunity to do the
+‘oriming’ In a general form within the spirtte of an Al
+

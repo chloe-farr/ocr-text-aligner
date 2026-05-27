@@ -12,8 +12,9 @@ from pathlib import Path
 
 # Project root (parent of tests/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 SAMPLE_XML = PROJECT_ROOT / "examples" / "sample_page" / "page-1.xml"
 # Minimal toy hOCR (fixed bboxes) for make_cleaned_pdf / hocr_combine smoke tests.
 MINIMAL_HOCR = PROJECT_ROOT / "examples" / "sample_page" / "page-1.hocr.html"
@@ -79,7 +80,7 @@ def test_align_completes_with_example():
 
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "map_up_text.py"),
+        str(SRC_ROOT / "map_up_text.py"),
         "--xml-file", str(SAMPLE_XML),
         "--clean-text", str(SAMPLE_CLEANTEXT),
     ]
@@ -101,7 +102,7 @@ def test_align_produces_output_hocr():
     try:
         cmd = [
             sys.executable,
-            str(PROJECT_ROOT / "map_up_text.py"),
+            str(SRC_ROOT / "map_up_text.py"),
             "--hocr-file", str(sample_hocr),
             "--clean-text", str(sample_clean),
             "--output-hocr", out_hocr,
@@ -136,7 +137,7 @@ def test_align_produces_output_xml():
     try:
         cmd = [
             sys.executable,
-            str(PROJECT_ROOT / "map_up_text.py"),
+            str(SRC_ROOT / "map_up_text.py"),
             "--xml-file", str(SAMPLE_XML),
             "--clean-text", str(SAMPLE_CLEANTEXT),
             "--output-xml", out_xml,
@@ -169,7 +170,7 @@ def test_run_pipeline_align_with_example():
 
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "run_pipeline.py"),
+        str(SRC_ROOT / "run_pipeline.py"),
         "align",
         "--xml-file", str(SAMPLE_XML),
         "--clean-text", str(SAMPLE_CLEANTEXT),
@@ -189,7 +190,7 @@ def test_run_pipeline_align_hocr_with_example():
 
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "run_pipeline.py"),
+        str(SRC_ROOT / "run_pipeline.py"),
         "align",
         "--hocr-file", str(sample_hocr),
         "--clean-text", str(sample_clean),
@@ -223,7 +224,7 @@ def test_make_cleaned_pdf_from_hocr_smoke():
 
         cmd = [
             sys.executable,
-            str(PROJECT_ROOT / "make_cleaned_pdf.py"),
+            str(SRC_ROOT / "make_cleaned_pdf.py"),
             "--image", str(img_path),
             "--aligned-hocr", str(sample_hocr),
             "--output", str(out_pdf),

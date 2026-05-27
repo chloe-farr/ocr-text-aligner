@@ -1,0 +1,59 @@
+system and based the dasten for a controller upon ft ther
+comes the grand questions, ‘how wil} the owarsatl suster
+respond to certurbecions af ere controlied variabias*
+(stability anaivets) and ‘haw will the system performance
+change If the modei ts not auitce righc' (sensitivity analysts}
+~ ft was the stabitity analysis techniques of Bade and Nyquist
+In the 30's that made control anginsering @ sublect area « oo
+later progress may be measured In terms of Increasing
+Benerality of such analyses (e.8, Lyapunov's criteria «
+Leondes 1965) ~ and the weak areas of CE today are those where
+such criteria are inapplicable, i.e. most nonlinear systams.
+To my mind the development of techniques for the study of
+Stability and sensitivity (general ‘robustness') Is the maior
+determinant of the success of any field of apptied system
+theory, fncluding Alt. We need to know the potential effects of
+defects In our own knowledge - In practice the best technique
+is not necessarily that which works best under preseribed
+conditions, but that which has limited ‘downstde sotenttal’
+under a wide range of possibile conditions (Radanovic (1966)
+fives a useful overview of the role of stability and
+sensitivity analyses fn cantrol theory).
+
+2.1 Linear Systems Theory
+
+if | were fool enough to try to define the differencas
+between the theoretical sub-structures of CE and Ail In one
+sentence, it would be that, "CE theory Is based upon model tine
+continuous processes as linear systems, whereas A! theory fs
+based upon modelling discrete processes as tinguistic
+systems". The role of linear systems theory In CFE cannot be
+over-emphasized ~ It Is both the major strength of the whole
+Subject area, and its major weakness. Linearity Is a powerful
+constraint that leads to deep and elerant results - that they
+are applicable to physical systems fs metaphysical mastic
+arising from: (a) Mathematically, linearity is a good
+approximation to the local behaviour of a continuous system
+with bounded higher order derlvatives (since these correspond
+to energy transfers they tend to be hounded in ali but bombs);
+(6) We chose the systems to be controlled, usually
+manufacturing them, so that they may be selected to be finear:
+{e) We certainly chose the controllers and, with the
+application of suffictent negative feedhack, a tinear
+controller tends to make the whole system anpear lisear. -
+
+That, perhaps, is a suffitctent rationaie for the
+domination of CE by linear systems theory and, re-tntersreted,
+explains the lack of Immaect of such theory In Af where we
+rarely deal with the dynamics of physical systems and choose
+our Sroblem areas with different theoretical models In mind.
+This great divide, although very real, is a historical one
+that camnot last for ever - centro] engineers fave been ,
+turning thelr attention to blological and ¢conomic systems
+where the assumption of linearity Is only partiality
+successful, and Al rahots are increasingty facing the nasty,
+continuous physical world. Hendrix's (1973) Al paner on
+“modelling stmultaneous action and continuous processes"
+states the problem clearly and bridges the gap between the two
+dtstotines. it may ‘be contrasted with CE papers on comouter
+

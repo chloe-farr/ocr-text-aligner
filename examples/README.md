@@ -11,7 +11,7 @@ From the **project root**:
 pip install -r requirements.txt
 
 # Align cleantext to ALTO and write aligned XML
-python3 run_pipeline.py align \
+python3 src/run_pipeline.py align \
   --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
   --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-xml
@@ -22,7 +22,7 @@ Output: aligned ALTO is written by default to `outputs/page_0000/page_0000_align
 ### Align cleantext to hOCR and write aligned hOCR
 
 ```bash
-python3 run_pipeline.py align \
+python3 src/run_pipeline.py align \
   --hocr-file examples/daily_colonist_1972_10_12/page_0000/page_0000.hocr \
   --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-hocr
@@ -30,10 +30,10 @@ python3 run_pipeline.py align \
 
 Output: aligned hOCR is written by default to `outputs/page_0000/page_0000_aligned_hocr.html`.
 
-Same via `map_up_text.py` directly:
+Same via `src/map_up_text.py` directly:
 
 ```bash
-python3 map_up_text.py \
+python3 src/map_up_text.py \
   --xml-file examples/daily_colonist_1972_10_12/page_0000/page_0000.xml \
   --clean-text examples/daily_colonist_1972_10_12/page_0000/page_0000_cleantext.md \
   --output-xml
@@ -49,7 +49,7 @@ For a full run you need:
 Example (from project root):
 
 ```bash
-python3 run_pipeline.py all --input /path/to/your/document.pdf
+python3 src/run_pipeline.py all --input /path/to/your/document.pdf
 ```
 
 Outputs go to `pipeline_work/` by default. See the main [README](../README.md) for options (e.g. `--work-dir`, `--model`, `--ocr-output-dir` to skip OCR).

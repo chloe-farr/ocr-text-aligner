@@ -12,10 +12,12 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-# Project root (where run_pipeline.py lives)
+# src/ directory (where run_pipeline.py lives)
 PROJECT_ROOT = Path(__file__).resolve().parent
+# Repository root (one level up from src/)
+REPO_ROOT = PROJECT_ROOT.parent
 
-CONFIG_FILE = PROJECT_ROOT / "pipeline_config.json"
+CONFIG_FILE = REPO_ROOT / "pipeline_config.json"
 
 
 def _env(key: str, default: str = "") -> str:
@@ -74,7 +76,7 @@ def cmd_ocr(args: argparse.Namespace) -> int:
         return 0
 
     # Built-in OCR (tesseract_ocr.py)
-    out_dir = Path(getattr(args, "output_dir", None) or (PROJECT_ROOT / "pipeline_work" / "ocr_output" / input_path.stem)).resolve()
+    out_dir = Path(getattr(args, "output_dir", None) or (REPO_ROOT / "pipeline_work" / "ocr_output" / input_path.stem)).resolve()
     try:
         import tesseract_ocr as ocr
         ocr.ocr_input(input_path, out_dir, dpi=getattr(args, "dpi", 300), lang=getattr(args, "lang", "eng"), psm=getattr(args, "psm", 4), save_pages=getattr(args, "save_pages", False))
@@ -94,7 +96,7 @@ def _resolve_ocr_output(args: argparse.Namespace, base: str, year: str, work_dir
         return (Path(tesseract_dir).resolve() / ".." / ".." / "04_datasets" / "TimesColonist_PDFs" / "output" / year / base).resolve()
     if work_dir is not None:
         return (work_dir / "ocr_output" / base).resolve()
-    return (PROJECT_ROOT / "pipeline_work" / "ocr_output" / base).resolve()
+    return (REPO_ROOT / "pipeline_work" / "ocr_output" / base).resolve()
 
 
 def cmd_clean(args: argparse.Namespace) -> int:
@@ -132,7 +134,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
         cmd.append("--debug")
     if getattr(args, "page_mode", False):
         cmd.append("--page-mode")
-    r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
+    r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))  # cwd=src/ so -m llm_cleaning resolves
     return r.returncode
 
 
@@ -159,13 +161,13 @@ def cmd_align(args: argparse.Namespace) -> int:
             cmd.append(str(args.output_hocr))
     if getattr(args, "show_ocr_accuracy", False):
         cmd.append("--show-ocr-accuracy")
-    r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
+    r = subprocess.run(cmd, cwd=str(REPO_ROOT))  # cwd=repo root so outputs/ lands correctly
     return r.returncode
 
 
 def cmd_all(args: argparse.Namespace) -> int:
     """Run OCR (if requested) → clean → align with derived paths."""
-    work_dir = Path(args.work_dir or PROJECT_ROOT / "pipeline_work").resolve()
+    work_dir = Path(args.work_dir or REPO_ROOT / "pipeline_work").resolve()
     work_dir.mkdir(parents=True, exist_ok=True)
     input_path = getattr(args, "input", None) or getattr(args, "pdf", None)
     input_path = Path(input_path).resolve() if input_path else None
@@ -470,7 +472,7 @@ def main():
         parser.print_help()
         return 0
 
-    os.chdir(PROJECT_ROOT)
+    os.chdir(REPO_ROOT)
     if parsed.command == "ocr":
         return cmd_ocr(parsed)
     if parsed.command == "clean":

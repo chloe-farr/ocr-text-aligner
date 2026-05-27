@@ -493,6 +493,8 @@ if __name__ == "__main__":
                        help='Write aligned ALTO XML to this path; if flag given with no path, use outputs/<pagename>/<pagename>_aligned.xml')
     parser.add_argument('--output-hocr', nargs='?', const='', type=str, default=None,
                        help='Write aligned hOCR HTML to this path; if flag given with no path, use outputs/<pagename>/<pagename>_aligned_hocr.html')
+    parser.add_argument('--fuzzy-cutoff', type=float, default=60.0,
+                       help='Minimum fuzzy match score (0–100) for candidate generation (default: 60.0)')
     args = parser.parse_args()
     input_format: Optional[str] = None
     ocr_filename: Optional[str] = None
@@ -550,7 +552,7 @@ if __name__ == "__main__":
     """
     First round of matching:
     """
-    hypothesis_list = create_hypothesis_list(alto_words, clean_vocab)
+    hypothesis_list = create_hypothesis_list(alto_words, clean_vocab, fuzzy_cutoff=args.fuzzy_cutoff)
     
     # Analyze OCR accuracy at the VERY BEGINNING (before any processing)
     analyze_ocr_accuracy(hypothesis_list, show=args.show_ocr_accuracy)
@@ -671,7 +673,11 @@ if __name__ == "__main__":
     
     # FINAL HARD MATCHING PASS: Match PENDING words based solely on neighbors and position/size
     # This is the very last pass - matches words that have no candidates using hard neighbor/position matching
-    pending_hyps = [hyp for hyp in hypothesis_list if hyp.chosen_LLM_token is None and not hyp.flagged_for_error and not hyp.candidates]
+    # Include flagged_for_error words with no candidates: if neighbors are strong and size
+    # matches, the neighbor+size evidence overrides the error flag (flag is cleared by
+    # _create_match_for_hypothesis). Words flagged WITH candidates are already handled
+    # by the weak-fuzzy recovery pass in weak_fuzzy_matching.py.
+    pending_hyps = [hyp for hyp in hypothesis_list if hyp.chosen_LLM_token is None and not hyp.candidates]
     if pending_hyps:
         unmatched_tokens = weak_fuzzy_matching.find_unmatched_llm_tokens(llm_elements, hypothesis_list)
         for pending_hyp in pending_hyps:

@@ -1,0 +1,55 @@
+of a system to tts future behaviour. Whilet modern control
+theory may be seen to be cructally based om the norton of
+system state, this is tat necessarily the most arpropriate
+basis for system develooment or modelling, particularty of
+blological systems. For example, the “causal” exptanation of
+the behaviour of an animal as determined by [ts current
+Internal state and external Input may be extremely compiex,
+whereas the "teleological" explanation in terms of its
+intended future behaviour may be very simple ~ Rescher (1963)
+gives some Interesting examples of this In tarms of automata,
+States have a definitional importance that makes them appear
+fundamental, but It ts Imnertant to realize that the “Inferred
+state" Is an artefact of the observing system and does not
+necessarliy have an analogy in the structure of the observed
+system,
+
+Automata theory Is the ultimate expression of general
+state-detarmined behaviour and it has its clace in most mocdarn
+textbooks on control theory. its actual rate so far has been
+pertpheral to both control theory and practice, largely
+because of the tack of nowerful general results comparabie to
+those of linear systems theory. Arbib (1975a) has recentiy
+provided a useful critique of the role of automata theory in
+modetling biological systems, and, over @ span of some years,
+he has been active [n promoting the role of automata theory tn
+contro! engineering CArbib 1965, 1966, Arbib & Zeteer 1969)
+and tts relationshie to linear systems theory CArbib & Manes
+iS7h#). This serfes of paners fs well worth reading both for
+its general Interest and as an introduction to algebraic
+‘Seay in CE, partleulariy the work of Kaiman (et a!
+
+3 Contre! Apptteattons
+
+Whilst the devicpment of contre! theory has its lessans
+for, and interactions with, Afi, ft is surety in the
+applications, and attempted applications, of CF that most
+value is to found. Finding suitable orohtems for the
+application of Al techniques [s a continuing requirement
+(where ‘suitable’ imaties both relevance and borderttine
+solvabitity), and advanced CE may he seen as defining the
+lower end of a spectrum of which realistic Al defines the
+other (standard CE ts the Infra-red, and optimistic Al the
+ultra-violet, of this spectrum 1).
+
+By far the best sources of informatton on control
+appltcattons are the symposta of the tnternational Federation
+for Automatic Control CHFAC) and tts assoctated journal,
+‘Automatica’. Many control journals are more concerned with
+applied (?) mathematias than with sossible applications, but
+{FAC has the well-deserved reputation of keesting theory
+closely alifed to reality and of treating experfence In the
+complex problems of controlling real systems with respect,
+even if it does not necessarily Illustrate elegant general
+systems nrinciples,
+
