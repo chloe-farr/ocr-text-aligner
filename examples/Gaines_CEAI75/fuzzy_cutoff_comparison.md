@@ -1,8 +1,5 @@
 # Fuzzy Cutoff Threshold Comparison — Gaines CEAI75
 
-1975	Control engineering and artificial intelligence
-Source PDF: https://gaines.library.uvic.ca/pubs/ 
-
 All 9 pages run with `--fuzzy-cutoff` at 80 (default), 70, and 60.
 Pipeline: ALTO XML + Chandra `.md` clean text.
 Includes error-gap fill fix (hard neighbor+size pass now also covers flagged-with-no-candidates words).

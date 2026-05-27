@@ -1,6 +1,10 @@
 # Gaines — Control Engineering and Artificial Intelligence (1975)
 
-9-page academic report by B.R. Gaines, digitized at the UVic Library. Tesseract OCR output (ALTO XML + hOCR) and VLM (Chandra/InternVL) per-block clean text are provided.
+1975	Control engineering and artificial intelligence
+Source PDF: https://gaines.library.uvic.ca/pubs/ 
+
+
+9-page academic report by B.R. Gaines. Tesseract OCR output (ALTO XML + hOCR) and VLM (Chandra/InternVL) per-block clean text are provided.
 
 | Pages | Content | Words (clean) | Words (Tesseract) |
 |-------|---------|--------------|-------------------|
@@ -35,7 +39,7 @@ Pre-generated aligned XML, hOCR, and visualization PNGs for all 9 pages are in `
 
 ## About the clean text
 
-Per-page clean text was produced by Chandra (InternVL) with per-block OCR outputs stored under `CEAI75_chandra_out/`. Each page has its own subdirectory containing a `.md` (plain text), `.html`, and `_metadata.json`.
+Per-page clean text was produced by Chandra (InternVL) with per-block OCR outputs stored under `CEAI75_chandra_out/`. Each page has its own subdirectory containing a `.md` (plain text), `.html`, and `_metadata.json`. Chandra outputs did not require manual edits.
 
 Single-column academic layout means ALTO reading order matches article reading order throughout, so context matching works well. Pages 1–7 achieve ~1–2% error rate; page 8 (bibliography, dense citation formatting) reaches ~3%.
 

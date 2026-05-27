@@ -1,6 +1,7 @@
 # Daily Colonist — October 12, 1972
+source: https://archive.org/details/dailycolonist19721012
 
-Front page of the Victoria *Daily Colonist*, digitized at the UVic Library (Kula: Library Futures Academy). Tesseract OCR output (ALTO XML + hOCR) is provided alongside a manually ordered clean text prepared from VLM (Chandra/InternVL) per-block outputs.
+Front page of the Victoria *Daily Colonist*, digitized at the UVic Library. Tesseract OCR output (ALTO XML + hOCR) is provided alongside a manually ordered clean text prepared from VLM (Chandra/InternVL) per-block outputs.
 
 | Page | Content | Words (clean) | Words (Tesseract) |
 |------|---------|--------------|-------------------|
