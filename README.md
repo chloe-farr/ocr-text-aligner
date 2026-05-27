@@ -41,7 +41,7 @@ The alignment pipeline is modular. For a high-level flow and file/function point
 - Python 3.8 or higher (tested with 3.8+)
 - Tesseract (CLI) — e.g. `brew install tesseract`
 - For PDF input: pdftoppm (poppler) — e.g. `brew install poppler`
-- For LLM clean step: [Ollama](https://ollama.ai)
+- For LLM clean step (optional): [Ollama](https://ollama.ai)
 - For alignment only (skip OCR): an ALTO XML file and a clean text file
 - Optional — custom OCR script: Set `TESSERACT_EXPERIMENT_DIR` to the directory containing your `ocr_pdf.sh` to use it instead of the built-in Tesseract pipeline. You can also use a config file: copy `pipeline_config.example.json` to `pipeline_config.json` and set `tesseract_experiment_dir` to that path. The repo does not commit `pipeline_config.json` (it may contain machine-specific paths).
 
