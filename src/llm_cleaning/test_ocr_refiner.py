@@ -125,7 +125,7 @@ def test_count_functions():
     text = "Hello world! This has 5 words."
     
     word_count = count_words(text)
-    assert word_count == 5, f"Expected 5 words, got {word_count}"
+    assert word_count == 6, f"Expected 6 words, got {word_count}"
     
     char_count = count_chars(text)
     assert char_count > 0, "Should count characters"

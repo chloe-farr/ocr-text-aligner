@@ -1,3 +1,14 @@
+---
+title: OCR Text Aligner
+emoji: 📄
+colorFrom: blue
+colorTo: gray
+sdk: gradio
+sdk_version: 4.44.1
+app_file: app.py
+pinned: false
+---
+
 # ocr-text-aligner
 
 **What this does:** Maps LLM-cleaned (or otherwise corrected) text back onto ALTO XML from OCR—word by word—using fuzzy matching, context, and layout. You get aligned ALTO/hOCR with per-word confidence scores and optional visualizations.
