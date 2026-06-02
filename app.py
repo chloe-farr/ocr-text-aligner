@@ -26,7 +26,7 @@ def _path(f):
     if isinstance(f, str):
         return Path(f)
     if isinstance(f, dict):
-        return Path(f.get("name") or f.get("path") or "")
+        return Path(f.get("path") or f.get("name") or "")
     if hasattr(f, "name"):
         return Path(f.name)
     return None
@@ -36,13 +36,34 @@ def _psm_int(choice: str) -> int:
     return _PSM_MAP.get(choice.split("—")[0].strip(), 4)
 
 
+def _page_outputs(out_dir: Path, page_n: int, num_pages: int):
+    """Return (alto_path, hocr_path, txt_path, plain_text) for a given page."""
+    alto_dir = out_dir / "alto"
+    hocr_dir = out_dir / "hocr"
+    alto_files = sorted(alto_dir.glob("*.xml")) if alto_dir.is_dir() else []
+    hocr_files = sorted(hocr_dir.glob("*.hocr.html")) if hocr_dir.is_dir() else []
+
+    idx = page_n - 1
+    alto = str(alto_files[idx]) if idx < len(alto_files) else None
+    hocr = str(hocr_files[idx]) if idx < len(hocr_files) else None
+
+    page_txt = out_dir / f"page-{page_n}.txt"
+    plain = page_txt.read_text(encoding="utf-8").strip() if page_txt.is_file() else ""
+
+    return alto, hocr, plain
+
+
+def _ocr_error(msg):
+    return None, None, None, "", "", msg, "", 1, 1, gr.update(visible=False), "—"
+
+
 def run_ocr(file_obj, lang, psm_choice):
     if file_obj is None:
-        return None, None, None, "", "", "Upload a file first."
+        return _ocr_error("Upload a file first.")
 
     input_path = _path(file_obj)
     if not input_path or not input_path.is_file():
-        return None, None, None, "", "", "File not found."
+        return _ocr_error("File not found.")
 
     lang = (lang or "eng").strip()
     psm = _psm_int(psm_choice)
@@ -51,36 +72,34 @@ def run_ocr(file_obj, lang, psm_choice):
     try:
         tess.ocr_input(input_path, out_dir, lang=lang, psm=psm)
     except Exception as e:
-        return None, None, None, "", "", f"OCR failed: {e}"
-
-    combined_txt = out_dir / f"{input_path.stem}.txt"
-    page1_txt = out_dir / "page-1.txt"
-    if combined_txt.is_file():
-        plain = combined_txt.read_text(encoding="utf-8").strip()
-    elif page1_txt.is_file():
-        plain = page1_txt.read_text(encoding="utf-8").strip()
-    else:
-        txts = list(out_dir.glob("*.txt"))
-        plain = txts[0].read_text(encoding="utf-8").strip() if txts else ""
+        return _ocr_error(f"OCR failed: {e}")
 
     alto_dir = out_dir / "alto"
-    hocr_dir = out_dir / "hocr"
     alto_files = sorted(alto_dir.glob("*.xml")) if alto_dir.is_dir() else []
-    hocr_files = sorted(hocr_dir.glob("*.hocr.html")) if hocr_dir.is_dir() else []
-    txt_out = combined_txt if combined_txt.is_file() else (page1_txt if page1_txt.is_file() else None)
+    num_pages = len(alto_files)
+    multi_page = num_pages > 1
 
-    status = f"Done — {len(alto_files)} page(s) processed."
-    if len(alto_files) > 1:
-        status += " Downloads show page 1. For multi-page alignment, run the pipeline locally."
+    alto, hocr, plain = _page_outputs(out_dir, 1, num_pages)
 
-    return (
-        str(alto_files[0]) if alto_files else None,
-        str(hocr_files[0]) if hocr_files else None,
-        str(txt_out) if txt_out else None,
-        plain,
-        plain,   # pre-populate Tab 2 text box
-        status,
-    )
+    combined_txt = out_dir / f"{input_path.stem}.txt"
+    txt_out = str(combined_txt) if combined_txt.is_file() else None
+
+    status = f"Done — {num_pages} page(s) processed."
+    if multi_page:
+        status += " Use the page buttons to browse. ALTO/hOCR downloads follow the current page."
+
+    # returns: alto, hocr, txt, plain×2, status, out_dir, page, num_pages, nav_visible, page_label
+    return (alto, hocr, txt_out, plain, plain, status,
+            str(out_dir), 1, num_pages, gr.update(visible=multi_page), f"1 / {num_pages}")
+
+
+def change_page(out_dir_str, current_page, num_pages, direction):
+    if not out_dir_str:
+        return None, None, "", "", current_page
+    new_page = max(1, min(num_pages, current_page + direction))
+    out_dir = Path(out_dir_str)
+    alto, hocr, plain = _page_outputs(out_dir, new_page, num_pages)
+    return alto, hocr, plain, plain, new_page
 
 
 def run_align(ocr_file, text_source, clean_file, clean_textbox):
@@ -130,6 +149,9 @@ def run_align(ocr_file, text_source, clean_file, clean_textbox):
 
 
 with gr.Blocks(title="OCR Text Aligner") as demo:
+    ocr_dir_state = gr.State("")
+    ocr_page_state = gr.State(1)
+    ocr_num_pages_state = gr.State(1)
 
     gr.Markdown(
         "# OCR Text Aligner\n"
@@ -165,7 +187,11 @@ with gr.Blocks(title="OCR Text Aligner") as demo:
             with gr.Row():
                 dl_alto = gr.File(label="ALTO XML")
                 dl_hocr = gr.File(label="hOCR")
-                dl_txt = gr.File(label="Plain text")
+                dl_txt = gr.File(label="Plain text (all pages)")
+            with gr.Row(visible=False) as page_nav:
+                prev_btn = gr.Button("← Prev page", size="sm")
+                page_label = gr.Textbox(label="Page", value="1", interactive=False, scale=0, min_width=80)
+                next_btn = gr.Button("Next page →", size="sm")
             ocr_text = gr.Textbox(
                 label="Plain text — edit here, then use in Align tab",
                 lines=16,
@@ -190,18 +216,17 @@ with gr.Blocks(title="OCR Text Aligner") as demo:
                 value="Paste / edit text",
                 label="Clean text source",
             )
-            with gr.Group() as paste_grp:
-                clean_text_in = gr.Textbox(
-                    label="Clean text",
-                    lines=12,
-                    interactive=True,
-                    placeholder="Paste LLM-corrected or manually edited text here.",
-                )
-            with gr.Group(visible=False) as upload_grp:
-                clean_file_in = gr.File(
-                    label="Clean text file (.txt or .md)",
-                    file_types=[".txt", ".md"],
-                )
+            clean_text_in = gr.Textbox(
+                label="Clean text",
+                lines=12,
+                interactive=True,
+                placeholder="Paste LLM-corrected or manually edited text here.",
+            )
+            clean_file_in = gr.File(
+                label="Clean text file (.txt or .md)",
+                file_types=[".txt", ".md"],
+                visible=False,
+            )
             align_btn = gr.Button("Align", variant="primary")
             align_status = gr.Textbox(label="Status", interactive=False, lines=1)
             dl_aligned = gr.File(label="Aligned output")
@@ -211,22 +236,37 @@ with gr.Blocks(title="OCR Text Aligner") as demo:
     ocr_btn.click(
         fn=run_ocr,
         inputs=[ocr_file_in, lang_in, psm_in],
-        outputs=[dl_alto, dl_hocr, dl_txt, ocr_text, clean_text_in, ocr_status],
+        outputs=[dl_alto, dl_hocr, dl_txt, ocr_text, clean_text_in, ocr_status,
+                 ocr_dir_state, ocr_page_state, ocr_num_pages_state, page_nav, page_label],
+        api_name=False,
     )
 
-    # Keep Tab 2 pre-populated when user edits Tab 1 text box directly
-    ocr_text.change(fn=lambda t: t, inputs=[ocr_text], outputs=[clean_text_in])
+    def _prev(out_dir, page, total):
+        alto, hocr, plain, plain2, new_page = change_page(out_dir, page, total, -1)
+        return alto, hocr, plain, plain2, new_page, f"{new_page} / {total}"
+
+    def _next(out_dir, page, total):
+        alto, hocr, plain, plain2, new_page = change_page(out_dir, page, total, +1)
+        return alto, hocr, plain, plain2, new_page, f"{new_page} / {total}"
+
+    _nav_inputs = [ocr_dir_state, ocr_page_state, ocr_num_pages_state]
+    _nav_outputs = [dl_alto, dl_hocr, ocr_text, clean_text_in, ocr_page_state, page_label]
+    prev_btn.click(fn=_prev, inputs=_nav_inputs, outputs=_nav_outputs, api_name=False)
+    next_btn.click(fn=_next, inputs=_nav_inputs, outputs=_nav_outputs, api_name=False)
+
+    ocr_text.change(fn=lambda t: t, inputs=[ocr_text], outputs=[clean_text_in], api_name=False)
 
     def _toggle(choice):
         is_paste = choice == "Paste / edit text"
         return gr.update(visible=is_paste), gr.update(visible=not is_paste)
 
-    text_source.change(fn=_toggle, inputs=[text_source], outputs=[paste_grp, upload_grp])
+    text_source.change(fn=_toggle, inputs=[text_source], outputs=[clean_text_in, clean_file_in], api_name=False)
 
     align_btn.click(
         fn=run_align,
         inputs=[align_ocr_in, text_source, clean_file_in, clean_text_in],
         outputs=[dl_aligned, align_status],
+        api_name=False,
     )
 
 
